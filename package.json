@@ -1,0 +1,60 @@
+{
+  "name": "@astrumu/graphql-authz",
+  "version": "1.0.0",
+  "description": "GraphQL authorization layer",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsc --build .",
+    "test": "yarn jest",
+    "lint": "eslint src __tests__",
+    "lint:fix": "eslint eslint src __tests__ --fix"
+  },
+  "author": "Dmitry Til <till.dima@gmail.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AstrumU/graphql-authz"
+  },
+  "keywords": [
+    "typescript",
+    "graphql",
+    "schema",
+    "directives",
+    "authorization",
+    "authz",
+    "apollo"
+  ],
+  "dependencies": {
+    "apollo-server-errors": "^2.5.0",
+    "apollo-server-plugin-base": "^0.13.0",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.171",
+    "@types/jest": "^26.0.24",
+    "@typescript-eslint/camelcase": "",
+    "@typescript-eslint/eslint-plugin": "^4.28.2",
+    "@typescript-eslint/parser": "^4.28.2",
+    "apollo-server": "^2.25.2",
+    "apollo-server-core": "^2.25.2",
+    "eslint": "^7.30.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-promise": "^5.1.0",
+    "eslint-plugin-security": "^1.4.0",
+    "graphql": "^15.5.1",
+    "jest": "^27.0.6",
+    "prettier": "^2.3.2",
+    "typescript": "^4.3.5"
+  },
+  "peerDependencies": {
+    "graphql": "^14.0.0 || ^15.0.0"
+  }
+}

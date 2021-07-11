@@ -1,0 +1,14 @@
+src
+test
+tsconfig.json
+tsconfig.module.json
+.travis.yml
+.github
+.prettierignore
+.vscode
+build/docs
+coverage
+.nyc_output
+*.log
+**/__tests__/**
+**/*.map
