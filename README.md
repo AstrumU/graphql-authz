@@ -1,3 +1,5 @@
+![logo](https://raw.githubusercontent.com/AstrumU/graphql-authz/master/img/logo.png)
+
 # graphql-authz
 
 ## Overview
