@@ -1,6 +1,7 @@
 import { GraphQLSchema, printSchema } from 'graphql';
 import {
   authZApolloPlugin,
+  AuthZDirective,
   authZDirective,
   PostExecutionRule
 } from '../../src';
@@ -24,10 +25,19 @@ class Rule3 extends PostExecutionRule {
   }
 }
 
+class RuleWithSelectionSet extends PostExecutionRule {
+  public execute() {
+    return;
+  }
+
+  public selectionSet = `{ testUnionWithSelectionSetQuery { ... on SubType1 { testField1 } } }`;
+}
+
 const rules = {
   Rule1,
   Rule2,
-  Rule3
+  Rule3,
+  RuleWithSelectionSet
 } as const;
 
 (Object.keys(rules) as Array<keyof typeof rules>).forEach(key => {
@@ -54,6 +64,7 @@ type SubType2 implements TestInterface {
 type Query {
   testInterfaceQuery: [TestInterface!]!
   testUnionQuery: [TestUnion!]!
+  testUnionWithSelectionSetQuery: TestUnion! @authz(rules: [RuleWithSelectionSet])
 }
 `;
 
@@ -81,6 +92,16 @@ const testUnionQuery = `
       ... on SubType2 {
         testField1
         testField3
+      }
+    }
+  }
+`;
+
+const testUnionWithSelectionSetQuery = `
+  query test {
+    testUnionWithSelectionSetQuery {
+      ... on SubType1 {
+        testField2
       }
     }
   }
@@ -137,7 +158,12 @@ describe('post execution rule', () => {
               testField3: 'testField3Value',
               __typename: 'SubType2'
             }
-          ]
+          ],
+          testUnionWithSelectionSetQuery: () => ({
+            testField1: 'testField1Value',
+            testField2: 'testField2Value',
+            __typename: 'SubType1'
+          })
         })
       },
       resolvers: {
@@ -149,7 +175,8 @@ describe('post execution rule', () => {
         }
       },
       mockEntireSchema: true,
-      plugins: [plugin]
+      plugins: [plugin],
+      schemaDirectives: { authz: AuthZDirective }
     });
     await server.willStart();
   });
@@ -175,5 +202,17 @@ describe('post execution rule', () => {
 
     expect(Rule2.prototype.execute).toBeCalledTimes(1);
     expect(Rule3.prototype.execute).toBeCalledTimes(1);
+  });
+
+  it('should clean result', async () => {
+    const result = await server.executeOperation({
+      query: testUnionWithSelectionSetQuery
+    });
+
+    expect(result.data?.testUnionWithSelectionSetQuery).toBeDefined();
+
+    expect(
+      result.data?.testUnionWithSelectionSetQuery?.testField1
+    ).toBeUndefined();
   });
 });

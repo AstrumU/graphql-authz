@@ -1,5 +1,5 @@
 import { GraphQLSchema, printSchema } from 'graphql';
-import { authZApolloPlugin, authZDirective } from '../../src';
+import { authZApolloPlugin, AuthZDirective, authZDirective } from '../../src';
 import { ApolloServerMock } from '../apollo-server-mock';
 import { rules, inlineRules } from './rules';
 
@@ -76,7 +76,8 @@ describe('Composite rules', () => {
       typeDefs,
       mocks: true,
       mockEntireSchema: true,
-      plugins: [plugin]
+      plugins: [plugin],
+      schemaDirectives: { authz: AuthZDirective }
     });
     await server.willStart();
   });

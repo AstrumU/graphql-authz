@@ -32,14 +32,11 @@
     "apollo"
   ],
   "dependencies": {
-    "apollo-server-errors": "^2.5.0",
-    "apollo-server-plugin-base": "^0.13.0",
     "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.171",
     "@types/jest": "^26.0.24",
-    "@typescript-eslint/camelcase": "",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
     "apollo-server": "^2.25.2",
@@ -52,9 +49,13 @@
     "graphql": "^15.5.1",
     "jest": "^27.0.6",
     "prettier": "^2.3.2",
+    "ts-jest": "27.0.3",
     "typescript": "^4.3.5"
   },
   "peerDependencies": {
-    "graphql": "^14.0.0 || ^15.0.0"
+    "graphql": "^14.0.0 || ^15.0.0",
+    "apollo-server": "^2.25.2",
+    "apollo-server-errors": "^2.5.0",
+    "apollo-server-plugin-base": "^0.13.0"
   }
 }

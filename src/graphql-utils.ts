@@ -1,7 +1,5 @@
 import {
-  ASTNode,
   DocumentNode,
-  EnumValueNode,
   FieldNode,
   FragmentDefinitionNode,
   FragmentSpreadNode,
@@ -13,14 +11,11 @@ import {
   GraphQLType,
   InlineFragmentNode,
   isListType,
-  isValueNode,
   Kind,
-  ListValueNode,
-  ObjectValueNode,
-  ValueNode,
   parse,
   DefinitionNode,
-  Location
+  Location,
+  isLeafType
 } from 'graphql';
 import { Maybe } from 'graphql/jsutils/Maybe';
 
@@ -74,45 +69,7 @@ export function getDeepType(type: GraphQLType): DeepType {
 
 export function isLeafTypeDeep(type: GraphQLType): boolean {
   const deepType = getDeepType(type);
-  return !(
-    deepType?.astNode &&
-    'fields' in deepType.astNode &&
-    deepType.astNode.fields?.length
-  );
-}
-
-export function isListValueNode(node: ASTNode): node is ListValueNode {
-  return isValueNode(node) && !!(node as ListValueNode).values;
-}
-
-export function isEnumValueNode(node: ASTNode): node is EnumValueNode {
-  return node.kind === 'EnumValue';
-}
-
-export function assertEnumValueNode(node: ASTNode): EnumValueNode {
-  if (!isEnumValueNode(node)) {
-    throw new Error(
-      `Expected ${JSON.stringify(node)} to be a GraphQL Enum value`
-    );
-  }
-  return node;
-}
-
-export function isObjectValueNode(node: ASTNode): node is ObjectValueNode {
-  return node.kind === 'ObjectValue';
-}
-
-export function assertObjectValueNode(node: ASTNode): ObjectValueNode {
-  if (!isObjectValueNode(node)) {
-    throw new Error(
-      `Expected ${JSON.stringify(node)} to be a GraphQL Object value`
-    );
-  }
-  return node;
-}
-
-export function getValueNodes(valueNode: ValueNode): readonly ValueNode[] {
-  return isListValueNode(valueNode) ? valueNode.values : [valueNode];
+  return isLeafType(deepType);
 }
 
 export function getNodeAliasOrName(node: FieldNode): string {

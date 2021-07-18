@@ -11,14 +11,14 @@ GraphQL authorization layer, flexible, directive-based, compatible with any Grap
 ### Apollo-server
 
 ```ts
-import { ApolloServer, gql } from "apollo-server";
-import { GraphQLRequestContext } from "apollo-server-plugin-base";
+import { ApolloServer, gql } from 'apollo-server';
+import { GraphQLRequestContext } from 'apollo-server-plugin-base';
 import {
   UnauthorizedError,
   PreExecutionRule,
   PostExecutionRule,
-  authZApolloPlugin,
-} from "graphql-authz";
+  authZApolloPlugin
+} from '@astrumu/graphql-authz';
 
 const typeDefs = gql`
   type User {
@@ -83,56 +83,61 @@ const typeDefs = gql`
 
 const users = [
   {
-    id: "1",
-    username: "user01",
-    email: "user01@gmail.com",
-    role: "Customer",
+    id: '1',
+    username: 'user01',
+    email: 'user01@gmail.com',
+    role: 'Customer'
   },
   {
-    id: "2",
-    username: "user02",
-    email: "user02@gmail.com",
-    role: "Admin",
-  },
+    id: '2',
+    username: 'user02',
+    email: 'user02@gmail.com',
+    role: 'Admin'
+  }
 ];
 
 const posts = [
   {
-    id: "1",
-    title: "Post01 title",
-    body: "Post01 body",
-    status: "draft",
-    authorId: "1",
+    id: '1',
+    title: 'Post01 title',
+    body: 'Post01 body',
+    status: 'draft',
+    authorId: '1'
   },
   {
-    id: "2",
-    title: "Post02 title",
-    body: "Post02 body",
-    status: "public",
-    authorId: "1",
-  },
+    id: '2',
+    title: 'Post02 title',
+    body: 'Post02 body',
+    status: 'public',
+    authorId: '1'
+  }
 ];
 
 const resolvers = {
   Query: {
     users: () => users,
     posts: () => posts,
-    post: (args: any) => posts.find(({ id }) => id === args.id),
+    post: (parent: unknown, args: { id: string }) =>
+      posts.find(({ id }) => id === args.id)
   },
   Mutation: {
-    publishPost: (args: any) => {
-      const post = posts.find(({ id }) => id === args.id)
+    publishPost: (parent: unknown, args: { postId: string }) => {
+      const post = posts.find(({ id }) => id === args.postId);
+      if (!post) {
+        throw new Error('Not Found');
+      }
       post.status = 'public';
       return post;
     }
   },
   Post: {
-    author: (parent: any) => users.find(({ id }) => id === parent.authorId),
-  },
+    author: (parent: { authorId: string }) =>
+      users.find(({ id }) => id === parent.authorId)
+  }
 };
 
 class IsAuthenticated extends PreExecutionRule {
-  public error = new UnauthorizedError("User is not authenticated");
+  public error = new UnauthorizedError('User is not authenticated');
 
   public execute(requestContext: GraphQLRequestContext) {
     if (!requestContext.context.user) {
@@ -142,33 +147,33 @@ class IsAuthenticated extends PreExecutionRule {
 }
 
 class IsAdmin extends PreExecutionRule {
-  public error = new UnauthorizedError("User is not admin");
+  public error = new UnauthorizedError('User is not admin');
 
   public execute(requestContext: GraphQLRequestContext) {
-    if (requestContext.context.user?.role !== "Admin") {
+    if (requestContext.context.user?.role !== 'Admin') {
       throw this.error;
     }
   }
 }
 
 class CanReadPost extends PostExecutionRule {
-  public error = new UnauthorizedError("Access denied");
+  public error = new UnauthorizedError('Access denied');
 
   public execute(
     requestContext: GraphQLRequestContext,
-    fieldArgs: any,
-    post: any,
-    parent: any
+    fieldArgs: unknown,
+    post: { status: string; author: { id: string } },
+    parent: unknown
   ) {
     if (
-      post.status !== "public" &&
+      post.status !== 'public' &&
       requestContext.context.user?.id !== post.author.id
     ) {
       throw this.error;
     }
   }
 
-  public selectionSet = "{ status author { id } }";
+  public selectionSet = '{ status author { id } }';
 }
 
 class CanPublishPost extends PreExecutionRule {
@@ -176,8 +181,10 @@ class CanPublishPost extends PreExecutionRule {
     requestContext: GraphQLRequestContext,
     fieldArgs: { postId: string }
   ) {
-    const post = await Promise.resolve(posts.find(({ id }) => id === fieldArgs.postId));
-    if (post.authorId !== requestContext.context.user?.id) {
+    const post = await Promise.resolve(
+      posts.find(({ id }) => id === fieldArgs.postId)
+    );
+    if (post && post.authorId !== requestContext.context.user?.id) {
       throw this.error;
     }
   }
@@ -194,11 +201,9 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   plugins: [authZApolloPlugin(authZRules)],
-  context: ({ req }) => {
-    return {
-      user: users.find(({ id }) => id === req.get("x-user-id")) || null,
-    };
-  },
+  context: ({ req }) => ({
+    user: users.find(({ id }) => id === req.get('x-user-id')) || null
+  })
 });
 
 server.listen().then(({ url }) => {
@@ -208,10 +213,9 @@ server.listen().then(({ url }) => {
 ```
 
 ### Code-first with NestJS
-// TODO: make this example work
 
 ```ts
-import { GraphQLRequestContext } from "apollo-server-plugin-base";
+import { GraphQLRequestContext } from 'apollo-server-plugin-base';
 import {
   ObjectType,
   Field,
@@ -219,16 +223,15 @@ import {
   ID,
   Resolver,
   Query,
-  Mutation,
   ResolveField,
   Parent,
   GraphQLModule,
   registerEnumType,
   Directive,
-  GraphQLSchemaHost,
-} from "@nestjs/graphql";
-import { Module } from "@nestjs/common";
-import { NestFactory } from "@nestjs/core";
+  Mutation
+} from '@nestjs/graphql';
+import { Module } from '@nestjs/common';
+import { NestFactory } from '@nestjs/core';
 
 import {
   UnauthorizedError,
@@ -236,19 +239,18 @@ import {
   PostExecutionRule,
   authZApolloPlugin,
   authZDirective,
-} from "graphql-authz";
+  AuthZDirective
+} from '@astrumu/graphql-authz';
 
-// super simple wrapper on nestjs `Directive`
-function AuthZ(config: any) {
+function AuthZ(config: Record<string, unknown>) {
   const args = Object.keys(config)
-    .map((key) => `${key}: ${JSON.stringify(config[key]).replace(/"/g, "")}`)
-    .join(", ");
+    .map(key => `${key}: ${JSON.stringify(config[key]).replace(/"/g, '')}`)
+    .join(', ');
   const directiveArgs = `(${args})`;
   return Directive(`@authz${directiveArgs}`);
 }
 
 @ObjectType()
-@AuthZ({ rules: ["CanReadPost"] })
 class User {
   @Field(() => ID)
   public id!: string;
@@ -257,7 +259,7 @@ class User {
   public username!: string;
 
   @Field()
-  @AuthZ({ rules: ["IsAdmin"] })
+  @AuthZ({ rules: ['IsAdmin'] })
   public email!: string;
 
   @Field(() => [Post])
@@ -265,20 +267,19 @@ class User {
 }
 
 enum Status {
-  draft = "draft",
-  public = "public",
+  draft = 'draft',
+  public = 'public'
 }
 
-registerEnumType(Status, { name: "Status" });
+registerEnumType(Status, { name: 'Status' });
 
 @ObjectType()
-@AuthZ({ rules: ["CanReadPost"] })
+@AuthZ({ rules: ['CanReadPost'] })
 class Post {
   @Field(() => ID)
   public id!: string;
 
   @Field()
-  @AuthZ({ rules: ["CanReadPost"] })
   public title!: string;
 
   @Field()
@@ -293,40 +294,40 @@ class Post {
 
 const users = [
   {
-    id: "1",
-    username: "user01",
-    email: "user01@gmail.com",
-    role: "Customer",
+    id: '1',
+    username: 'user01',
+    email: 'user01@gmail.com',
+    role: 'Customer'
   },
   {
-    id: "2",
-    username: "user02",
-    email: "user02@gmail.com",
-    role: "Admin",
-  },
+    id: '2',
+    username: 'user02',
+    email: 'user02@gmail.com',
+    role: 'Admin'
+  }
 ];
 
 const posts = [
   {
-    id: "1",
-    title: "Post01 title",
-    body: "Post01 body",
-    status: "draft",
-    authorId: "1",
+    id: '1',
+    title: 'Post01 title',
+    body: 'Post01 body',
+    status: 'draft',
+    authorId: '1'
   },
   {
-    id: "2",
-    title: "Post02 title",
-    body: "Post02 body",
-    status: "public",
-    authorId: "1",
-  },
+    id: '2',
+    title: 'Post02 title',
+    body: 'Post02 body',
+    status: 'public',
+    authorId: '1'
+  }
 ];
 
 @Resolver(() => User)
 class UserResolver {
-  @Query((returns) => [User])
-  @AuthZ({ rules: ["IsAuthenticated"] })
+  @Query(() => [User])
+  @AuthZ({ rules: ['IsAuthenticated'] })
   public users() {
     return users;
   }
@@ -334,32 +335,35 @@ class UserResolver {
 
 @Resolver(() => Post)
 class PostResolver {
-  @Query((returns) => [Post])
-  public posts() {
-    return posts;
-  }
-
-  @Query((returns) => Post)
-  public post(@Args({ name: "id", type: () => ID }) id: string) {
-    return posts.find((post) => post.id === id);
-  }
-
-  @Mutation((returns) => Post)
-  @AuthZ({ rules: ["CanPublishPost"] })
-  public publishPost(parent: any, args: any) {
-    const post = posts.find(({ id }) => id === args.id)
+  @Mutation(() => Post)
+  @AuthZ({ rules: ['CanPublishPost'] })
+  public publishPost(@Args({ name: 'postId', type: () => ID }) postId: string) {
+    const post = posts.find(({ id }) => id === postId);
+    if (!post) {
+      throw new Error('Not Found');
+    }
     post.status = 'public';
     return post;
   }
 
+  @Query(() => [Post])
+  public posts() {
+    return posts;
+  }
+
+  @Query(() => Post)
+  public post(@Args({ name: 'id', type: () => ID }) id: string) {
+    return posts.find(post => post.id === id);
+  }
+
   @ResolveField(() => User)
-  public author(@Parent() parent: any) {
+  public author(@Parent() parent: { authorId: string }) {
     return users.find(({ id }) => id === parent.authorId);
   }
 }
 
 class IsAuthenticated extends PreExecutionRule {
-  public error = new UnauthorizedError("User is not authenticated");
+  public error = new UnauthorizedError('User is not authenticated');
 
   public execute(requestContext: GraphQLRequestContext) {
     if (!requestContext.context.user) {
@@ -369,33 +373,32 @@ class IsAuthenticated extends PreExecutionRule {
 }
 
 class IsAdmin extends PreExecutionRule {
-  public error = new UnauthorizedError("User is not admin");
+  public error = new UnauthorizedError('User is not an admin');
 
   public execute(requestContext: GraphQLRequestContext) {
-    if (requestContext.context.user?.role !== "Admin") {
+    if (requestContext.context.user?.role !== 'Admin') {
       throw this.error;
     }
   }
 }
 
 class CanReadPost extends PostExecutionRule {
-  public error = new UnauthorizedError("Access denied");
+  public error = new UnauthorizedError('Access denied');
 
   public execute(
     requestContext: GraphQLRequestContext,
-    fieldArgs: any,
-    value: any,
-    parentValue: any
+    fieldArgs: unknown,
+    value: { status: string; author: { id: string } }
   ) {
     if (
-      value.status !== "public" &&
+      value.status !== 'public' &&
       requestContext.context.user?.id !== value.author.id
     ) {
       throw this.error;
     }
   }
 
-  public selectionSet = "{ status author { id } }";
+  public selectionSet = '{ status author { id } }';
 }
 
 class CanPublishPost extends PreExecutionRule {
@@ -403,8 +406,10 @@ class CanPublishPost extends PreExecutionRule {
     requestContext: GraphQLRequestContext,
     fieldArgs: { postId: string }
   ) {
-    const post = await Promise.resolve(posts.find(({ id }) => id === fieldArgs.postId));
-    if (post.authorId !== requestContext.context.user?.id) {
+    const post = await Promise.resolve(
+      posts.find(({ id }) => id === fieldArgs.postId)
+    );
+    if (post && post.authorId !== requestContext.context.user?.id) {
       throw this.error;
     }
   }
@@ -421,26 +426,24 @@ const authZRules = {
   imports: [
     GraphQLModule.forRoot({
       autoSchemaFile: true,
-      context: ({ req }) => {
-        return {
-          user: users.find(({ id }) => id === req.get("x-user-id")) || null,
-        };
-      },
+      context: ({ req }) => ({
+        user: users.find(({ id }) => id === req.get('x-user-id')) || null
+      }),
       plugins: [authZApolloPlugin(authZRules)],
+      schemaDirectives: { authz: AuthZDirective },
       buildSchemaOptions: {
-        directives: [authZDirective(authZRules)],
-      },
-    }),
+        directives: [authZDirective(authZRules)]
+      }
+    })
   ],
-  providers: [UserResolver, PostResolver],
+  providers: [UserResolver, PostResolver]
 })
 class AppModule {}
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(4001);
+  return app.listen(4001);
 }
-
 bootstrap();
 ```
 

@@ -4,11 +4,36 @@ import {
   GraphQLDirective,
   GraphQLEnumType,
   GraphQLEnumValueConfigMap,
+  GraphQLField,
   GraphQLInputObjectType,
-  GraphQLList
+  GraphQLInterfaceType,
+  GraphQLList,
+  GraphQLObjectType
 } from 'graphql';
+import { SchemaDirectiveVisitor } from 'apollo-server';
 
 import { RulesObject } from './rules';
+
+export interface ICompositeRulesArgumentItem {
+  and?: string[];
+  or?: string[];
+  not?: string;
+}
+export interface IDeepCompositeRulesArgumentItem {
+  id?: string;
+  and?: IDeepCompositeRulesArgumentItem[];
+  or?: IDeepCompositeRulesArgumentItem[];
+  not?: IDeepCompositeRulesArgumentItem;
+}
+export interface IExtensionsDirectiveArguments {
+  rules?: string[];
+  compositeRules?: ICompositeRulesArgumentItem[];
+  deepCompositeRules?: IDeepCompositeRulesArgumentItem[];
+}
+export interface IExtensionsDirective {
+  name: string;
+  arguments: IExtensionsDirectiveArguments;
+}
 
 // TODO: implement directive validation
 export function authZDirective(
@@ -60,4 +85,46 @@ export function authZDirective(
       deepCompositeRules: { type: new GraphQLList(DeepCompositeRulesInput) }
     }
   });
+}
+
+export class AuthZDirective extends SchemaDirectiveVisitor {
+  private addAuthZExtensionsDirective(
+    schemaItem:
+      | GraphQLField<unknown, unknown>
+      | GraphQLObjectType
+      | GraphQLInterfaceType,
+    authZExtensionsDirective: IExtensionsDirective
+  ): void {
+    schemaItem.extensions = {
+      ...schemaItem.extensions,
+      authz: {
+        ...schemaItem.extensions?.authz,
+        directives: [
+          ...(schemaItem.extensions?.authz?.directives || []),
+          authZExtensionsDirective
+        ]
+      }
+    };
+  }
+
+  public visitFieldDefinition(field: GraphQLField<unknown, unknown>): void {
+    this.addAuthZExtensionsDirective(field, {
+      name: this.name,
+      arguments: this.args
+    });
+  }
+
+  public visitObject(object: GraphQLObjectType): void {
+    this.addAuthZExtensionsDirective(object, {
+      name: this.name,
+      arguments: this.args
+    });
+  }
+
+  public visitInterface(iface: GraphQLInterfaceType): void {
+    this.addAuthZExtensionsDirective(iface, {
+      name: this.name,
+      arguments: this.args
+    });
+  }
 }

@@ -78,10 +78,20 @@ module.exports = {
 
   overrides: [
     {
-      // enable the rule specifically for TypeScript files
       files: ['./__tests__/**/*.ts'],
       rules: {
         '@typescript-eslint/unbound-method': ['off']
+      }
+    },
+    {
+      files: ['./examples/**/*.ts'],
+      rules: {
+        'promise/catch-or-return': ['off'],
+        'promise/always-return': ['off'],
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          { ignoreRestSiblings: true, args: 'none' }
+        ]
       }
     }
   ]

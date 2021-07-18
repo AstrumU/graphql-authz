@@ -1,11 +1,4 @@
 import _ from 'lodash';
-import { ArgumentNode, ObjectFieldNode, ValueNode } from 'graphql';
-
-import {
-  assertEnumValueNode,
-  assertObjectValueNode,
-  getValueNodes
-} from './graphql-utils';
 import {
   AndRule,
   InstantiableRule,
@@ -15,6 +8,10 @@ import {
   RulesObject,
   RuleType
 } from './rules';
+import {
+  ICompositeRulesArgumentItem,
+  IDeepCompositeRulesArgumentItem
+} from './authz-directive';
 
 function createInlineCompositeRule(
   CompositeRuleCls: typeof AndRule | typeof OrRule | typeof NotRule,
@@ -44,127 +41,102 @@ export function composeWithAndIfNeeded(
   return createInlineCompositeRule(AndRule, rules);
 }
 
-function composeSimpleSubRule(
-  rules: RulesObject,
-  valueNode: ValueNode
-): InstantiableRule {
-  const enumValueNode = assertEnumValueNode(valueNode);
-  const ruleName = enumValueNode.value;
-  return rules[ruleName];
-}
-
 export function composeSimpleRule(
   rules: RulesObject,
-  rulesArgument: ArgumentNode
+  rulesArgument: string[]
 ): InstantiableRule {
-  const valueNodes = getValueNodes(rulesArgument.value);
-
-  const nestedRules = valueNodes.map(valueNode =>
-    composeSimpleSubRule(rules, valueNode)
-  );
-
+  const nestedRules = rulesArgument.map(ruleName => rules[ruleName]);
   return composeWithAndIfNeeded(nestedRules);
 }
 
 function composeCompositeSubRule(
   rules: RulesObject,
-  fieldNode: ObjectFieldNode,
+  subRuleName: string | string[],
   CompositeRuleCls: typeof AndRule | typeof OrRule | typeof NotRule
 ): InstantiableRule {
-  const valueNodes = getValueNodes(fieldNode.value);
-  const classes = valueNodes.map(n => rules[assertEnumValueNode(n).value]);
+  const classes = [subRuleName].flat().map(ruleName => rules[ruleName]);
 
   return createInlineCompositeRule(CompositeRuleCls, classes);
 }
 
 export function composeCompositeRule(
   rules: RulesObject,
-  compositeRulesArgument: ArgumentNode
+  compositeRulesArgument: ICompositeRulesArgumentItem[]
 ): InstantiableRule {
-  const valueNodes = getValueNodes(compositeRulesArgument.value);
+  const nestedRules = compositeRulesArgument.flatMap(
+    compositeRulesArgumentItem => {
+      const {
+        and: andRuleNames,
+        or: orRuleNames,
+        not: notRuleName
+      } = compositeRulesArgumentItem;
 
-  const nestedRules = valueNodes.flatMap(valueNode => {
-    const objectValueNode = assertObjectValueNode(valueNode);
-    const fieldsByName = _.groupBy(
-      objectValueNode.fields,
-      ({ name: { value } }) => value
-    ) as Record<'and' | 'or' | 'not', Array<ObjectFieldNode | undefined>>;
+      const andRule =
+        andRuleNames && composeCompositeSubRule(rules, andRuleNames, AndRule);
 
-    const {
-      and: [andFieldNode] = [],
-      or: [orFieldNode] = [],
-      not: [notFieldNode] = []
-    } = fieldsByName;
+      const orRule =
+        orRuleNames && composeCompositeSubRule(rules, orRuleNames, OrRule);
 
-    const andRule =
-      andFieldNode && composeCompositeSubRule(rules, andFieldNode, AndRule);
+      const notRule =
+        notRuleName && composeCompositeSubRule(rules, notRuleName, NotRule);
 
-    const orRule =
-      orFieldNode && composeCompositeSubRule(rules, orFieldNode, OrRule);
-
-    const notRule =
-      notFieldNode && composeCompositeSubRule(rules, notFieldNode, NotRule);
-
-    return _.compact([andRule, orRule, notRule]);
-  });
+      return _.compact([andRule, orRule, notRule]);
+    }
+  );
 
   return composeWithAndIfNeeded(nestedRules);
 }
 
 function composeDeepCompositeSubRule(
   rules: RulesObject,
-  fieldNode: ObjectFieldNode,
+  deepCompositeRulesArgumentItem:
+    | IDeepCompositeRulesArgumentItem
+    | IDeepCompositeRulesArgumentItem[],
   CompositeRuleCls: typeof AndRule | typeof OrRule | typeof NotRule
 ): InstantiableRule {
-  const valueNodes = getValueNodes(fieldNode.value);
-  const classes = valueNodes.flatMap(n =>
+  const classes = [deepCompositeRulesArgumentItem]
+    .flat()
     // eslint-disable-next-line @typescript-eslint/no-use-before-define
-    processValueNodeRecursive(rules, assertObjectValueNode(n))
-  );
+    .flatMap(item => processRulesArgumentItemRecursive(rules, item));
 
   return createInlineCompositeRule(CompositeRuleCls, classes);
 }
 
-function processValueNodeRecursive(
+function processRulesArgumentItemRecursive(
   rules: RulesObject,
-  node: ValueNode
+  rulesArgumentItem: IDeepCompositeRulesArgumentItem
 ): InstantiableRule[] {
-  const objectValueNode = assertObjectValueNode(node);
-
-  const fieldsByName = _.groupBy(
-    objectValueNode.fields,
-    ({ name: { value } }) => value
-  ) as Record<'and' | 'or' | 'not' | 'id', Array<ObjectFieldNode | undefined>>;
-
   const {
-    and: [andFieldNode] = [],
-    or: [orFieldNode] = [],
-    not: [notFieldNode] = [],
-    id: [idFieldNode] = []
-  } = fieldsByName;
+    and: andRuleDefinition,
+    or: orRuleDefinition,
+    not: notRuleDefinition,
+    id: idRuleName
+  } = rulesArgumentItem;
 
   const andRule =
-    andFieldNode && composeDeepCompositeSubRule(rules, andFieldNode, AndRule);
+    andRuleDefinition &&
+    composeDeepCompositeSubRule(rules, andRuleDefinition, AndRule);
 
   const orRule =
-    orFieldNode && composeDeepCompositeSubRule(rules, orFieldNode, OrRule);
+    orRuleDefinition &&
+    composeDeepCompositeSubRule(rules, orRuleDefinition, OrRule);
 
   const notRule =
-    notFieldNode && composeDeepCompositeSubRule(rules, notFieldNode, NotRule);
+    notRuleDefinition &&
+    composeDeepCompositeSubRule(rules, notRuleDefinition, NotRule);
 
-  const idRule = idFieldNode && composeSimpleSubRule(rules, idFieldNode.value);
+  const idRule = idRuleName && rules[idRuleName];
 
   return _.compact([andRule, orRule, notRule, idRule]);
 }
 
 export function composeDeepCompositeRule(
   rules: RulesObject,
-  deepCompositeRulesArgument: ArgumentNode
+  deepCompositeRulesArgument: IDeepCompositeRulesArgumentItem[]
 ): InstantiableRule {
-  const valueNodes = getValueNodes(deepCompositeRulesArgument.value);
-
-  const nestedRules = valueNodes.flatMap(valueNode =>
-    processValueNodeRecursive(rules, valueNode)
+  const nestedRules = deepCompositeRulesArgument.flatMap(
+    deepCompositeRulesArgumentItem =>
+      processRulesArgumentItemRecursive(rules, deepCompositeRulesArgumentItem)
   );
 
   return composeWithAndIfNeeded(nestedRules);

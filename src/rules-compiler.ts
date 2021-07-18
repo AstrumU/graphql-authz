@@ -1,14 +1,15 @@
 import _ from 'lodash';
 import {
   FieldNode,
-  DirectiveNode,
   visitWithTypeInfo,
   TypeInfo,
   visit,
   DocumentNode,
   GraphQLSchema,
-  ArgumentNode,
-  isUnionType
+  isUnionType,
+  GraphQLObjectType,
+  GraphQLInterfaceType,
+  GraphQLField
 } from 'graphql';
 import { getArgumentValues } from 'graphql/execution/values';
 
@@ -17,7 +18,6 @@ import {
   getNodeAliasOrName,
   shouldIncludeNode
 } from './graphql-utils';
-
 import {
   extractExecutableRules,
   PostExecutionRule,
@@ -30,6 +30,7 @@ import {
   composeSimpleRule,
   composeWithAndIfNeeded
 } from './rules-composer';
+import { IExtensionsDirective } from './authz-directive';
 
 export interface ICompiledRules {
   preExecutionRules: PreExecutionRule[];
@@ -40,37 +41,35 @@ export interface ICompiledRules {
   };
 }
 
-function getExecutableRulesByASTNode(
-  astNode: { directives?: readonly DirectiveNode[] | undefined },
+function getExecutableRulesByExtensions(
+  extensions: (
+    | GraphQLObjectType
+    | GraphQLInterfaceType
+    | GraphQLField<unknown, unknown>
+  )['extensions'],
   rules: RulesObject,
   directiveName: string,
   fieldArgs: Record<string, unknown>
 ) {
-  if (!(astNode && astNode.directives)) {
+  if (!extensions?.authz?.directives?.length) {
     return [];
   }
-  const authZDirectives = astNode.directives.filter(
-    directive => directive.name.value === directiveName
-  );
+
+  const authZDirectives: IExtensionsDirective[] =
+    extensions.authz.directives.filter(
+      (directive: IExtensionsDirective) => directive.name === directiveName
+    );
 
   return authZDirectives.flatMap(authZDirective => {
     if (!authZDirective.arguments) {
       throw new Error(`No arguments found in @${directiveName}`);
     }
 
-    const argumentsByName = _.groupBy(
-      authZDirective.arguments,
-      ({ name: { value } }) => value
-    ) as Record<
-      'rules' | 'compositeRules' | 'deepCompositeRules',
-      Array<ArgumentNode | undefined>
-    >;
-
     const {
-      rules: [rulesArgument] = [],
-      compositeRules: [compositeRulesArgument] = [],
-      deepCompositeRules: [deepCompositeRulesArgument] = []
-    } = argumentsByName;
+      rules: rulesArgument,
+      compositeRules: compositeRulesArgument,
+      deepCompositeRules: deepCompositeRulesArgument
+    } = authZDirective.arguments;
 
     if (
       !(rulesArgument || compositeRulesArgument || deepCompositeRulesArgument)
@@ -130,63 +129,52 @@ export function compileRules(
 
       if (type) {
         const deepType = getDeepType(type);
-        const astNode = deepType.astNode;
+        const executableRules = getExecutableRulesByExtensions(
+          deepType.extensions,
+          rules,
+          directiveName,
+          {}
+        );
 
-        if (astNode) {
-          const executableRules = getExecutableRulesByASTNode(
-            astNode,
-            rules,
-            directiveName,
-            {}
-          );
+        const rulesByType = compiledRules.postExecutionRules.byType;
+        const typeName = deepType.name;
 
-          const rulesByType = compiledRules.postExecutionRules.byType;
-          const typeName = astNode.name.value;
-
-          executableRules.forEach(rule => {
-            if (rule instanceof PreExecutionRule) {
-              compiledRules.preExecutionRules.push(rule);
-            } else if (rule instanceof PostExecutionRule) {
-              rulesByType[typeName] = rulesByType[typeName] || [];
-              rulesByType[typeName].push(rule);
-            }
-          });
-        }
+        executableRules.forEach(rule => {
+          if (rule instanceof PreExecutionRule) {
+            compiledRules.preExecutionRules.push(rule);
+          } else if (rule instanceof PostExecutionRule) {
+            rulesByType[typeName] = rulesByType[typeName] || [];
+            rulesByType[typeName].push(rule);
+          }
+        });
       }
 
-      if (parentType && parentType.astNode && !isUnionType(parentType)) {
-        const parentAstNode = parentType.astNode;
-        const fieldDefinition = parentAstNode.fields?.find(
-          ({ name: { value } }) => value === node.name.value
+      if (parentType && !isUnionType(parentType)) {
+        const graphqlField = parentType.getFields()[node.name.value];
+
+        const fieldArgs = getArgumentValues(graphqlField, node, variables);
+        const executableRules = getExecutableRulesByExtensions(
+          graphqlField.extensions,
+          rules,
+          directiveName,
+          fieldArgs
         );
-        if (fieldDefinition) {
-          const graphqlField =
-            parentType.getFields()[fieldDefinition.name.value];
 
-          const fieldArgs = getArgumentValues(graphqlField, node, variables);
-          const executableRules = getExecutableRulesByASTNode(
-            fieldDefinition,
-            rules,
-            directiveName,
-            fieldArgs
-          );
+        const fieldName = getNodeAliasOrName(node);
+        const rulesByField = compiledRules.postExecutionRules.byField;
+        const parentTypeName = parentType.name;
 
-          const fieldName = getNodeAliasOrName(node);
-          const rulesByField = compiledRules.postExecutionRules.byField;
-          const parentTypeName = parentAstNode.name.value;
+        executableRules.forEach(rule => {
+          if (rule instanceof PreExecutionRule) {
+            compiledRules.preExecutionRules.push(rule);
+          } else if (rule instanceof PostExecutionRule) {
+            rulesByField[parentTypeName] = rulesByField[parentTypeName] || {};
+            rulesByField[parentTypeName][fieldName] =
+              rulesByField[parentTypeName][fieldName] || [];
 
-          executableRules.forEach(rule => {
-            if (rule instanceof PreExecutionRule) {
-              compiledRules.preExecutionRules.push(rule);
-            } else if (rule instanceof PostExecutionRule) {
-              rulesByField[parentTypeName] = rulesByField[parentTypeName] || {};
-              rulesByField[parentTypeName][fieldName] =
-                rulesByField[parentTypeName][fieldName] || [];
-
-              rulesByField[parentTypeName][fieldName].push(rule);
-            }
-          });
-        }
+            rulesByField[parentTypeName][fieldName].push(rule);
+          }
+        });
       }
       return undefined;
     }

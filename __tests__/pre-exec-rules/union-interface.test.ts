@@ -1,5 +1,10 @@
 import { GraphQLSchema, printSchema } from 'graphql';
-import { authZApolloPlugin, authZDirective, PreExecutionRule } from '../../src';
+import {
+  authZApolloPlugin,
+  AuthZDirective,
+  authZDirective,
+  PreExecutionRule
+} from '../../src';
 import { ApolloServerMock } from '../apollo-server-mock';
 
 class Rule1 extends PreExecutionRule {
@@ -118,7 +123,8 @@ describe('pre execution rule', () => {
           __resolveType
         }
       },
-      plugins: [plugin]
+      plugins: [plugin],
+      schemaDirectives: { authz: AuthZDirective }
     });
     await server.willStart();
   });
