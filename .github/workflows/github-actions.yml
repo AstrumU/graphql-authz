@@ -10,16 +10,19 @@ jobs:
           node-version: '14'
       - run: npm install -g yarn
       - run: yarn install
+
   build:
     runs-on: ubuntu-latest
     needs: dependencies
     steps:
       - run: yarn build:ts
+
   lint:
     runs-on: ubuntu-latest
     needs: dependencies
     steps:
       - run: yarn lint
+
   test:
     runs-on: ubuntu-latest
     needs: dependencies
