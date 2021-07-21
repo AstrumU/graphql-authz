@@ -26,20 +26,6 @@ export function isWrappedType(type: GraphQLType): type is WrappedType {
   return 'ofType' in type && type.ofType;
 }
 
-export function isListTypeDeep(type: Maybe<GraphQLType>): boolean {
-  if (!type) {
-    return false;
-  }
-
-  if (isListType(type)) {
-    return true;
-  }
-  if (isWrappedType(type)) {
-    return isListType(type.ofType);
-  }
-  return false;
-}
-
 export function getListTypeDepth(
   type: Maybe<GraphQLType>,
   initialDepth = 0

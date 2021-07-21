@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import {
   DirectiveLocation,
   GraphQLDirective,
@@ -42,10 +41,9 @@ export function authZDirective(
 ): GraphQLDirective {
   const RulesEnum = new GraphQLEnumType({
     name: 'AuthZRules',
-    values: _.reduce<RulesObject, GraphQLEnumValueConfigMap>(
-      rules,
-      (result, rule, key) => {
-        result[key] = { value: rule.name };
+    values: Object.keys(rules).reduce<GraphQLEnumValueConfigMap>(
+      (result, key) => {
+        result[key] = { value: rules[key].name };
         return result;
       },
       {}

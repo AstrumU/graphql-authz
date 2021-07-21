@@ -299,6 +299,7 @@ describe.each([
         ).not.toBeCalled();
         expect(result?.data?.user).toBeDefined();
         expect(result?.data?.user).not.toHaveProperty('email');
+        expect(result?.data?.user).not.toHaveProperty('comments');
       });
 
       it('should not skip fields with @skip(if: false) directive', async () => {
@@ -319,6 +320,7 @@ describe.each([
         ).toBeCalled();
         expect(result?.data?.user).toBeDefined();
         expect(result?.data?.user).toHaveProperty('email');
+        expect(result?.data?.user).not.toHaveProperty('comments');
 
         const passingRuleArgs =
           // @ts-expect-error
@@ -347,6 +349,7 @@ describe.each([
         ).not.toBeCalled();
         expect(result?.data?.user).toBeDefined();
         expect(result?.data?.user).not.toHaveProperty('email');
+        expect(result?.data?.user).not.toHaveProperty('comments');
       });
 
       it('should not skip fields with @include(if: true) directive', async () => {
@@ -367,6 +370,7 @@ describe.each([
         ).toBeCalled();
         expect(result?.data?.user).toBeDefined();
         expect(result?.data?.user).toHaveProperty('email');
+        expect(result?.data?.user).not.toHaveProperty('comments');
 
         const passingRuleArgs =
           // @ts-expect-error
@@ -378,7 +382,7 @@ describe.each([
       });
 
       it('should handle fragments', async () => {
-        await server.executeOperation({
+        const result = await server.executeOperation({
           query: `query getUser {
             user {
               id
@@ -397,6 +401,7 @@ describe.each([
         expect(
           rules.PassingPostExecRuleWithSelectionSet.prototype.execute
         ).toBeCalled();
+        expect(result?.data?.user).not.toHaveProperty('comments');
 
         const passingRuleArgs =
           // @ts-expect-error
@@ -408,7 +413,7 @@ describe.each([
       });
 
       it('should handle aliases', async () => {
-        await server.executeOperation({
+        const result = await server.executeOperation({
           query: `query getUser {
             user {
               id
@@ -421,6 +426,7 @@ describe.each([
         expect(
           rules.PassingPostExecRuleWithSelectionSet.prototype.execute
         ).toBeCalled();
+        expect(result?.data?.user).not.toHaveProperty('comments');
 
         const passingRuleArgs =
           // @ts-expect-error
@@ -432,7 +438,7 @@ describe.each([
       });
 
       it('should handle aliases in fragments', async () => {
-        await server.executeOperation({
+        const result = await server.executeOperation({
           query: `query getUser {
             user {
               id
@@ -451,6 +457,7 @@ describe.each([
         expect(
           rules.PassingPostExecRuleWithSelectionSet.prototype.execute
         ).toBeCalled();
+        expect(result?.data?.user).not.toHaveProperty('comments');
 
         const passingRuleArgs =
           // @ts-expect-error

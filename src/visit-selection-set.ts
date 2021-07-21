@@ -3,7 +3,6 @@ import {
   SelectionSetNode,
   print,
   TypeInfo,
-  FieldNode,
   Kind,
   parse
 } from 'graphql';
@@ -12,7 +11,6 @@ import { getNodeAliasOrName } from './graphql-utils';
 import { PostExecutionRule } from './rules';
 import { ICompiledRules } from './rules-compiler';
 
-// copied from graphql-tools
 export function memoize2<
   T1 extends Record<string, any>, // eslint-disable-line
   T2 extends Record<string, any>, // eslint-disable-line
@@ -52,7 +50,6 @@ export function memoize2<
   return memoized;
 }
 
-// copied from graphql-tools
 const addSelectionsToMap = memoize2(function (
   map: Map<string, SelectionNode>,
   selectionSet: SelectionSetNode
@@ -62,16 +59,11 @@ const addSelectionsToMap = memoize2(function (
   });
 });
 
-// copied from graphql-tools and patched with aliases handling
 function visitSelectionSet(
   node: SelectionSetNode,
   typeInfo: TypeInfo,
   selectionSetsByType: Record<string, SelectionSetNode>,
-  selectionSetsByField: Record<string, Record<string, SelectionSetNode>>,
-  dynamicSelectionSetsByField: Record<
-    string,
-    Record<string, Array<(node: FieldNode) => SelectionSetNode>>
-  >
+  selectionSetsByField: Record<string, Record<string, SelectionSetNode>>
 ): SelectionSetNode | void {
   const parentType = typeInfo.getParentType();
 
@@ -93,24 +85,6 @@ function visitSelectionSet(
           const selectionSet = selectionSetsByField[parentTypeName][name];
           if (selectionSet != null) {
             addSelectionsToMap(newSelections, selectionSet);
-          }
-        }
-      });
-    }
-
-    if (parentTypeName in dynamicSelectionSetsByField) {
-      node.selections.forEach(selection => {
-        if (selection.kind === Kind.FIELD) {
-          const name = getNodeAliasOrName(selection);
-          const dynamicSelectionSets =
-            dynamicSelectionSetsByField[parentTypeName][name];
-          if (dynamicSelectionSets != null) {
-            dynamicSelectionSets.forEach(selectionSetFn => {
-              const selectionSet = selectionSetFn(selection);
-              if (selectionSet != null) {
-                addSelectionsToMap(newSelections, selectionSet);
-              }
-            });
           }
         }
       });
@@ -180,8 +154,7 @@ export function getVisitor(
       node,
       typeInfo,
       selectionSetsByType,
-      selectionSetsByField,
-      {}
+      selectionSetsByField
     );
   };
 }
