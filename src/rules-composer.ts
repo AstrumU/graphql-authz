@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import {
   AndRule,
   InstantiableRule,
@@ -80,7 +79,9 @@ export function composeCompositeRule(
       const notRule =
         notRuleName && composeCompositeSubRule(rules, notRuleName, NotRule);
 
-      return _.compact([andRule, orRule, notRule]);
+      return [andRule, orRule, notRule].filter(
+        (item): item is Exclude<typeof item, undefined | ''> => !!item
+      );
     }
   );
 
@@ -127,7 +128,9 @@ function processRulesArgumentItemRecursive(
 
   const idRule = idRuleName && rules[idRuleName];
 
-  return _.compact([andRule, orRule, notRule, idRule]);
+  return [andRule, orRule, notRule, idRule].filter(
+    (item): item is Exclude<typeof item, undefined | ''> => !!item
+  );
 }
 
 export function composeDeepCompositeRule(

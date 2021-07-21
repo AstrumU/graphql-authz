@@ -4,7 +4,6 @@ import {
   SelectionSetNode,
   TypeInfo
 } from 'graphql';
-import _ from 'lodash';
 
 import {
   getListTypeDepth,
@@ -53,12 +52,12 @@ export function visitWithResultInfo(
           for (let i = 0; i < listDepth; i++) {
             resultInfoList.map(resultInfo => {
               const list = resultInfo.getValue() as unknown[];
-              const pathFromRoot = resultInfo.getPathFromRoot();
+              const fullParentStack = resultInfo.getFullParentStack();
               resultInfo.enter(0);
               list &&
                 list.map((value, index) => {
                   if (index !== 0) {
-                    const newResultInfo = new ResultInfo(list, pathFromRoot);
+                    const newResultInfo = new ResultInfo(list, fullParentStack);
                     newResultInfo.enter(index);
                     resultInfoList.push(newResultInfo);
                   }
@@ -94,7 +93,7 @@ export function visitWithResultInfo(
             }
             const pathLeft = resultInfo.leave();
             if (!pathLeft) {
-              _.remove(resultInfoList, item => item === resultInfo);
+              resultInfoList.splice(resultInfoList.indexOf(resultInfo), 1);
             }
           });
           break;

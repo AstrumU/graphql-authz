@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import {
   ApolloServerPlugin,
   GraphQLRequestContext
@@ -21,10 +20,10 @@ import { RulesObject, UnauthorizedError } from './rules';
 import { compileRules, ICompiledRules } from './rules-compiler';
 import { getVisitor } from './visit-selection-set';
 import { visitWithResultInfo } from './visit-with-result-info';
+import { cleanupResult } from './result-cleaner';
 import {
   getFilteredAst,
   getFragmentDefinitions,
-  isLeafTypeDeep,
   shouldIncludeNode
 } from './graphql-utils';
 
@@ -73,43 +72,6 @@ function executePostExecRules(
   );
   visit(ast, typeInfoVisitor);
   return rules.postExecutionRules.executionPromises;
-}
-
-function cleanupResult(
-  ast: DocumentNode,
-  schema: GraphQLSchema,
-  fragmentDefinitions: FragmentDefinitionNode[],
-  variables: Record<string, unknown>,
-  data: unknown
-) {
-  const result = {};
-
-  const typeInfo = new TypeInfo(schema);
-  const resultInfo = new ResultInfo(data);
-  const visitor = visitWithTypeInfo(
-    typeInfo,
-    visitWithResultInfo(
-      resultInfo,
-      typeInfo,
-      fragmentDefinitions,
-      variables,
-      (resultInfo: ResultInfo, typeInfo: TypeInfo) => {
-        const type = typeInfo.getType();
-        const value = resultInfo.getValue();
-        if (
-          value === null ||
-          _.isEmpty(value) ||
-          (type && isLeafTypeDeep(type))
-        ) {
-          _.set(result, resultInfo.getPathFromRoot(), value);
-        }
-      }
-    )
-  );
-
-  visit(ast, visitor);
-
-  return result;
 }
 
 function processError(error: Error) {

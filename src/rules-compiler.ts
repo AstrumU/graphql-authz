@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import {
   FieldNode,
   visitWithTypeInfo,
@@ -89,11 +88,9 @@ function getExecutableRulesByExtensions(
       deepCompositeRulesArgument &&
       composeDeepCompositeRule(rules, deepCompositeRulesArgument);
 
-    const ruleClasses = _.compact([
-      simpleRule,
-      compositeRule,
-      deepCompositeRule
-    ]);
+    const ruleClasses = [simpleRule, compositeRule, deepCompositeRule].filter(
+      (item): item is Exclude<typeof item, undefined> => !!item
+    );
 
     const RuleCls = composeWithAndIfNeeded(ruleClasses);
     const rule = new RuleCls({ fieldArgs });
