@@ -1,7 +1,8 @@
 name: codecov;
-on: push: 
-      branches:
-        -master;
+on: 
+  push: 
+    branches:
+      -main
 jobs:
   test:
     runs-on: ubuntu-latest
