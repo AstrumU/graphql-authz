@@ -22,4 +22,3 @@ jobs:
           fail_ci_if_error: false
           files: ./cover.xml
           verbose: true
-
