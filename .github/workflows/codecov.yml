@@ -2,7 +2,7 @@ name: codecov
 on:
   push:
     branches:
-      -main
+      - main
 jobs:
   test:
     runs-on: ubuntu-latest
