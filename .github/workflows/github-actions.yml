@@ -33,3 +33,11 @@ jobs:
           cache: 'yarn'
       - run: yarn install
       - run: yarn test
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: ./coverage/
+          fail_ci_if_error: true
+          files: ./cover.xml
+          verbose: true
