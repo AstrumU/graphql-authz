@@ -2,6 +2,8 @@
 
 # graphql-authz
 
+[![codecov](https://codecov.io/gh/AstrumU/graphql-authz/branch/main/graph/badge.svg?token=5IMVNTLQGF)](https://codecov.io/gh/AstrumU/graphql-authz)
+
 ## Overview
 
 GraphQL authorization layer, flexible, directive-based, compatible with any GraphQL architecture based on apollo-server.
