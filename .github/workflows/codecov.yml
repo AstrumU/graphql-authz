@@ -1,6 +1,6 @@
-name: codecov;
-on: 
-  push: 
+name: codecov
+on:
+  push:
     branches:
       -main
 jobs:
