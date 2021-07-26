@@ -1,8 +1,13 @@
 import {
+  and,
   AndRule,
+  not,
   NotRule,
+  or,
   OrRule,
+  postExecRule,
   PostExecutionRule,
+  preExecRule,
   PreExecutionRule
 } from '../../src';
 
@@ -12,11 +17,15 @@ class FailingPreExecRule extends PreExecutionRule {
   }
 }
 
+const FailingPreExecRuleFunctional = preExecRule()(() => false);
+
 class PassingPreExecRule extends PreExecutionRule {
   public execute() {
     return;
   }
 }
+
+const PassingPreExecRuleFunctional = preExecRule()(() => true);
 
 class FailingPostExecRule extends PostExecutionRule {
   public execute() {
@@ -24,17 +33,26 @@ class FailingPostExecRule extends PostExecutionRule {
   }
 }
 
+const FailingPostExecRuleFunctional = postExecRule()(() => false);
+
 class PassingPostExecRule extends PostExecutionRule {
   public execute() {
     return;
   }
 }
 
+const PassingPostExecRuleFunctional = postExecRule()(() => true);
+
 class FailingAndRule extends AndRule {
   public getRules() {
     return [FailingPreExecRule, PassingPostExecRule];
   }
 }
+
+const FailingAndRuleFunctional = and(
+  FailingPreExecRuleFunctional,
+  PassingPostExecRuleFunctional
+);
 
 const failingAndRuleInline = `{
   and: [FailingPreExecRule, PassingPostExecRule]
@@ -46,6 +64,11 @@ class PassingAndRule extends AndRule {
   }
 }
 
+const PassingAndRuleFunctional = and(
+  PassingPreExecRuleFunctional,
+  PassingPostExecRuleFunctional
+);
+
 const passingAndRuleInline = `{
   and: [PassingPreExecRule, PassingPostExecRule]
 }`;
@@ -55,6 +78,11 @@ class FailingOrRule extends OrRule {
     return [FailingPreExecRule, FailingPostExecRule];
   }
 }
+
+const FailingOrRuleFunctional = or(
+  FailingPreExecRuleFunctional,
+  FailingPostExecRuleFunctional
+);
 
 const failingOrRuleInline = `{
   or: [FailingPreExecRule, FailingPostExecRule]
@@ -66,6 +94,11 @@ class PassingOrRule extends OrRule {
   }
 }
 
+const PassingOrRuleFunctional = or(
+  FailingPreExecRuleFunctional,
+  PassingPostExecRuleFunctional
+);
+
 const passingOrRuleInline = `{
   or: [FailingPreExecRule, PassingPostExecRule]
 }`;
@@ -75,6 +108,8 @@ class FailingNotRule extends NotRule {
     return [PassingPreExecRule];
   }
 }
+
+const FailingNotRuleFunctional = not(PassingPreExecRuleFunctional);
 
 const failingNotRuleInline = `{
   not: PassingPreExecRule
@@ -86,6 +121,8 @@ class PassingNotRule extends NotRule {
   }
 }
 
+const PassingNotRuleFunctional = not(FailingPostExecRuleFunctional);
+
 const passingNotRuleInline = `{
   not: FailingPostExecRule
 }`;
@@ -95,6 +132,11 @@ class FailingDeepAndRule extends AndRule {
     return [FailingAndRule, PassingOrRule];
   }
 }
+
+const FailingDeepAndRuleFunctional = and(
+  and(FailingPreExecRuleFunctional, PassingPostExecRule),
+  or(FailingPreExecRuleFunctional, PassingPostExecRuleFunctional)
+);
 
 const failingDeepAndRuleInline = `{
   and: [
@@ -113,6 +155,11 @@ class PassingDeepAndRule extends AndRule {
   }
 }
 
+const PassingDeepAndRuleFunctional = and(
+  or(FailingPreExecRuleFunctional, PassingPostExecRuleFunctional),
+  and(PassingPreExecRuleFunctional, PassingPostExecRuleFunctional)
+);
+
 const passingDeepAndRuleInline = `{
   and: [
     {
@@ -129,6 +176,11 @@ class FailingDeepOrRule extends OrRule {
     return [FailingAndRule, FailingOrRule];
   }
 }
+
+const FailingDeepOrRuleFunctional = or(
+  and(FailingPreExecRuleFunctional, PassingPostExecRule),
+  or(FailingPreExecRuleFunctional, FailingPostExecRuleFunctional)
+);
 
 const failingDeepOrRuleInline = `{
   or: [
@@ -147,6 +199,11 @@ class PassingDeepOrRule extends OrRule {
   }
 }
 
+const PassingDeepOrRuleFunctional = or(
+  and(PassingPreExecRuleFunctional, PassingPostExecRuleFunctional),
+  or(FailingPreExecRuleFunctional, FailingPostExecRuleFunctional)
+);
+
 const passingDeepOrRuleInline = `{
   or: [
     {
@@ -164,6 +221,13 @@ class FailingDeepNotRule extends NotRule {
   }
 }
 
+const FailingDeepNotRuleFunctional = not(
+  or(
+    and(PassingPreExecRuleFunctional, PassingPostExecRuleFunctional),
+    or(FailingPreExecRuleFunctional, FailingPostExecRuleFunctional)
+  )
+);
+
 const failingDeepNotRuleInline = `{
   not: {
     or: [
@@ -178,6 +242,13 @@ class PassingDeepNotRule extends NotRule {
     return [FailingDeepAndRule];
   }
 }
+
+const PassingDeepNotRuleFunctional = not(
+  and(
+    and(FailingPreExecRuleFunctional, PassingPostExecRuleFunctional),
+    or(FailingPreExecRuleFunctional, PassingPostExecRuleFunctional)
+  )
+);
 
 const passingDeepNotRuleInline = `{
   not: {
@@ -209,6 +280,25 @@ export const rules = {
   PassingDeepOrRule,
   FailingDeepNotRule,
   PassingDeepNotRule
+} as const;
+
+export const functionalRules = {
+  FailingPreExecRule: FailingPreExecRuleFunctional,
+  PassingPreExecRule: PassingPreExecRuleFunctional,
+  FailingPostExecRule: FailingPostExecRuleFunctional,
+  PassingPostExecRule: PassingPostExecRuleFunctional,
+  FailingAndRule: FailingAndRuleFunctional,
+  PassingAndRule: PassingAndRuleFunctional,
+  FailingOrRule: FailingOrRuleFunctional,
+  PassingOrRule: PassingOrRuleFunctional,
+  FailingNotRule: FailingNotRuleFunctional,
+  PassingNotRule: PassingNotRuleFunctional,
+  FailingDeepAndRule: FailingDeepAndRuleFunctional,
+  PassingDeepAndRule: PassingDeepAndRuleFunctional,
+  FailingDeepOrRule: FailingDeepOrRuleFunctional,
+  PassingDeepOrRule: PassingDeepOrRuleFunctional,
+  FailingDeepNotRule: FailingDeepNotRuleFunctional,
+  PassingDeepNotRule: PassingDeepNotRuleFunctional
 } as const;
 
 export const inlineRules = {

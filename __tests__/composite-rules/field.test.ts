@@ -1,7 +1,7 @@
 import { GraphQLSchema, printSchema } from 'graphql';
 import { authZApolloPlugin, AuthZDirective, authZDirective } from '../../src';
 import { ApolloServerMock } from '../apollo-server-mock';
-import { inlineRules, rules } from './rules';
+import { inlineRules, rules, functionalRules } from './rules';
 
 const rawSchema = `
   type TestObject {
@@ -63,82 +63,87 @@ const rawSchema = `
   }
 `;
 
-describe('Composite rules', () => {
-  let server: ApolloServerMock;
-  let typeDefs: string;
+describe.each([
+  ['', rules],
+  ['functional', functionalRules]
+])('%s', (name, rules) => {
+  describe('Composite rules', () => {
+    let server: ApolloServerMock;
+    let typeDefs: string;
 
-  beforeAll(async () => {
-    const plugin = authZApolloPlugin(rules);
-    const directive = authZDirective(rules);
-    const directiveSchema = new GraphQLSchema({
-      directives: [directive]
-    });
+    beforeAll(async () => {
+      const plugin = authZApolloPlugin(rules);
+      const directive = authZDirective(rules);
+      const directiveSchema = new GraphQLSchema({
+        directives: [directive]
+      });
 
-    typeDefs = `${printSchema(directiveSchema)}
+      typeDefs = `${printSchema(directiveSchema)}
         ${rawSchema}`;
 
-    server = new ApolloServerMock({
-      typeDefs,
-      mocks: true,
-      mockEntireSchema: true,
-      plugins: [plugin],
-      schemaDirectives: { authz: AuthZDirective }
+      server = new ApolloServerMock({
+        typeDefs,
+        mocks: true,
+        mockEntireSchema: true,
+        plugins: [plugin],
+        schemaDirectives: { authz: AuthZDirective }
+      });
+      await server.willStart();
     });
-    await server.willStart();
-  });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
 
-  describe.each([
-    'failingAndRule',
-    'passingAndRule',
-    'failingOrRule',
-    'passingOrRule',
-    'failingNotRule',
-    'passingNotRule',
-    'failingDeepAndRule',
-    'passingDeepAndRule',
-    'failingDeepOrRule',
-    'passingDeepOrRule',
-    'failingDeepNotRule',
-    'passingDeepNotRule'
-  ])('%s', ruleName => {
-    describe.each(['', 'Inline'])('%s', ruleVariant => {
-      describe.each(['', 'List'])('%s', resultVariant => {
-        it('should fail on failing rules and not fail on passing rules', async () => {
-          let result;
-          let error;
-          try {
-            result = await server.executeOperation({
-              query: `query Test {
+    describe.each([
+      'failingAndRule',
+      'passingAndRule',
+      'failingOrRule',
+      'passingOrRule',
+      'failingNotRule',
+      'passingNotRule',
+      'failingDeepAndRule',
+      'passingDeepAndRule',
+      'failingDeepOrRule',
+      'passingDeepOrRule',
+      'failingDeepNotRule',
+      'passingDeepNotRule'
+    ])('%s', ruleName => {
+      describe.each(['', 'Inline'])('%s', ruleVariant => {
+        describe.each(['', 'List'])('%s', resultVariant => {
+          it('should fail on failing rules and not fail on passing rules', async () => {
+            let result;
+            let error;
+            try {
+              result = await server.executeOperation({
+                query: `query Test {
                       testQuery {
                         ${ruleName}${ruleVariant}${resultVariant}Field
                       }
                     }`
-            });
-          } catch (e) {
-            error = e;
-          }
+              });
+            } catch (e) {
+              error = e;
+            }
 
-          if (ruleName.startsWith('failing')) {
-            const requestError = error || result?.errors?.[0];
-            expect(requestError).toBeDefined();
-            expect(requestError.extensions.code).toEqual('FORBIDDEN');
-          } else {
-            expect(result).toBeDefined();
-            expect(result?.data?.testQuery).toHaveProperty(
-              `${ruleName}${ruleVariant}${resultVariant}Field`
-            );
-            const fieldData =
-              result?.data?.testQuery[
+            if (ruleName.startsWith('failing')) {
+              const requestError = error || result?.errors?.[0];
+              expect(requestError).toBeDefined();
+              expect(requestError.extensions.code).toEqual('FORBIDDEN');
+            } else {
+              expect(result).toBeDefined();
+              expect(result?.data?.testQuery).toHaveProperty(
                 `${ruleName}${ruleVariant}${resultVariant}Field`
-              ];
-            expect(
-              typeof (resultVariant === 'List' ? fieldData[0] : fieldData)
-            ).toEqual('string');
-          }
+              );
+              const fieldData =
+                result?.data?.testQuery[
+                  `${ruleName}${ruleVariant}${resultVariant}Field`
+                ];
+              expect(
+                typeof (resultVariant === 'List' ? fieldData[0] : fieldData)
+              ).toEqual('string');
+            }
+          });
         });
       });
     });
