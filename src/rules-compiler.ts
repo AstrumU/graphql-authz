@@ -36,7 +36,7 @@ export interface ICompiledRules {
   postExecutionRules: {
     byType: Record<string, PostExecutionRule[]>;
     byField: Record<string, Record<string, PostExecutionRule[]>>;
-    executionPromises: Array<Promise<void>>;
+    executionPromises: Array<Promise<void | boolean>>;
   };
 }
 

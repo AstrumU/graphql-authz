@@ -1,5 +1,6 @@
 export * from './apollo-plugin';
 export * from './authz-directive';
+export * from './rules-builder';
 export {
   UnauthorizedError,
   Rule,

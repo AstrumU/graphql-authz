@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "tsc --build .",
-    "test": "yarn jest",
+    "test": "yarn jest --collectCoverageFrom=src/**/*.ts",
     "lint": "eslint src __tests__",
     "lint:fix": "eslint src __tests__ --fix"
   },

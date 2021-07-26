@@ -50,7 +50,7 @@ export abstract class ExecutableRule extends Rule {
     requestContext: GraphQLRequestContext,
     fieldArgs: Record<string, unknown>,
     ...args: unknown[]
-  ): void | Promise<void>;
+  ): void | Promise<void> | boolean | Promise<boolean>;
 
   public error: UnauthorizedError = new UnauthorizedError();
 
@@ -72,6 +72,14 @@ export abstract class ExecutableRule extends Rule {
     // TODO: get rid of bind
     // and store originalExecutor in instance and call it from instance (this.originalExecutor())
     this.execute = this.execute.bind(this);
+
+    // wrap executor to treat `return false` as fail
+    this.wrapExecutor(async (execute, ...args) => {
+      const ruleResult = await execute(...args);
+      if (ruleResult === false) {
+        throw this.error;
+      }
+    });
   }
 }
 
@@ -109,7 +117,7 @@ export abstract class PreExecutionRule extends ExecutableRule {
   abstract execute(
     requestContext: GraphQLRequestContext,
     fieldArgs: Record<string, unknown>
-  ): void | Promise<void>;
+  ): void | Promise<void> | boolean | Promise<boolean>;
 
   public type = RuleType.preExec;
 }
@@ -121,7 +129,7 @@ export abstract class PostExecutionRule extends ExecutableRule {
     value: unknown,
     parentValue: unknown,
     path: string
-  ): void | Promise<void>;
+  ): void | Promise<void> | boolean | Promise<boolean>;
 
   public type = RuleType.postExec;
 

@@ -2,8 +2,8 @@ import { GraphQLSchema, printSchema } from 'graphql';
 
 import { authZApolloPlugin, AuthZDirective, authZDirective } from '../../src';
 import { ApolloServerMock } from '../apollo-server-mock';
-import { syncRules } from './rules-sync';
-import { asyncRules } from './rules-async';
+import { syncFunctionalRules, syncRules } from './rules-sync';
+import { asyncFunctionalRules, asyncRules } from './rules-async';
 
 const rawSchema = `
 type Post @authz(rules: [FailingPostExecRule]) {
@@ -78,7 +78,9 @@ query getUser {
 
 describe.each([
   ['sync', syncRules],
-  ['async', asyncRules]
+  ['async', asyncRules],
+  ['sync functional', syncFunctionalRules],
+  ['async functional', asyncFunctionalRules]
 ])('%s', (name, rules) => {
   describe('post execution rule', () => {
     describe('on object', () => {
@@ -128,7 +130,6 @@ describe.each([
           .catch(e => e);
 
         const failingRuleArgs =
-          // @ts-expect-error
           rules.FailingPostExecRule.prototype.execute.mock.calls[0];
 
         expect(failingRuleArgs[0]).toBeDefined();
@@ -146,7 +147,6 @@ describe.each([
           .catch(e => e);
 
         const passingRuleArgs =
-          // @ts-expect-error
           rules.PassingPostExecRuleWithSelectionSet.prototype.execute.mock
             .calls[0];
 
@@ -235,7 +235,6 @@ describe.each([
           rules.SecondPassingPostExecRule.prototype.execute
         ).toBeCalledTimes(2);
 
-        // @ts-expect-error
         rules.SecondPassingPostExecRule.prototype.execute.mock.calls.forEach(
           (args: unknown[]) => {
             expect(args[0]).toBeDefined();

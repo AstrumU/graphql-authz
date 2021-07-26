@@ -2,8 +2,8 @@ import { GraphQLSchema, printSchema } from 'graphql';
 
 import { authZApolloPlugin, AuthZDirective, authZDirective } from '../../src';
 import { ApolloServerMock } from '../apollo-server-mock';
-import { syncRules } from './rules-sync';
-import { asyncRules } from './rules-async';
+import { syncFunctionalRules, syncRules } from './rules-sync';
+import { asyncFunctionalRules, asyncRules } from './rules-async';
 
 const rawSchema = `
 type Post @authz(rules: [FailingPreExecRule]) {
@@ -57,7 +57,9 @@ query getUser {
 
 describe.each([
   ['sync', syncRules],
-  ['async', asyncRules]
+  ['async', asyncRules],
+  ['sync functional', syncFunctionalRules],
+  ['async functional', asyncFunctionalRules]
 ])('%s', (name, rules) => {
   describe('pre execution rule', () => {
     describe('on object', () => {
