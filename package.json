@@ -11,7 +11,9 @@
     "build": "tsc --build .",
     "test": "yarn jest --collectCoverageFrom=src/**/*.ts",
     "lint": "eslint src __tests__",
-    "lint:fix": "eslint src __tests__ --fix"
+    "lint:fix": "eslint src __tests__ --fix",
+    "prettier": "prettier --check src __tests__",
+    "prettier:fix": "prettier --write src __tests__"
   },
   "author": "Dmitry Til <till.dima@gmail.com>",
   "license": "MIT",
@@ -40,11 +42,12 @@
     "eslint": "^7.30.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.23.4",
     "eslint-plugin-promise": "^5.1.0",
     "eslint-plugin-security": "^1.4.0",
     "graphql": "^15.5.1",
     "jest": "^27.0.6",
-    "prettier": "^2.3.2",
+    "prettier": "2.3.2",
     "ts-jest": "27.0.3",
     "typescript": "^4.3.5"
   },
