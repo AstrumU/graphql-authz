@@ -1,6 +1,10 @@
 import { GraphQLSchema, printSchema } from 'graphql';
 
-import { authZApolloPlugin, AuthZDirective, authZDirective } from '../../src';
+import {
+  authZApolloPlugin,
+  AuthZDirectiveVisitor,
+  authZGraphQLDirective
+} from '../../src';
 import { ApolloServerMock } from '../apollo-server-mock';
 import { asyncRules } from './rules-async';
 
@@ -127,7 +131,7 @@ describe('post execution rule with list result', () => {
 
   beforeAll(async () => {
     const plugin = authZApolloPlugin(asyncRules);
-    const directive = authZDirective(asyncRules);
+    const directive = authZGraphQLDirective(asyncRules);
     const directiveSchema = new GraphQLSchema({
       directives: [directive]
     });
@@ -180,7 +184,7 @@ describe('post execution rule with list result', () => {
       },
       mockEntireSchema: true,
       plugins: [plugin],
-      schemaDirectives: { authz: AuthZDirective }
+      schemaDirectives: { authz: AuthZDirectiveVisitor }
     });
     await server.willStart();
   });

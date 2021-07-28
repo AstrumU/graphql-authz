@@ -13,29 +13,37 @@ import { SchemaDirectiveVisitor } from 'apollo-server';
 
 import { RulesObject } from './rules';
 
-export interface ICompositeRulesArgumentItem {
-  and?: string[];
-  or?: string[];
-  not?: string;
+export interface ICompositeRulesArgumentItem<
+  TRules extends RulesObject = RulesObject
+> {
+  and?: (keyof TRules)[];
+  or?: (keyof TRules)[];
+  not?: keyof TRules;
 }
-export interface IDeepCompositeRulesArgumentItem {
-  id?: string;
-  and?: IDeepCompositeRulesArgumentItem[];
-  or?: IDeepCompositeRulesArgumentItem[];
-  not?: IDeepCompositeRulesArgumentItem;
+export interface IDeepCompositeRulesArgumentItem<
+  TRules extends RulesObject = RulesObject
+> {
+  id?: keyof TRules;
+  and?: IDeepCompositeRulesArgumentItem<TRules>[];
+  or?: IDeepCompositeRulesArgumentItem<TRules>[];
+  not?: IDeepCompositeRulesArgumentItem<TRules>;
 }
-export interface IExtensionsDirectiveArguments {
-  rules?: string[];
-  compositeRules?: ICompositeRulesArgumentItem[];
-  deepCompositeRules?: IDeepCompositeRulesArgumentItem[];
+export interface IExtensionsDirectiveArguments<
+  TRules extends RulesObject = RulesObject
+> {
+  rules?: (keyof TRules)[];
+  compositeRules?: ICompositeRulesArgumentItem<TRules>[];
+  deepCompositeRules?: IDeepCompositeRulesArgumentItem<TRules>[];
 }
-export interface IExtensionsDirective {
+export interface IExtensionsDirective<
+  TRules extends RulesObject = RulesObject
+> {
   name: string;
-  arguments: IExtensionsDirectiveArguments;
+  arguments: IExtensionsDirectiveArguments<TRules>;
 }
 
 // TODO: implement directive validation
-export function authZDirective(
+export function authZGraphQLDirective(
   rules: RulesObject,
   directiveName = 'authz'
 ): GraphQLDirective {
@@ -85,7 +93,7 @@ export function authZDirective(
   });
 }
 
-export class AuthZDirective extends SchemaDirectiveVisitor {
+export class AuthZDirectiveVisitor extends SchemaDirectiveVisitor {
   private addAuthZExtensionsDirective(
     schemaItem:
       | GraphQLField<unknown, unknown>
