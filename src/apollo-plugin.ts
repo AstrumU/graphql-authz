@@ -124,7 +124,7 @@ export function authZApolloPlugin(
       );
       requestContext.request.query = fullQuery;
 
-      return {
+      return Promise.resolve({
         async didResolveOperation(requestContext) {
           try {
             await Promise.all(
@@ -169,7 +169,7 @@ export function authZApolloPlugin(
             processError(error);
           }
         }
-      };
+      });
     }
   };
 }
