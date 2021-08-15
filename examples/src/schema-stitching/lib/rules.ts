@@ -13,7 +13,7 @@ const IsAuthenticated = preExecRule({
 const IsAdmin = preExecRule({
   error: new UnauthorizedError('User is not admin')
 })(async (requestContext: GraphQLRequestContext) => {
-  const { id: userId } = requestContext.context.user;
+  const userId = requestContext.context.user?.id;
 
   if (!userId) {
     return false;
@@ -24,7 +24,7 @@ const IsAdmin = preExecRule({
     source: `query user { user(id: ${String(userId)}) { role } }`
   });
 
-  return graphQLResult.data?.user.role === 'Admin';
+  return graphQLResult.data?.user?.role === 'Admin';
 });
 
 const CanReadPost = postExecRule({

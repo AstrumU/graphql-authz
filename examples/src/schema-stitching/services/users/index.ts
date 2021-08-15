@@ -1,11 +1,21 @@
 import { ApolloServer, gql } from 'apollo-server';
 import { stitchingDirectives } from '@graphql-tools/stitching-directives';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import {
+  authZGraphQLDirective,
+  directiveTypeDefs
+} from '@astrumu/graphql-authz';
+
+import { authZRules } from '../../lib/rules';
+
+const directive = authZGraphQLDirective(authZRules);
+const authZDirectiveTypeDefs = directiveTypeDefs(directive);
 
 const { stitchingDirectivesTypeDefs, stitchingDirectivesValidator } =
   stitchingDirectives();
 
 const typeDefs = gql`
+  ${authZDirectiveTypeDefs}
   ${stitchingDirectivesTypeDefs}
 
   type User @key(selectionSet: "{ id }") {
@@ -20,35 +30,6 @@ const typeDefs = gql`
     user(id: ID!): User! @merge(keyField: "id")
     _sdl: String!
   }
-
-  enum AuthZRules {
-    IsAuthenticated
-    IsAdmin
-    CanReadPost
-    CanPublishPost
-  }
-
-  # this is a common boilerplate
-  input AuthZDirectiveCompositeRulesInput {
-    and: [AuthZRules]
-    or: [AuthZRules]
-    not: AuthZRules
-  }
-
-  # this is a common boilerplate
-  input AuthZDirectiveDeepCompositeRulesInput {
-    id: AuthZRules
-    and: [AuthZDirectiveDeepCompositeRulesInput]
-    or: [AuthZDirectiveDeepCompositeRulesInput]
-    not: AuthZDirectiveDeepCompositeRulesInput
-  }
-
-  # this is a common boilerplate
-  directive @authz(
-    rules: [AuthZRules]
-    compositeRules: [AuthZDirectiveCompositeRulesInput]
-    deepCompositeRules: [AuthZDirectiveDeepCompositeRulesInput]
-  ) on FIELD_DEFINITION | OBJECT | INTERFACE
 `;
 
 const users = [

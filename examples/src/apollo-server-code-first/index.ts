@@ -13,9 +13,9 @@ import {
   UnauthorizedError,
   authZApolloPlugin,
   preExecRule,
-  postExecRule,
-  IExtensionsDirectiveArguments
+  postExecRule
 } from '@astrumu/graphql-authz';
+import { IAuthConfig } from '@astrumu/graphql-authz/';
 
 const users = [
   {
@@ -92,9 +92,7 @@ const authZRules = {
   CanPublishPost
 } as const;
 
-function createAuthZExtensions(
-  args: IExtensionsDirectiveArguments<typeof authZRules>
-) {
+function createAuthZExtensions(args: IAuthConfig<typeof authZRules>) {
   return {
     authz: {
       directives: [
@@ -145,7 +143,11 @@ const User = new GraphQLObjectType({
         rules: ['IsAdmin']
       })
     },
-    posts: { type: GraphQLNonNull(GraphQLList(GraphQLNonNull(Post))) }
+    posts: {
+      type: GraphQLNonNull(GraphQLList(GraphQLNonNull(Post))),
+      resolve: (parent: { id: string }) =>
+        posts.filter(({ authorId }) => authorId === parent.id)
+    }
   })
 });
 
@@ -208,7 +210,7 @@ const schema = new GraphQLSchema({
 
 const server = new ApolloServer({
   schema,
-  plugins: [authZApolloPlugin(authZRules)],
+  plugins: [authZApolloPlugin({ rules: authZRules })],
   context: ({ req }) => ({
     user: users.find(({ id }) => id === req.get('x-user-id')) || null
   })

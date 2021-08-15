@@ -42,10 +42,13 @@ async function bootstrap() {
 
   const server = new ApolloServer({
     schema,
-    plugins: [authZApolloPlugin(authZRules)],
-    context: ({ req }) => ({
-      user: { id: req.get('x-user-id') }
-    })
+    plugins: [authZApolloPlugin({ rules: authZRules })],
+    context: ({ req }) => {
+      const userId = req.get('x-user-id');
+      return {
+        user: userId ? { id: req.get('x-user-id') } : null
+      };
+    }
   });
 
   server.listen(4000).then(({ url }) => {
