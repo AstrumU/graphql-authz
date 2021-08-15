@@ -1,11 +1,5 @@
-import { GraphQLSchema, printSchema } from 'graphql';
-import {
-  authZApolloPlugin,
-  AuthZDirectiveVisitor,
-  authZGraphQLDirective,
-  PostExecutionRule
-} from '../../src';
-import { ApolloServerMock } from '../apollo-server-mock';
+import { PostExecutionRule } from '../../src';
+import { ApolloServerMock, mockServer } from '../mock-server';
 
 class Rule1 extends PostExecutionRule {
   public execute() {
@@ -68,6 +62,30 @@ type Query {
 }
 `;
 
+const rawSchemaWithoutDirectives = `
+interface TestInterface {
+  testField1: String!
+}
+
+union TestUnion = SubType1 | SubType2
+
+type SubType1 implements TestInterface {
+  testField1: String!
+  testField2: String!
+}
+
+type SubType2 implements TestInterface {
+  testField1: String!
+  testField3: String!
+}
+
+type Query {
+  testInterfaceQuery: [TestInterface!]!
+  testUnionQuery: [TestUnion!]!
+  testUnionWithSelectionSetQuery: TestUnion!
+}
+`;
+
 const testInterfaceQuery = `
   query test {
     testInterfaceQuery {
@@ -107,6 +125,23 @@ const testUnionWithSelectionSetQuery = `
   }
 `;
 
+const authSchema = {
+  Query: {
+    testUnionWithSelectionSetQuery: {
+      __authz: { rules: ['RuleWithSelectionSet'] }
+    }
+  },
+  TestInterface: {
+    testField1: { __authz: { rules: ['Rule1'] } }
+  },
+  SubType1: {
+    testField2: { __authz: { rules: ['Rule2'] } }
+  },
+  SubType2: {
+    testField3: { __authz: { rules: ['Rule3'] } }
+  }
+};
+
 function __resolveType(obj: Record<string, unknown>) {
   if ('testField2' in obj) {
     return 'SubType1';
@@ -117,102 +152,98 @@ function __resolveType(obj: Record<string, unknown>) {
   return null;
 }
 
-describe('post execution rule', () => {
-  let server: ApolloServerMock;
-  let typeDefs: string;
+describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
+  describe('post execution rule', () => {
+    let server: ApolloServerMock;
 
-  beforeAll(async () => {
-    const plugin = authZApolloPlugin(rules);
-    const directive = authZGraphQLDirective(rules);
-    const directiveSchema = new GraphQLSchema({
-      directives: [directive]
-    });
-
-    typeDefs = `${printSchema(directiveSchema)}
-        ${rawSchema}`;
-
-    server = new ApolloServerMock({
-      typeDefs,
-      mocks: {
-        Query: () => ({
-          testUnionQuery: () => [
-            {
-              testField1: 'testField1Value',
-              testField2: 'testField2Value',
-              __typename: 'SubType1'
+    beforeAll(async () => {
+      server = mockServer({
+        rules,
+        rawSchema,
+        rawSchemaWithoutDirectives,
+        declarationMode,
+        authSchema,
+        apolloServerConfig: {
+          mocks: {
+            Query: () => ({
+              testUnionQuery: () => [
+                {
+                  testField1: 'testField1Value',
+                  testField2: 'testField2Value',
+                  __typename: 'SubType1'
+                },
+                {
+                  testField1: 'testField1Value',
+                  testField3: 'testField3Value',
+                  __typename: 'SubType2'
+                }
+              ],
+              testInterfaceQuery: () => [
+                {
+                  testField1: 'testField1Value',
+                  testField2: 'testField2Value',
+                  __typename: 'SubType1'
+                },
+                {
+                  testField1: 'testField1Value',
+                  testField3: 'testField3Value',
+                  __typename: 'SubType2'
+                }
+              ],
+              testUnionWithSelectionSetQuery: () => ({
+                testField1: 'testField1Value',
+                testField2: 'testField2Value',
+                __typename: 'SubType1'
+              })
+            })
+          },
+          resolvers: {
+            TestUnion: {
+              __resolveType
             },
-            {
-              testField1: 'testField1Value',
-              testField3: 'testField3Value',
-              __typename: 'SubType2'
+            TestInterface: {
+              __resolveType
             }
-          ],
-          testInterfaceQuery: () => [
-            {
-              testField1: 'testField1Value',
-              testField2: 'testField2Value',
-              __typename: 'SubType1'
-            },
-            {
-              testField1: 'testField1Value',
-              testField3: 'testField3Value',
-              __typename: 'SubType2'
-            }
-          ],
-          testUnionWithSelectionSetQuery: () => ({
-            testField1: 'testField1Value',
-            testField2: 'testField2Value',
-            __typename: 'SubType1'
-          })
-        })
-      },
-      resolvers: {
-        TestUnion: {
-          __resolveType
-        },
-        TestInterface: {
-          __resolveType
+          }
         }
-      },
-      mockEntireSchema: true,
-      plugins: [plugin],
-      schemaDirectives: { authz: AuthZDirectiveVisitor }
-    });
-    await server.willStart();
-  });
+      });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should handle interfaces', async () => {
-    await server.executeOperation({
-      query: testInterfaceQuery
+      await server.willStart();
     });
 
-    expect(Rule1.prototype.execute).toBeCalledTimes(2);
-    expect(Rule2.prototype.execute).toBeCalledTimes(1);
-    expect(Rule3.prototype.execute).toBeCalledTimes(1);
-  });
-
-  it('should handle unions', async () => {
-    await server.executeOperation({
-      query: testUnionQuery
+    afterEach(() => {
+      jest.clearAllMocks();
     });
 
-    expect(Rule2.prototype.execute).toBeCalledTimes(1);
-    expect(Rule3.prototype.execute).toBeCalledTimes(1);
-  });
+    it('should handle interfaces', async () => {
+      await server.executeOperation({
+        query: testInterfaceQuery
+      });
 
-  it('should clean result', async () => {
-    const result = await server.executeOperation({
-      query: testUnionWithSelectionSetQuery
+      expect(Rule1.prototype.execute).toBeCalledTimes(2);
+      expect(Rule2.prototype.execute).toBeCalledTimes(1);
+      expect(Rule3.prototype.execute).toBeCalledTimes(1);
     });
 
-    expect(result.data?.testUnionWithSelectionSetQuery).toBeDefined();
+    it('should handle unions', async () => {
+      await server.executeOperation({
+        query: testUnionQuery
+      });
 
-    expect(
-      result.data?.testUnionWithSelectionSetQuery?.testField1
-    ).toBeUndefined();
+      expect(Rule2.prototype.execute).toBeCalledTimes(1);
+      expect(Rule3.prototype.execute).toBeCalledTimes(1);
+    });
+
+    it('should clean result', async () => {
+      const result = await server.executeOperation({
+        query: testUnionWithSelectionSetQuery
+      });
+
+      expect(result.data?.testUnionWithSelectionSetQuery).toBeDefined();
+
+      expect(
+        result.data?.testUnionWithSelectionSetQuery?.testField1
+      ).toBeUndefined();
+    });
   });
 });

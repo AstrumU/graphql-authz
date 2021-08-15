@@ -1,11 +1,10 @@
-import { GraphQLSchema, printSchema } from 'graphql';
+import { ApolloServerMock, mockServer } from '../mock-server';
 import {
-  authZApolloPlugin,
-  AuthZDirectiveVisitor,
-  authZGraphQLDirective
-} from '../../src';
-import { ApolloServerMock } from '../apollo-server-mock';
-import { functionalRules, inlineRules, rules } from './rules';
+  functionalRules,
+  inlineRules,
+  inlineSchemaRules,
+  rules
+} from './rules';
 
 const rawSchema = `
   type FailingAndRuleObject @authz(rules: [FailingAndRule]) {
@@ -159,88 +158,298 @@ const rawSchema = `
   }
 `;
 
-describe.each([
-  ['', rules],
-  ['functional', functionalRules]
-])('%s', (name, rules) => {
-  describe('Composite rules', () => {
-    let server: ApolloServerMock;
-    let typeDefs: string;
+const rawSchemaWithoutDirectives = `
+  type FailingAndRuleObject {
+    id: ID!
+  }
 
-    beforeAll(async () => {
-      const plugin = authZApolloPlugin(rules);
-      const directive = authZGraphQLDirective(rules);
-      const directiveSchema = new GraphQLSchema({
-        directives: [directive]
+  type PassingAndRuleObject {
+    id: ID!
+  }
+
+  type FailingOrRuleObject {
+    id: ID!
+  }
+
+  type PassingOrRuleObject  {
+    id: ID!
+  }
+
+  type FailingNotRuleObject  {
+    id: ID!
+  }
+
+  type PassingNotRuleObject  {
+    id: ID!
+  }
+
+  type FailingDeepAndRuleObject  {
+    id: ID!
+  }
+
+  type PassingDeepAndRuleObject  {
+    id: ID!
+  }
+
+  type FailingDeepOrRuleObject  {
+    id: ID!
+  }
+
+  type PassingDeepOrRuleObject  {
+    id: ID!
+  }
+
+  type FailingDeepNotRuleObject {
+    id: ID!
+  }
+
+  type PassingDeepNotRuleObject {
+    id: ID!
+  }
+
+  type FailingAndRuleInlineObject {
+    id: ID!
+  }
+
+  type PassingAndRuleInlineObject {
+    id: ID!
+  }
+
+  type FailingOrRuleInlineObject {
+    id: ID!
+  }
+
+  type PassingOrRuleInlineObject {
+    id: ID!
+  }
+
+  type FailingNotRuleInlineObject {
+    id: ID!
+  }
+
+  type PassingNotRuleInlineObject {
+    id: ID!
+  }
+
+  type FailingDeepAndRuleInlineObject {
+    id: ID!
+  }
+
+  type PassingDeepAndRuleInlineObject {
+    id: ID!
+  }
+
+  type FailingDeepOrRuleInlineObject {
+    id: ID!
+  }
+
+  type PassingDeepOrRuleInlineObject {
+    id: ID!
+  }
+
+  type FailingDeepNotRuleInlineObject {
+    id: ID!
+  }
+
+  type PassingDeepNotRuleInlineObject {
+    id: ID!
+  }
+
+  type Query {
+    FailingAndRuleQuery: FailingAndRuleObject
+    PassingAndRuleQuery: PassingAndRuleObject
+    FailingOrRuleQuery: FailingOrRuleObject
+    PassingOrRuleQuery: PassingOrRuleObject
+    FailingNotRuleQuery: FailingNotRuleObject
+    PassingNotRuleQuery: PassingNotRuleObject
+    FailingDeepAndRuleQuery: FailingDeepAndRuleObject
+    PassingDeepAndRuleQuery: PassingDeepAndRuleObject
+    FailingDeepOrRuleQuery: FailingDeepOrRuleObject
+    PassingDeepOrRuleQuery: PassingDeepOrRuleObject
+    FailingDeepNotRuleQuery: FailingDeepNotRuleObject
+    PassingDeepNotRuleQuery: PassingDeepNotRuleObject
+
+    FailingAndRuleInlineQuery: FailingAndRuleInlineObject
+    PassingAndRuleInlineQuery: PassingAndRuleInlineObject
+    FailingOrRuleInlineQuery: FailingOrRuleInlineObject
+    PassingOrRuleInlineQuery: PassingOrRuleInlineObject
+    FailingNotRuleInlineQuery: FailingNotRuleInlineObject
+    PassingNotRuleInlineQuery: PassingNotRuleInlineObject
+    FailingDeepAndRuleInlineQuery: FailingDeepAndRuleInlineObject
+    PassingDeepAndRuleInlineQuery: PassingDeepAndRuleInlineObject
+    FailingDeepOrRuleInlineQuery: FailingDeepOrRuleInlineObject
+    PassingDeepOrRuleInlineQuery: PassingDeepOrRuleInlineObject
+    FailingDeepNotRuleInlineQuery: FailingDeepNotRuleInlineObject
+    PassingDeepNotRuleInlineQuery: PassingDeepNotRuleInlineObject
+
+    FailingAndRuleListQuery: [FailingAndRuleObject]
+    PassingAndRuleListQuery: [PassingAndRuleObject]
+    FailingOrRuleListQuery: [FailingOrRuleObject]
+    PassingOrRuleListQuery: [PassingOrRuleObject]
+    FailingNotRuleListQuery: [FailingNotRuleObject]
+    PassingNotRuleListQuery: [PassingNotRuleObject]
+    FailingDeepAndRuleListQuery: [FailingDeepAndRuleObject]
+    PassingDeepAndRuleListQuery: [PassingDeepAndRuleObject]
+    FailingDeepOrRuleListQuery: [FailingDeepOrRuleObject]
+    PassingDeepOrRuleListQuery: [PassingDeepOrRuleObject]
+    FailingDeepNotRuleListQuery: [FailingDeepNotRuleObject]
+    PassingDeepNotRuleListQuery: [PassingDeepNotRuleObject]
+
+    FailingAndRuleInlineListQuery: [FailingAndRuleInlineObject]
+    PassingAndRuleInlineListQuery: [PassingAndRuleInlineObject]
+    FailingOrRuleInlineListQuery: [FailingOrRuleInlineObject]
+    PassingOrRuleInlineListQuery: [PassingOrRuleInlineObject]
+    FailingNotRuleInlineListQuery: [FailingNotRuleInlineObject]
+    PassingNotRuleInlineListQuery: [PassingNotRuleInlineObject]
+    FailingDeepAndRuleInlineListQuery: [FailingDeepAndRuleInlineObject]
+    PassingDeepAndRuleInlineListQuery: [PassingDeepAndRuleInlineObject]
+    FailingDeepOrRuleInlineListQuery: [FailingDeepOrRuleInlineObject]
+    PassingDeepOrRuleInlineListQuery: [PassingDeepOrRuleInlineObject]
+    FailingDeepNotRuleInlineListQuery: [FailingDeepNotRuleInlineObject]
+    PassingDeepNotRuleInlineListQuery: [PassingDeepNotRuleInlineObject]
+  }
+`;
+
+const authSchema = {
+  FailingAndRuleObject: { __authz: { rules: ['FailingAndRule'] } },
+  PassingAndRuleObject: { __authz: { rules: ['PassingAndRule'] } },
+  FailingOrRuleObject: { __authz: { rules: ['FailingOrRule'] } },
+  PassingOrRuleObject: { __authz: { rules: ['PassingOrRule'] } },
+  FailingNotRuleObject: { __authz: { rules: ['FailingNotRule'] } },
+  PassingNotRuleObject: { __authz: { rules: ['PassingNotRule'] } },
+  FailingDeepAndRuleObject: { __authz: { rules: ['FailingDeepAndRule'] } },
+  PassingDeepAndRuleObject: { __authz: { rules: ['PassingDeepAndRule'] } },
+  FailingDeepOrRuleObject: { __authz: { rules: ['FailingDeepOrRule'] } },
+  PassingDeepOrRuleObject: { __authz: { rules: ['PassingDeepOrRule'] } },
+  FailingDeepNotRuleObject: { __authz: { rules: ['FailingDeepNotRule'] } },
+  PassingDeepNotRuleObject: { __authz: { rules: ['PassingDeepNotRule'] } },
+
+  FailingAndRuleInlineObject: {
+    __authz: { compositeRules: [inlineSchemaRules.failingAndRuleInlineSchema] }
+  },
+  PassingAndRuleInlineObject: {
+    __authz: { compositeRules: [inlineSchemaRules.passingAndRuleInlineSchema] }
+  },
+  FailingOrRuleInlineObject: {
+    __authz: { compositeRules: [inlineSchemaRules.failingOrRuleInlineSchema] }
+  },
+  PassingOrRuleInlineObject: {
+    __authz: { compositeRules: [inlineSchemaRules.passingOrRuleInlineSchema] }
+  },
+  FailingNotRuleInlineObject: {
+    __authz: { compositeRules: [inlineSchemaRules.failingNotRuleInlineSchema] }
+  },
+  PassingNotRuleInlineObject: {
+    __authz: { compositeRules: [inlineSchemaRules.passingNotRuleInlineSchema] }
+  },
+  FailingDeepAndRuleInlineObject: {
+    __authz: {
+      deepCompositeRules: [inlineSchemaRules.failingDeepAndRuleInlineSchema]
+    }
+  },
+  PassingDeepAndRuleInlineObject: {
+    __authz: {
+      deepCompositeRules: [inlineSchemaRules.passingDeepAndRuleInlineSchema]
+    }
+  },
+  FailingDeepOrRuleInlineObject: {
+    __authz: {
+      deepCompositeRules: [inlineSchemaRules.failingDeepOrRuleInlineSchema]
+    }
+  },
+  PassingDeepOrRuleInlineObject: {
+    __authz: {
+      deepCompositeRules: [inlineSchemaRules.passingDeepOrRuleInlineSchema]
+    }
+  },
+  FailingDeepNotRuleInlineObject: {
+    __authz: {
+      deepCompositeRules: [inlineSchemaRules.failingDeepNotRuleInlineSchema]
+    }
+  },
+  PassingDeepNotRuleInlineObject: {
+    __authz: {
+      deepCompositeRules: [inlineSchemaRules.passingDeepNotRuleInlineSchema]
+    }
+  }
+};
+
+describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
+  describe.each([
+    ['', rules],
+    ['functional', functionalRules]
+  ])('%s', (name, rules) => {
+    describe('Composite rules', () => {
+      let server: ApolloServerMock;
+
+      beforeAll(async () => {
+        server = mockServer({
+          rules,
+          rawSchema,
+          rawSchemaWithoutDirectives,
+          declarationMode,
+          authSchema
+        });
+
+        await server.willStart();
       });
 
-      typeDefs = `${printSchema(directiveSchema)}
-        ${rawSchema}`;
-
-      server = new ApolloServerMock({
-        typeDefs,
-        mocks: true,
-        mockEntireSchema: true,
-        plugins: [plugin],
-        schemaDirectives: { authz: AuthZDirectiveVisitor }
+      afterEach(() => {
+        jest.clearAllMocks();
       });
-      await server.willStart();
-    });
 
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-
-    describe.each([
-      'FailingAndRule',
-      'PassingAndRule',
-      'FailingOrRule',
-      'PassingOrRule',
-      'FailingNotRule',
-      'PassingNotRule',
-      'FailingDeepAndRule',
-      'PassingDeepAndRule',
-      'FailingDeepOrRule',
-      'PassingDeepOrRule',
-      'FailingDeepNotRule',
-      'PassingDeepNotRule'
-    ])('%s', ruleName => {
-      describe.each(['', 'Inline'])('%s', ruleVariant => {
-        describe.each(['', 'List'])('%s', resultVariant => {
-          it('should fail on failing rules and not fail on passing rules', async () => {
-            let result;
-            let error;
-            try {
-              result = await server.executeOperation({
-                query: `query Test {
+      describe.each([
+        'FailingAndRule',
+        'PassingAndRule',
+        'FailingOrRule',
+        'PassingOrRule',
+        'FailingNotRule',
+        'PassingNotRule',
+        'FailingDeepAndRule',
+        'PassingDeepAndRule',
+        'FailingDeepOrRule',
+        'PassingDeepOrRule',
+        'FailingDeepNotRule',
+        'PassingDeepNotRule'
+      ])('%s', ruleName => {
+        describe.each(['', 'Inline'])('%s', ruleVariant => {
+          describe.each(['', 'List'])('%s', resultVariant => {
+            it('should fail on failing rules and not fail on passing rules', async () => {
+              let result;
+              let error;
+              try {
+                result = await server.executeOperation({
+                  query: `query Test {
                       ${ruleName}${ruleVariant}${resultVariant}Query {
                         id
                       }
                     }`
-              });
-            } catch (e) {
-              error = e;
-            }
+                });
+              } catch (e) {
+                error = e;
+              }
 
-            if (ruleName.startsWith('Failing')) {
-              const requestError = error || result?.errors?.[0];
-              expect(requestError).toBeDefined();
-              expect(requestError.extensions.code).toEqual('FORBIDDEN');
-            } else {
-              expect(result).toBeDefined();
-              const queryResult =
-                result?.data?.[
-                  `${ruleName}${ruleVariant}${resultVariant}Query`
-                ];
-              expect(
-                resultVariant === 'List' ? queryResult[0] : queryResult
-              ).toHaveProperty('id');
+              if (ruleName.startsWith('Failing')) {
+                const requestError = error || result?.errors?.[0];
+                expect(requestError).toBeDefined();
+                expect(requestError.extensions.code).toEqual('FORBIDDEN');
+              } else {
+                expect(result).toBeDefined();
+                const queryResult =
+                  result?.data?.[
+                    `${ruleName}${ruleVariant}${resultVariant}Query`
+                  ];
+                expect(
+                  resultVariant === 'List' ? queryResult[0] : queryResult
+                ).toHaveProperty('id');
 
-              expect(
-                typeof (resultVariant === 'List' ? queryResult[0] : queryResult)
-                  .id
-              ).toEqual('string');
-            }
+                expect(
+                  typeof (
+                    resultVariant === 'List' ? queryResult[0] : queryResult
+                  ).id
+                ).toEqual('string');
+              }
+            });
           });
         });
       });

@@ -14,6 +14,7 @@ import {
   FieldNode
 } from 'graphql';
 
+import { AuthSchema } from './auth-schema';
 import { ResultInfo } from './result-info';
 import { getPostExecRulesExecutor } from './rule-executor';
 import { RulesObject, UnauthorizedError } from './rules';
@@ -81,10 +82,22 @@ function processError(error: Error) {
   throw new Error('Internal Server Error');
 }
 
+interface IAuthZApolloPluginOptions {
+  rules: RulesObject;
+  directiveName?: string;
+  authSchemaKey?: string;
+  authSchema?: AuthSchema;
+}
+
 export function authZApolloPlugin(
-  rules: RulesObject,
-  directiveName = 'authz'
+  config: IAuthZApolloPluginOptions
 ): ApolloServerPlugin {
+  const {
+    rules,
+    authSchema,
+    directiveName = 'authz',
+    authSchemaKey = '__authz'
+  } = config;
   return {
     requestDidStart(requestContext) {
       const { operationName, query } = requestContext.request;
@@ -93,13 +106,15 @@ export function authZApolloPlugin(
       }
       const { variables = {} } = requestContext.request;
       const filteredAst = getFilteredAst(query, operationName);
-      const compiledRules = compileRules(
-        filteredAst,
-        requestContext.schema,
+      const compiledRules = compileRules({
+        ast: filteredAst,
+        schema: requestContext.schema,
         rules,
         variables,
-        directiveName
-      );
+        directiveName,
+        authSchemaKey,
+        authSchema
+      });
 
       const fullQuery = addSelectionSetsToQuery(
         filteredAst,

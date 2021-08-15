@@ -1,4 +1,8 @@
 import {
+  ICompositeRulesConfigItem,
+  IDeepCompositeRulesConfigItem
+} from './auth-config';
+import {
   AndRule,
   InstantiableRule,
   IRuleConfig,
@@ -7,10 +11,6 @@ import {
   RulesObject,
   RuleType
 } from './rules';
-import {
-  ICompositeRulesArgumentItem,
-  IDeepCompositeRulesArgumentItem
-} from './authz-directive';
 
 function createInlineCompositeRule(
   CompositeRuleCls: typeof AndRule | typeof OrRule | typeof NotRule,
@@ -60,7 +60,7 @@ function composeCompositeSubRule(
 
 export function composeCompositeRule(
   rules: RulesObject,
-  compositeRulesArgument: ICompositeRulesArgumentItem[]
+  compositeRulesArgument: ICompositeRulesConfigItem[]
 ): InstantiableRule {
   const nestedRules = compositeRulesArgument.flatMap(
     compositeRulesArgumentItem => {
@@ -91,8 +91,8 @@ export function composeCompositeRule(
 function composeDeepCompositeSubRule(
   rules: RulesObject,
   deepCompositeRulesArgumentItem:
-    | IDeepCompositeRulesArgumentItem
-    | IDeepCompositeRulesArgumentItem[],
+    | IDeepCompositeRulesConfigItem
+    | IDeepCompositeRulesConfigItem[],
   CompositeRuleCls: typeof AndRule | typeof OrRule | typeof NotRule
 ): InstantiableRule {
   const classes = [deepCompositeRulesArgumentItem]
@@ -105,7 +105,7 @@ function composeDeepCompositeSubRule(
 
 function processRulesArgumentItemRecursive(
   rules: RulesObject,
-  rulesArgumentItem: IDeepCompositeRulesArgumentItem
+  rulesArgumentItem: IDeepCompositeRulesConfigItem
 ): InstantiableRule[] {
   const {
     and: andRuleDefinition,
@@ -135,7 +135,7 @@ function processRulesArgumentItemRecursive(
 
 export function composeDeepCompositeRule(
   rules: RulesObject,
-  deepCompositeRulesArgument: IDeepCompositeRulesArgumentItem[]
+  deepCompositeRulesArgument: IDeepCompositeRulesConfigItem[]
 ): InstantiableRule {
   const nestedRules = deepCompositeRulesArgument.flatMap(
     deepCompositeRulesArgumentItem =>

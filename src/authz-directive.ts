@@ -12,34 +12,13 @@ import {
 import { SchemaDirectiveVisitor } from 'apollo-server';
 
 import { RulesObject } from './rules';
+import { IAuthConfig } from './auth-config';
 
-export interface ICompositeRulesArgumentItem<
-  TRules extends RulesObject = RulesObject
-> {
-  and?: (keyof TRules)[];
-  or?: (keyof TRules)[];
-  not?: keyof TRules;
-}
-export interface IDeepCompositeRulesArgumentItem<
-  TRules extends RulesObject = RulesObject
-> {
-  id?: keyof TRules;
-  and?: IDeepCompositeRulesArgumentItem<TRules>[];
-  or?: IDeepCompositeRulesArgumentItem<TRules>[];
-  not?: IDeepCompositeRulesArgumentItem<TRules>;
-}
-export interface IExtensionsDirectiveArguments<
-  TRules extends RulesObject = RulesObject
-> {
-  rules?: (keyof TRules)[];
-  compositeRules?: ICompositeRulesArgumentItem<TRules>[];
-  deepCompositeRules?: IDeepCompositeRulesArgumentItem<TRules>[];
-}
 export interface IExtensionsDirective<
   TRules extends RulesObject = RulesObject
 > {
   name: string;
-  arguments: IExtensionsDirectiveArguments<TRules>;
+  arguments: IAuthConfig<TRules>;
 }
 
 // TODO: implement directive validation

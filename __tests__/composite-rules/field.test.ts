@@ -1,11 +1,10 @@
-import { GraphQLSchema, printSchema } from 'graphql';
+import { ApolloServerMock, mockServer } from '../mock-server';
 import {
-  authZApolloPlugin,
-  AuthZDirectiveVisitor,
-  authZGraphQLDirective
-} from '../../src';
-import { ApolloServerMock } from '../apollo-server-mock';
-import { inlineRules, rules, functionalRules } from './rules';
+  inlineRules,
+  rules,
+  functionalRules,
+  inlineSchemaRules
+} from './rules';
 
 const rawSchema = `
   type TestObject {
@@ -67,86 +66,283 @@ const rawSchema = `
   }
 `;
 
-describe.each([
-  ['', rules],
-  ['functional', functionalRules]
-])('%s', (name, rules) => {
-  describe('Composite rules', () => {
-    let server: ApolloServerMock;
-    let typeDefs: string;
+const rawSchemaWithoutDirectives = `
+  type TestObject {
+    failingAndRuleField: String
+    passingAndRuleField: String
+    failingOrRuleField: String
+    passingOrRuleField: String
+    failingNotRuleField: String
+    passingNotRuleField: String
+    failingDeepAndRuleField: String
+    passingDeepAndRuleField: String
+    failingDeepOrRuleField: String
+    passingDeepOrRuleField: String
+    failingDeepNotRuleField: String
+    passingDeepNotRuleField: String
 
-    beforeAll(async () => {
-      const plugin = authZApolloPlugin(rules);
-      const directive = authZGraphQLDirective(rules);
-      const directiveSchema = new GraphQLSchema({
-        directives: [directive]
+    failingAndRuleInlineField: String
+    passingAndRuleInlineField: String
+    failingOrRuleInlineField: String
+    passingOrRuleInlineField: String
+    failingNotRuleInlineField: String
+    passingNotRuleInlineField: String
+    failingDeepAndRuleInlineField: String
+    passingDeepAndRuleInlineField: String
+    failingDeepOrRuleInlineField: String
+    passingDeepOrRuleInlineField: String
+    failingDeepNotRuleInlineField: String
+    passingDeepNotRuleInlineField: String
+
+    failingAndRuleListField: [String]
+    passingAndRuleListField: [String]
+    failingOrRuleListField: [String]
+    passingOrRuleListField: [String]
+    failingNotRuleListField: [String]
+    passingNotRuleListField: [String]
+    failingDeepAndRuleListField: [String]
+    passingDeepAndRuleListField: [String]
+    failingDeepOrRuleListField: [String]
+    passingDeepOrRuleListField: [String]
+    failingDeepNotRuleListField: [String]
+    passingDeepNotRuleListField: [String]
+
+    failingAndRuleInlineListField: [String]
+    passingAndRuleInlineListField: [String]
+    failingOrRuleInlineListField: [String]
+    passingOrRuleInlineListField: [String]
+    failingNotRuleInlineListField: [String]
+    passingNotRuleInlineListField: [String]
+    failingDeepAndRuleInlineListField: [String]
+    passingDeepAndRuleInlineListField: [String]
+    failingDeepOrRuleInlineListField: [String]
+    passingDeepOrRuleInlineListField: [String]
+    failingDeepNotRuleInlineListField: [String]
+    passingDeepNotRuleInlineListField: [String]
+  }
+
+  type Query {
+    testQuery: TestObject
+  }
+`;
+
+const authSchema = {
+  TestObject: {
+    failingAndRuleField: { __authz: { rules: ['FailingAndRule'] } },
+    passingAndRuleField: { __authz: { rules: ['PassingAndRule'] } },
+    failingOrRuleField: { __authz: { rules: ['FailingOrRule'] } },
+    passingOrRuleField: { __authz: { rules: ['PassingOrRule'] } },
+    failingNotRuleField: { __authz: { rules: ['FailingNotRule'] } },
+    passingNotRuleField: { __authz: { rules: ['PassingNotRule'] } },
+    failingDeepAndRuleField: { __authz: { rules: ['FailingDeepAndRule'] } },
+    passingDeepAndRuleField: { __authz: { rules: ['PassingDeepAndRule'] } },
+    failingDeepOrRuleField: { __authz: { rules: ['FailingDeepOrRule'] } },
+    passingDeepOrRuleField: { __authz: { rules: ['PassingDeepOrRule'] } },
+    failingDeepNotRuleField: { __authz: { rules: ['FailingDeepNotRule'] } },
+    passingDeepNotRuleField: { __authz: { rules: ['PassingDeepNotRule'] } },
+
+    failingAndRuleInlineField: {
+      __authz: {
+        compositeRules: [inlineSchemaRules.failingAndRuleInlineSchema]
+      }
+    },
+    passingAndRuleInlineField: {
+      __authz: {
+        compositeRules: [inlineSchemaRules.passingAndRuleInlineSchema]
+      }
+    },
+    failingOrRuleInlineField: {
+      __authz: { compositeRules: [inlineSchemaRules.failingOrRuleInlineSchema] }
+    },
+    passingOrRuleInlineField: {
+      __authz: { compositeRules: [inlineSchemaRules.passingOrRuleInlineSchema] }
+    },
+    failingNotRuleInlineField: {
+      __authz: {
+        compositeRules: [inlineSchemaRules.failingNotRuleInlineSchema]
+      }
+    },
+    passingNotRuleInlineField: {
+      __authz: {
+        compositeRules: [inlineSchemaRules.passingNotRuleInlineSchema]
+      }
+    },
+    failingDeepAndRuleInlineField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.failingDeepAndRuleInlineSchema]
+      }
+    },
+    passingDeepAndRuleInlineField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.passingDeepAndRuleInlineSchema]
+      }
+    },
+    failingDeepOrRuleInlineField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.failingDeepOrRuleInlineSchema]
+      }
+    },
+    passingDeepOrRuleInlineField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.passingDeepOrRuleInlineSchema]
+      }
+    },
+    failingDeepNotRuleInlineField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.failingDeepNotRuleInlineSchema]
+      }
+    },
+    passingDeepNotRuleInlineField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.passingDeepNotRuleInlineSchema]
+      }
+    },
+
+    failingAndRuleListField: { __authz: { rules: ['FailingAndRule'] } },
+    passingAndRuleListField: { __authz: { rules: ['PassingAndRule'] } },
+    failingOrRuleListField: { __authz: { rules: ['FailingOrRule'] } },
+    passingOrRuleListField: { __authz: { rules: ['PassingOrRule'] } },
+    failingNotRuleListField: { __authz: { rules: ['FailingNotRule'] } },
+    passingNotRuleListField: { __authz: { rules: ['PassingNotRule'] } },
+    failingDeepAndRuleListField: { __authz: { rules: ['FailingDeepAndRule'] } },
+    passingDeepAndRuleListField: { __authz: { rules: ['PassingDeepAndRule'] } },
+    failingDeepOrRuleListField: { __authz: { rules: ['FailingDeepOrRule'] } },
+    passingDeepOrRuleListField: { __authz: { rules: ['PassingDeepOrRule'] } },
+    failingDeepNotRuleListField: { __authz: { rules: ['FailingDeepNotRule'] } },
+    passingDeepNotRuleListField: { __authz: { rules: ['PassingDeepNotRule'] } },
+
+    failingAndRuleInlineListField: {
+      __authz: {
+        compositeRules: [inlineSchemaRules.failingAndRuleInlineSchema]
+      }
+    },
+    passingAndRuleInlineListField: {
+      __authz: {
+        compositeRules: [inlineSchemaRules.passingAndRuleInlineSchema]
+      }
+    },
+    failingOrRuleInlineListField: {
+      __authz: { compositeRules: [inlineSchemaRules.failingOrRuleInlineSchema] }
+    },
+    passingOrRuleInlineListField: {
+      __authz: { compositeRules: [inlineSchemaRules.passingOrRuleInlineSchema] }
+    },
+    failingNotRuleInlineListField: {
+      __authz: {
+        compositeRules: [inlineSchemaRules.failingNotRuleInlineSchema]
+      }
+    },
+    passingNotRuleInlineListField: {
+      __authz: {
+        compositeRules: [inlineSchemaRules.passingNotRuleInlineSchema]
+      }
+    },
+    failingDeepAndRuleInlineListField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.failingDeepAndRuleInlineSchema]
+      }
+    },
+    passingDeepAndRuleInlineListField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.passingDeepAndRuleInlineSchema]
+      }
+    },
+    failingDeepOrRuleInlineListField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.failingDeepOrRuleInlineSchema]
+      }
+    },
+    passingDeepOrRuleInlineListField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.passingDeepOrRuleInlineSchema]
+      }
+    },
+    failingDeepNotRuleInlineListField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.failingDeepNotRuleInlineSchema]
+      }
+    },
+    passingDeepNotRuleInlineListField: {
+      __authz: {
+        deepCompositeRules: [inlineSchemaRules.passingDeepNotRuleInlineSchema]
+      }
+    }
+  }
+};
+
+describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
+  describe.each([
+    ['', rules],
+    ['functional', functionalRules]
+  ])('%s', (name, rules) => {
+    describe('Composite rules', () => {
+      let server: ApolloServerMock;
+
+      beforeAll(async () => {
+        server = mockServer({
+          rules,
+          rawSchema,
+          rawSchemaWithoutDirectives,
+          declarationMode,
+          authSchema
+        });
+
+        await server.willStart();
       });
 
-      typeDefs = `${printSchema(directiveSchema)}
-        ${rawSchema}`;
-
-      server = new ApolloServerMock({
-        typeDefs,
-        mocks: true,
-        mockEntireSchema: true,
-        plugins: [plugin],
-        schemaDirectives: { authz: AuthZDirectiveVisitor }
+      afterEach(() => {
+        jest.clearAllMocks();
       });
-      await server.willStart();
-    });
 
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
-
-    describe.each([
-      'failingAndRule',
-      'passingAndRule',
-      'failingOrRule',
-      'passingOrRule',
-      'failingNotRule',
-      'passingNotRule',
-      'failingDeepAndRule',
-      'passingDeepAndRule',
-      'failingDeepOrRule',
-      'passingDeepOrRule',
-      'failingDeepNotRule',
-      'passingDeepNotRule'
-    ])('%s', ruleName => {
-      describe.each(['', 'Inline'])('%s', ruleVariant => {
-        describe.each(['', 'List'])('%s', resultVariant => {
-          it('should fail on failing rules and not fail on passing rules', async () => {
-            let result;
-            let error;
-            try {
-              result = await server.executeOperation({
-                query: `query Test {
+      describe.each([
+        'failingAndRule',
+        'passingAndRule',
+        'failingOrRule',
+        'passingOrRule',
+        'failingNotRule',
+        'passingNotRule',
+        'failingDeepAndRule',
+        'passingDeepAndRule',
+        'failingDeepOrRule',
+        'passingDeepOrRule',
+        'failingDeepNotRule',
+        'passingDeepNotRule'
+      ])('%s', ruleName => {
+        describe.each(['', 'Inline'])('%s', ruleVariant => {
+          describe.each(['', 'List'])('%s', resultVariant => {
+            it('should fail on failing rules and not fail on passing rules', async () => {
+              let result;
+              let error;
+              try {
+                result = await server.executeOperation({
+                  query: `query Test {
                       testQuery {
                         ${ruleName}${ruleVariant}${resultVariant}Field
                       }
                     }`
-              });
-            } catch (e) {
-              error = e;
-            }
+                });
+              } catch (e) {
+                error = e;
+              }
 
-            if (ruleName.startsWith('failing')) {
-              const requestError = error || result?.errors?.[0];
-              expect(requestError).toBeDefined();
-              expect(requestError.extensions.code).toEqual('FORBIDDEN');
-            } else {
-              expect(result).toBeDefined();
-              expect(result?.data?.testQuery).toHaveProperty(
-                `${ruleName}${ruleVariant}${resultVariant}Field`
-              );
-              const fieldData =
-                result?.data?.testQuery[
+              if (ruleName.startsWith('failing')) {
+                const requestError = error || result?.errors?.[0];
+                expect(requestError).toBeDefined();
+                expect(requestError.extensions.code).toEqual('FORBIDDEN');
+              } else {
+                expect(result).toBeDefined();
+                expect(result?.data?.testQuery).toHaveProperty(
                   `${ruleName}${ruleVariant}${resultVariant}Field`
-                ];
-              expect(
-                typeof (resultVariant === 'List' ? fieldData[0] : fieldData)
-              ).toEqual('string');
-            }
+                );
+                const fieldData =
+                  result?.data?.testQuery[
+                    `${ruleName}${ruleVariant}${resultVariant}Field`
+                  ];
+                expect(
+                  typeof (resultVariant === 'List' ? fieldData[0] : fieldData)
+                ).toEqual('string');
+              }
+            });
           });
         });
       });

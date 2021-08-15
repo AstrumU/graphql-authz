@@ -1,11 +1,4 @@
-import { GraphQLSchema, printSchema } from 'graphql';
-
-import {
-  authZApolloPlugin,
-  AuthZDirectiveVisitor,
-  authZGraphQLDirective
-} from '../../src';
-import { ApolloServerMock } from '../apollo-server-mock';
+import { ApolloServerMock, mockServer } from '../mock-server';
 import { asyncRules } from './rules-async';
 
 const rawSchema = `
@@ -34,6 +27,46 @@ type Comment @authz(rules: [FailingPostExecRule]) {
 }
 
 type Like @authz(rules: [PassingPostExecRule]) {
+  id: ID!
+  post: Post!
+}
+
+type Query {
+  user: User
+  userWithLikes: User
+  userWithNullPosts: User
+  userWithCommentsAndLikesListOfLists: User
+  userWithPostsAndLikesListOfLists: User
+  userWithPostsAndStringsListOfLists: User
+}
+`;
+
+const rawSchemaWithoutDirectives = `
+type Post {
+  id: ID!
+  title: String!
+  owner: User!
+  comments: [Comment!]!
+}
+
+type User {
+  id: ID!
+  email: String
+  posts: [Post]
+  comments: [Comment]
+  likes: [Like!]!
+  likesListOfLists: [[[Like!]]]!
+  stringsListOfLists: [[[String!]]]!
+}
+
+type Comment {
+  id: ID!
+  text: String!
+  owner: User!
+  post: Post
+}
+
+type Like {
   id: ID!
   post: Post!
 }
@@ -125,154 +158,167 @@ const userLikesQuery = `
   }
 `;
 
-describe('post execution rule with list result', () => {
-  let server: ApolloServerMock;
-  let typeDefs: string;
+const authSchema = {
+  Comment: {
+    __authz: { rules: ['FailingPostExecRule'] }
+  },
+  Like: {
+    __authz: { rules: ['PassingPostExecRule'] }
+  }
+};
 
-  beforeAll(async () => {
-    const plugin = authZApolloPlugin(asyncRules);
-    const directive = authZGraphQLDirective(asyncRules);
-    const directiveSchema = new GraphQLSchema({
-      directives: [directive]
+describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
+  describe('post execution rule with list result', () => {
+    let server: ApolloServerMock;
+
+    beforeAll(async () => {
+      server = mockServer({
+        rules: asyncRules,
+        rawSchema,
+        rawSchemaWithoutDirectives,
+        declarationMode,
+        authSchema,
+        apolloServerConfig: {
+          mocks: {
+            Query: () => ({
+              user: () => ({
+                posts: [],
+                comments: [{ id: 'comment_id' }]
+              }),
+              userWithNullPosts: () => ({
+                posts: null,
+                comments: [{ id: 'comment_id' }]
+              }),
+              userWithLikes: () => ({
+                likes: []
+              }),
+              userWithCommentsAndLikesListOfLists: () => ({
+                likesListOfLists: [
+                  [[{ id: 'like_id01' }, { id: 'like_id02' }]],
+                  [[{ id: 'like_id03' }, { id: 'like_id04' }]]
+                ],
+                comments: [{ id: 'comment_id' }]
+              }),
+              userWithPostsAndLikesListOfLists: () => ({
+                likesListOfLists: [
+                  [
+                    [{ id: 'like_id01' }, { id: 'like_id02' }],
+                    [{ id: 'like_id03' }, { id: 'like_id04' }]
+                  ]
+                ],
+                posts: [{ id: 'post_id' }]
+              }),
+              userWithPostsAndStringsListOfLists: () => ({
+                stringsListOfLists: [
+                  [
+                    ['test01', 'test02'],
+                    ['test03', 'test04']
+                  ],
+                  [['test05']]
+                ],
+                posts: [{ id: 'post_id' }]
+              })
+            })
+          }
+        }
+      });
+
+      await server.willStart();
     });
 
-    typeDefs = `${printSchema(directiveSchema)}
-        ${rawSchema}`;
+    afterEach(() => {
+      jest.clearAllMocks();
+    });
 
-    server = new ApolloServerMock({
-      typeDefs,
-      mocks: {
-        Query: () => ({
-          user: () => ({
-            posts: [],
-            comments: [{ id: 'comment_id' }]
-          }),
-          userWithNullPosts: () => ({
-            posts: null,
-            comments: [{ id: 'comment_id' }]
-          }),
-          userWithLikes: () => ({
-            likes: []
-          }),
-          userWithCommentsAndLikesListOfLists: () => ({
-            likesListOfLists: [
-              [[{ id: 'like_id01' }, { id: 'like_id02' }]],
-              [[{ id: 'like_id03' }, { id: 'like_id04' }]]
-            ],
-            comments: [{ id: 'comment_id' }]
-          }),
-          userWithPostsAndLikesListOfLists: () => ({
-            likesListOfLists: [
-              [
-                [{ id: 'like_id01' }, { id: 'like_id02' }],
-                [{ id: 'like_id03' }, { id: 'like_id04' }]
-              ]
-            ],
-            posts: [{ id: 'post_id' }]
-          }),
-          userWithPostsAndStringsListOfLists: () => ({
-            stringsListOfLists: [
-              [
-                ['test01', 'test02'],
-                ['test03', 'test04']
-              ],
-              [['test05']]
-            ],
-            posts: [{ id: 'post_id' }]
-          })
+    it('should execute affected rule when response contains empty lists', async () => {
+      const result = await server
+        .executeOperation({
+          query: userQuery
         })
-      },
-      mockEntireSchema: true,
-      plugins: [plugin],
-      schemaDirectives: { authz: AuthZDirectiveVisitor }
-    });
-    await server.willStart();
-  });
+        .catch(e => e);
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  it('should execute affected rule when response contains empty lists', async () => {
-    const result = await server
-      .executeOperation({
-        query: userQuery
-      })
-      .catch(e => e);
-
-    expect(result).toBeInstanceOf(Error);
-    expect(asyncRules.FailingPostExecRule.prototype.execute).toBeCalledTimes(1);
-  });
-
-  it('should handle nullable lists', async () => {
-    const result = await server
-      .executeOperation({
-        query: userWithNullPostsQuery
-      })
-      .catch(e => e);
-
-    expect(result).toBeInstanceOf(Error);
-    expect(asyncRules.FailingPostExecRule.prototype.execute).toBeCalledTimes(1);
-  });
-
-  it('should handle empty lists in result with nested selection set', async () => {
-    const result = await server.executeOperation({
-      query: userLikesQuery
+      expect(result).toBeInstanceOf(Error);
+      expect(asyncRules.FailingPostExecRule.prototype.execute).toBeCalledTimes(
+        1
+      );
     });
 
-    expect(asyncRules.FailingPostExecRule.prototype.execute).not.toBeCalled();
-    expect(result.data).toEqual({
-      userWithLikes: { likes: [] }
-    });
-  });
+    it('should handle nullable lists', async () => {
+      const result = await server
+        .executeOperation({
+          query: userWithNullPostsQuery
+        })
+        .catch(e => e);
 
-  it('should handle failing list of lists', async () => {
-    const result = await server
-      .executeOperation({
-        query: userCommentsAndLikesListOfListsQuery
-      })
-      .catch(e => e);
-
-    expect(result).toBeInstanceOf(Error);
-    expect(asyncRules.FailingPostExecRule.prototype.execute).toBeCalled();
-    expect(asyncRules.PassingPostExecRule.prototype.execute).toBeCalledTimes(4);
-  });
-
-  it('should handle passing list of lists', async () => {
-    const result = await server.executeOperation({
-      query: userPostsAndLikesListOfListsQuery
+      expect(result).toBeInstanceOf(Error);
+      expect(asyncRules.FailingPostExecRule.prototype.execute).toBeCalledTimes(
+        1
+      );
     });
 
-    expect(asyncRules.PassingPostExecRule.prototype.execute).toBeCalledTimes(4);
-    expect(result.data).toEqual({
-      userWithPostsAndLikesListOfLists: {
-        likesListOfLists: [
-          [
-            [{ id: 'like_id01' }, { id: 'like_id02' }],
-            [{ id: 'like_id03' }, { id: 'like_id04' }]
-          ]
-        ],
-        posts: [{ id: 'post_id' }]
-      }
-    });
-  });
+    it('should handle empty lists in result with nested selection set', async () => {
+      const result = await server.executeOperation({
+        query: userLikesQuery
+      });
 
-  it('should handle passing list of lists of strings', async () => {
-    const result = await server.executeOperation({
-      query: userPostsAndStringsListOfListsQuery
+      expect(asyncRules.FailingPostExecRule.prototype.execute).not.toBeCalled();
+      expect(result.data).toEqual({
+        userWithLikes: { likes: [] }
+      });
     });
 
-    expect(result.data).toEqual({
-      userWithPostsAndStringsListOfLists: {
-        stringsListOfLists: [
-          [
-            ['test01', 'test02'],
-            ['test03', 'test04']
+    it('should handle failing list of lists', async () => {
+      const result = await server
+        .executeOperation({
+          query: userCommentsAndLikesListOfListsQuery
+        })
+        .catch(e => e);
+
+      expect(result).toBeInstanceOf(Error);
+      expect(asyncRules.FailingPostExecRule.prototype.execute).toBeCalled();
+      expect(asyncRules.PassingPostExecRule.prototype.execute).toBeCalledTimes(
+        4
+      );
+    });
+
+    it('should handle passing list of lists', async () => {
+      const result = await server.executeOperation({
+        query: userPostsAndLikesListOfListsQuery
+      });
+
+      expect(asyncRules.PassingPostExecRule.prototype.execute).toBeCalledTimes(
+        4
+      );
+      expect(result.data).toEqual({
+        userWithPostsAndLikesListOfLists: {
+          likesListOfLists: [
+            [
+              [{ id: 'like_id01' }, { id: 'like_id02' }],
+              [{ id: 'like_id03' }, { id: 'like_id04' }]
+            ]
           ],
-          [['test05']]
-        ],
-        posts: [{ id: 'post_id' }]
-      }
+          posts: [{ id: 'post_id' }]
+        }
+      });
+    });
+
+    it('should handle passing list of lists of strings', async () => {
+      const result = await server.executeOperation({
+        query: userPostsAndStringsListOfListsQuery
+      });
+
+      expect(result.data).toEqual({
+        userWithPostsAndStringsListOfLists: {
+          stringsListOfLists: [
+            [
+              ['test01', 'test02'],
+              ['test03', 'test04']
+            ],
+            [['test05']]
+          ],
+          posts: [{ id: 'post_id' }]
+        }
+      });
     });
   });
 });
