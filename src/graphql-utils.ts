@@ -15,7 +15,10 @@ import {
   parse,
   DefinitionNode,
   Location,
-  isLeafType
+  isLeafType,
+  GraphQLSchema,
+  GraphQLDirective,
+  printSchema
 } from 'graphql';
 import { Maybe } from 'graphql/jsutils/Maybe';
 
@@ -126,4 +129,11 @@ export function shouldIncludeNode(
     return false;
   }
   return true;
+}
+
+export function directiveTypeDefs(directive: GraphQLDirective): string {
+  const directiveSchema = new GraphQLSchema({
+    directives: [directive]
+  });
+  return printSchema(directiveSchema);
 }

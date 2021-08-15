@@ -1,9 +1,18 @@
 import { ApolloServer, gql } from 'apollo-server';
 import { buildFederatedSchema } from '@apollo/federation';
+import {
+  authZGraphQLDirective,
+  directiveTypeDefs
+} from '@astrumu/graphql-authz';
 
 import { posts } from '../../db';
+import { authZRules } from '../../rules';
+
+const directive = authZGraphQLDirective(authZRules);
+const authZDirectiveTypeDefs = directiveTypeDefs(directive);
 
 const typeDefs = gql`
+  ${authZDirectiveTypeDefs}
   extend type User @key(fields: "id") {
     id: ID! @external
     posts: [Post!]!
@@ -30,35 +39,6 @@ const typeDefs = gql`
   extend type Mutation {
     publishPost(postId: ID!): Post! @authz(rules: [CanPublishPost])
   }
-
-  enum AuthZRules {
-    IsAuthenticated
-    IsAdmin
-    CanReadPost
-    CanPublishPost
-  }
-
-  # this is a common boilerplate
-  input AuthZDirectiveCompositeRulesInput {
-    and: [AuthZRules]
-    or: [AuthZRules]
-    not: AuthZRules
-  }
-
-  # this is a common boilerplate
-  input AuthZDirectiveDeepCompositeRulesInput {
-    id: AuthZRules
-    and: [AuthZDirectiveDeepCompositeRulesInput]
-    or: [AuthZDirectiveDeepCompositeRulesInput]
-    not: AuthZDirectiveDeepCompositeRulesInput
-  }
-
-  # this is a common boilerplate
-  directive @authz(
-    rules: [AuthZRules]
-    compositeRules: [AuthZDirectiveCompositeRulesInput]
-    deepCompositeRules: [AuthZDirectiveDeepCompositeRulesInput]
-  ) on FIELD_DEFINITION | OBJECT | INTERFACE
 `;
 
 const resolvers = {

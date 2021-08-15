@@ -20,10 +20,10 @@ import {
   authZApolloPlugin,
   preExecRule,
   postExecRule,
-  IExtensionsDirectiveArguments
+  IAuthConfig
 } from '@astrumu/graphql-authz';
 
-function AuthZ(args: IExtensionsDirectiveArguments<typeof authZRules>) {
+function AuthZ(args: IAuthConfig<typeof authZRules>) {
   return Extensions({
     authz: {
       directives: [
@@ -117,6 +117,11 @@ class UserResolver {
   public users() {
     return users;
   }
+
+  @FieldResolver(() => [Post])
+  public posts(@Root() parent: { id: string }) {
+    return posts.filter(({ authorId }) => parent.id === authorId);
+  }
 }
 
 @Resolver(() => Post)
@@ -198,7 +203,7 @@ async function bootstrap() {
 
   const server = new ApolloServer({
     schema,
-    plugins: [authZApolloPlugin(authZRules)],
+    plugins: [authZApolloPlugin({ rules: authZRules })],
     context: ({ req }) => ({
       user: users.find(({ id }) => id === req.get('x-user-id')) || null
     }),

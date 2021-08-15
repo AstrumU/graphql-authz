@@ -121,6 +121,10 @@ const resolvers = {
   Post: {
     author: (parent: { authorId: string }) =>
       users.find(({ id }) => id === parent.authorId)
+  },
+  User: {
+    posts: (parent: { id: string }) =>
+      posts.filter(({ authorId }) => authorId === parent.id)
   }
 };
 
@@ -170,7 +174,7 @@ const authZRules = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [authZApolloPlugin(authZRules)],
+  plugins: [authZApolloPlugin({ rules: authZRules })],
   schemaDirectives: { authz: AuthZDirectiveVisitor },
   context: ({ req }) => ({
     user: users.find(({ id }) => id === req.get('x-user-id')) || null

@@ -23,7 +23,7 @@ import {
   AuthZDirectiveVisitor,
   preExecRule,
   postExecRule,
-  IExtensionsDirectiveArguments
+  IAuthConfig
 } from '@astrumu/graphql-authz';
 
 const users = [
@@ -101,7 +101,7 @@ const authZRules = {
   CanPublishPost
 } as const;
 
-function AuthZ(config: IExtensionsDirectiveArguments<typeof authZRules>) {
+function AuthZ(config: IAuthConfig<typeof authZRules>) {
   const args = (Object.keys(config) as Array<keyof typeof config>)
     .map(
       key => `${String(key)}: ${JSON.stringify(config[key]).replace(/"/g, '')}`
@@ -160,6 +160,11 @@ class UserResolver {
   public users() {
     return users;
   }
+
+  @ResolveField(() => [Post])
+  public posts(@Parent() parent: { id: string }) {
+    return posts.filter(({ id }) => id === parent.id);
+  }
 }
 
 @Resolver(() => Post)
@@ -198,7 +203,7 @@ class PostResolver {
       context: ({ req }) => ({
         user: users.find(({ id }) => id === req.get('x-user-id')) || null
       }),
-      plugins: [authZApolloPlugin(authZRules)],
+      plugins: [authZApolloPlugin({ rules: authZRules })],
       schemaDirectives: { authz: AuthZDirectiveVisitor },
       buildSchemaOptions: {
         directives: [authZGraphQLDirective(authZRules)]
