@@ -8,6 +8,7 @@ import {
   AuthZDirectiveVisitor
 } from '@astrumu/graphql-authz';
 
+// schema
 const typeDefs = gql`
   type User {
     id: ID!
@@ -39,6 +40,7 @@ const typeDefs = gql`
     publishPost(postId: ID!): Post! @authz(rules: [CanPublishPost])
   }
 
+  # authz rules enum
   enum AuthZRules {
     IsAuthenticated
     IsAdmin
@@ -69,6 +71,7 @@ const typeDefs = gql`
   ) on FIELD_DEFINITION | OBJECT | INTERFACE
 `;
 
+// data
 const users = [
   {
     id: '1',
@@ -101,6 +104,7 @@ const posts = [
   }
 ];
 
+// resolvers
 const resolvers = {
   Query: {
     users: () => users,
@@ -128,6 +132,7 @@ const resolvers = {
   }
 };
 
+// rules
 const IsAuthenticated = preExecRule({
   error: new UnauthorizedError('User is not authenticated')
 })((requestContext: GraphQLRequestContext) => !!requestContext.context.user);
@@ -174,7 +179,9 @@ const authZRules = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
+  // authz apollo plugin
   plugins: [authZApolloPlugin({ rules: authZRules })],
+  // authz directive visitor
   schemaDirectives: { authz: AuthZDirectiveVisitor },
   context: ({ req }) => ({
     user: users.find(({ id }) => id === req.get('x-user-id')) || null

@@ -23,6 +23,7 @@ import {
   IAuthConfig
 } from '@astrumu/graphql-authz';
 
+// AuthZ decorator that wraps Extensions decorator
 function AuthZ(args: IAuthConfig<typeof authZRules>) {
   return Extensions({
     authz: {
@@ -36,6 +37,7 @@ function AuthZ(args: IAuthConfig<typeof authZRules>) {
   });
 }
 
+// types
 @ObjectType()
 class User {
   @Field(() => ID)
@@ -78,6 +80,7 @@ class Post {
   public author!: User;
 }
 
+// data
 const users = [
   {
     id: '1',
@@ -110,6 +113,7 @@ const posts = [
   }
 ];
 
+// resolvers
 @Resolver(() => User)
 class UserResolver {
   @Query(() => [User])
@@ -153,6 +157,7 @@ class PostResolver {
   }
 }
 
+// authz rules
 const IsAuthenticated = preExecRule({
   error: new UnauthorizedError('User is not authenticated')
 })((requestContext: GraphQLRequestContext) => !!requestContext.context.user);
@@ -203,6 +208,7 @@ async function bootstrap() {
 
   const server = new ApolloServer({
     schema,
+    // authz apollo plugin
     plugins: [authZApolloPlugin({ rules: authZRules })],
     context: ({ req }) => ({
       user: users.find(({ id }) => id === req.get('x-user-id')) || null

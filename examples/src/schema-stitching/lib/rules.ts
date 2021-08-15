@@ -6,6 +6,7 @@ import {
   UnauthorizedError
 } from '@astrumu/graphql-authz';
 
+// authz rules
 const IsAuthenticated = preExecRule({
   error: new UnauthorizedError('User is not authenticated')
 })((requestContext: GraphQLRequestContext) => !!requestContext.context.user);
@@ -19,6 +20,7 @@ const IsAdmin = preExecRule({
     return false;
   }
 
+  // query executable schema from rules
   const graphQLResult = await graphql({
     schema: requestContext.schema,
     source: `query user { user(id: ${String(userId)}) { role } }`
@@ -51,6 +53,7 @@ const CanPublishPost = preExecRule()(
       return false;
     }
 
+    // query executable schema from rules
     const graphQLResult = await graphql({
       schema: requestContext.schema,
       source: `query post { post(id: ${fieldArgs.postId}) { author { id } } }`

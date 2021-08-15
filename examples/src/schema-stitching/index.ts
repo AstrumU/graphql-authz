@@ -21,6 +21,7 @@ async function makeGatewaySchema() {
   const postsExec = makeRemoteExecutor('http://localhost:4002/graphql');
 
   return stitchSchemas({
+    // authz directive visitor
     schemaDirectives: { authz: AuthZDirective },
     mergeDirectives: true,
     subschemaConfigTransforms: [stitchingDirectivesTransformer],
@@ -42,6 +43,7 @@ async function bootstrap() {
 
   const server = new ApolloServer({
     schema,
+    // authz apollo plugin
     plugins: [authZApolloPlugin({ rules: authZRules })],
     context: ({ req }) => {
       const userId = req.get('x-user-id');

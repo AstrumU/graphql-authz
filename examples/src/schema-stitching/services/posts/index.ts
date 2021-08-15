@@ -8,12 +8,14 @@ import {
 
 import { authZRules } from '../../lib/rules';
 
+// authz directive to print definitions to schema
 const directive = authZGraphQLDirective(authZRules);
 const authZDirectiveTypeDefs = directiveTypeDefs(directive);
 
 const { stitchingDirectivesTypeDefs, stitchingDirectivesValidator } =
   stitchingDirectives();
 
+// schema
 const typeDefs = gql`
   ${stitchingDirectivesTypeDefs}
   ${authZDirectiveTypeDefs}
@@ -48,6 +50,7 @@ const typeDefs = gql`
   }
 `;
 
+// data
 const posts = [
   {
     id: '1',
@@ -65,6 +68,7 @@ const posts = [
   }
 ];
 
+// resolvers
 const resolvers = {
   Query: {
     posts: () => posts,

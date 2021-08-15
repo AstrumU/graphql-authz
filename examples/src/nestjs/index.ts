@@ -26,6 +26,7 @@ import {
   IAuthConfig
 } from '@astrumu/graphql-authz';
 
+// data
 const users = [
   {
     id: '1',
@@ -58,6 +59,7 @@ const posts = [
   }
 ];
 
+// authz rules
 const IsAuthenticated = preExecRule({
   error: new UnauthorizedError('User is not authenticated')
 })((requestContext: GraphQLRequestContext) => !!requestContext.context.user);
@@ -101,6 +103,7 @@ const authZRules = {
   CanPublishPost
 } as const;
 
+// AuthZ decorator that wraps Directive decorator
 function AuthZ(config: IAuthConfig<typeof authZRules>) {
   const args = (Object.keys(config) as Array<keyof typeof config>)
     .map(
@@ -111,6 +114,7 @@ function AuthZ(config: IAuthConfig<typeof authZRules>) {
   return Directive(`@authz${directiveArgs}`);
 }
 
+// types
 @ObjectType()
 class User {
   @Field(() => ID)
@@ -153,6 +157,7 @@ class Post {
   public author!: User;
 }
 
+// resolvers
 @Resolver(() => User)
 class UserResolver {
   @Query(() => [User])
@@ -196,6 +201,7 @@ class PostResolver {
   }
 }
 
+// nestjs module
 @Module({
   imports: [
     GraphQLModule.forRoot({
@@ -203,9 +209,12 @@ class PostResolver {
       context: ({ req }) => ({
         user: users.find(({ id }) => id === req.get('x-user-id')) || null
       }),
+      // authz apollo plugin
       plugins: [authZApolloPlugin({ rules: authZRules })],
+      // authz directive visitor
       schemaDirectives: { authz: AuthZDirectiveVisitor },
       buildSchemaOptions: {
+        // GraphQL directive
         directives: [authZGraphQLDirective(authZRules)]
       }
     })
