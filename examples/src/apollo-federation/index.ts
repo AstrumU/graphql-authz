@@ -11,6 +11,7 @@ const gateway = new ApolloGateway({
   ]
 });
 
+// authz auth schema
 const authSchema = {
   Post: { __authz: { rules: ['CanReadPost'] } },
   User: {
@@ -28,6 +29,7 @@ function bootstrap() {
   const server = new ApolloServer({
     gateway,
     subscriptions: false,
+    // authz apollo plugin with auth schema provided
     plugins: [authZApolloPlugin({ rules: authZRules, authSchema })],
     context: ({ req }) => {
       const userId = req.get('x-user-id');

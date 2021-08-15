@@ -17,6 +17,7 @@ import {
 } from '@astrumu/graphql-authz';
 import { IAuthConfig } from '@astrumu/graphql-authz/';
 
+// data
 const users = [
   {
     id: '1',
@@ -49,6 +50,7 @@ const posts = [
   }
 ];
 
+// authz rules
 const IsAuthenticated = preExecRule({
   error: new UnauthorizedError('User is not authenticated')
 })((requestContext: GraphQLRequestContext) => !!requestContext.context.user);
@@ -92,6 +94,7 @@ const authZRules = {
   CanPublishPost
 } as const;
 
+// authz extension
 function createAuthZExtensions(args: IAuthConfig<typeof authZRules>) {
   return {
     authz: {
@@ -105,6 +108,7 @@ function createAuthZExtensions(args: IAuthConfig<typeof authZRules>) {
   };
 }
 
+// type definitions
 const Status = new GraphQLEnumType({
   name: 'Status',
   values: {
@@ -210,6 +214,7 @@ const schema = new GraphQLSchema({
 
 const server = new ApolloServer({
   schema,
+  // authz apollo plugin
   plugins: [authZApolloPlugin({ rules: authZRules })],
   context: ({ req }) => ({
     user: users.find(({ id }) => id === req.get('x-user-id')) || null

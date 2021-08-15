@@ -8,11 +8,14 @@ import {
 import { posts } from '../../db';
 import { authZRules } from '../../rules';
 
+// authz directive to print definitions to schema
 const directive = authZGraphQLDirective(authZRules);
 const authZDirectiveTypeDefs = directiveTypeDefs(directive);
 
+// schema
 const typeDefs = gql`
   ${authZDirectiveTypeDefs}
+
   extend type User @key(fields: "id") {
     id: ID! @external
     posts: [Post!]!
@@ -41,6 +44,7 @@ const typeDefs = gql`
   }
 `;
 
+// resolvers
 const resolvers = {
   Query: {
     posts: () => posts,

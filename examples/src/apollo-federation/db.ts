@@ -1,3 +1,4 @@
+// mock database
 export const users = [
   {
     id: '1',

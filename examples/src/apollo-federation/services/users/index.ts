@@ -8,9 +8,11 @@ import {
 import { users } from '../../db';
 import { authZRules } from '../../rules';
 
+// authz directive to print definitions to schema
 const directive = authZGraphQLDirective(authZRules);
 const authZDirectiveTypeDefs = directiveTypeDefs(directive);
 
+// schema
 const typeDefs = gql`
   ${authZDirectiveTypeDefs}
   type User @key(fields: "id") {
@@ -26,6 +28,7 @@ const typeDefs = gql`
   }
 `;
 
+// resolvers
 const resolvers = {
   Query: {
     users: () => users,
