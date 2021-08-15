@@ -1,4 +1,6 @@
-import { ApolloServerMock, mockServer } from '../mock-server';
+import { ApolloServer } from 'apollo-server';
+
+import { mockServer } from '../mock-server';
 import {
   inlineRules,
   rules,
@@ -276,9 +278,9 @@ describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
     ['functional', functionalRules]
   ])('%s', (name, rules) => {
     describe('Composite rules', () => {
-      let server: ApolloServerMock;
+      let server: ApolloServer;
 
-      beforeAll(async () => {
+      beforeAll(() => {
         server = mockServer({
           rules,
           rawSchema,
@@ -286,8 +288,6 @@ describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
           declarationMode,
           authSchema
         });
-
-        await server.willStart();
       });
 
       afterEach(() => {

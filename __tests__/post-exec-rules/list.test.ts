@@ -1,4 +1,5 @@
-import { ApolloServerMock, mockServer } from '../mock-server';
+import { ApolloServer } from 'apollo-server';
+import { mockServer } from '../mock-server';
 import { asyncRules } from './rules-async';
 
 const rawSchema = `
@@ -169,9 +170,9 @@ const authSchema = {
 
 describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
   describe('post execution rule with list result', () => {
-    let server: ApolloServerMock;
+    let server: ApolloServer;
 
-    beforeAll(async () => {
+    beforeAll(() => {
       server = mockServer({
         rules: asyncRules,
         rawSchema,
@@ -222,8 +223,6 @@ describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
           }
         }
       });
-
-      await server.willStart();
     });
 
     afterEach(() => {

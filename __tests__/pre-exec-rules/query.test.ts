@@ -1,6 +1,8 @@
+import { ApolloServer } from 'apollo-server';
+
 import { syncFunctionalRules, syncRules } from './rules-sync';
 import { asyncFunctionalRules, asyncRules } from './rules-async';
-import { ApolloServerMock, mockServer } from '../mock-server';
+import { mockServer } from '../mock-server';
 
 const rawSchema = `
 type Post {
@@ -72,9 +74,9 @@ describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
   ])('%s', (name, rules) => {
     describe('pre execution rule', () => {
       describe('on query', () => {
-        let server: ApolloServerMock;
+        let server: ApolloServer;
 
-        beforeAll(async () => {
+        beforeAll(() => {
           server = mockServer({
             rules,
             rawSchema,
@@ -82,8 +84,6 @@ describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
             declarationMode,
             authSchema
           });
-
-          await server.willStart();
         });
 
         afterEach(() => {

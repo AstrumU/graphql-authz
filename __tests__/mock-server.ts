@@ -1,20 +1,14 @@
-import { Config } from 'apollo-server';
-import { ApolloServerBase } from 'apollo-server-core';
+import { ApolloServer, Config } from 'apollo-server';
 import { GraphQLSchema, printSchema } from 'graphql';
+import { makeExecutableSchema } from '@graphql-tools/schema';
 
 import {
   authZApolloPlugin,
-  AuthZDirectiveVisitor,
   authZGraphQLDirective,
   RulesObject,
-  AuthSchema
+  AuthSchema,
+  authZDirective
 } from '../src';
-
-export class ApolloServerMock extends ApolloServerBase {
-  public async willStart(): Promise<void> {
-    return super.willStart();
-  }
-}
 
 export interface IMockServerParams {
   rules: RulesObject;
@@ -25,6 +19,8 @@ export interface IMockServerParams {
   apolloServerConfig?: Config;
 }
 
+const { authZDirectiveTransformer } = authZDirective();
+
 export function mockServer({
   rules,
   rawSchema,
@@ -32,7 +28,7 @@ export function mockServer({
   declarationMode,
   authSchema,
   apolloServerConfig = {}
-}: IMockServerParams): ApolloServerMock {
+}: IMockServerParams): ApolloServer {
   const directive = authZGraphQLDirective(rules);
   const directiveSchema = new GraphQLSchema({
     directives: [directive]
@@ -43,18 +39,27 @@ export function mockServer({
     const typeDefs = `${printSchema(directiveSchema)}
         ${rawSchema}`;
 
-    return new ApolloServerMock({
-      typeDefs,
+    const schema = makeExecutableSchema({
+      typeDefs
+    });
+
+    const transformedSchema = authZDirectiveTransformer(schema);
+
+    return new ApolloServer({
+      schema: transformedSchema,
       mocks: true,
       mockEntireSchema: true,
-      schemaDirectives: { authz: AuthZDirectiveVisitor },
       plugins: [plugin],
       ...apolloServerConfig
     });
   } else {
     const plugin = authZApolloPlugin({ rules, authSchema });
-    return new ApolloServerMock({
-      typeDefs: rawSchemaWithoutDirectives,
+    const schema = makeExecutableSchema({
+      typeDefs: rawSchemaWithoutDirectives
+    });
+
+    return new ApolloServer({
+      schema,
       mocks: true,
       mockEntireSchema: true,
       plugins: [plugin],
