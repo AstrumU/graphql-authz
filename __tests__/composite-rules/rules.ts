@@ -58,6 +58,10 @@ const failingAndRuleInline = `{
   and: [FailingPreExecRule, PassingPostExecRule]
 }`;
 
+const failingAndRuleInlineSchema = {
+  and: ['FailingPreExecRule', 'PassingPostExecRule']
+};
+
 class PassingAndRule extends AndRule {
   public getRules() {
     return [PassingPreExecRule, PassingPostExecRule];
@@ -72,6 +76,10 @@ const PassingAndRuleFunctional = and(
 const passingAndRuleInline = `{
   and: [PassingPreExecRule, PassingPostExecRule]
 }`;
+
+const passingAndRuleInlineSchema = {
+  and: ['PassingPreExecRule', 'PassingPostExecRule']
+};
 
 class FailingOrRule extends OrRule {
   public getRules() {
@@ -88,6 +96,10 @@ const failingOrRuleInline = `{
   or: [FailingPreExecRule, FailingPostExecRule]
 }`;
 
+const failingOrRuleInlineSchema = {
+  or: ['FailingPreExecRule', 'FailingPostExecRule']
+};
+
 class PassingOrRule extends OrRule {
   public getRules() {
     return [FailingPreExecRule, PassingPostExecRule];
@@ -103,6 +115,10 @@ const passingOrRuleInline = `{
   or: [FailingPreExecRule, PassingPostExecRule]
 }`;
 
+const passingOrRuleInlineSchema = {
+  or: ['FailingPreExecRule', 'PassingPostExecRule']
+};
+
 class FailingNotRule extends NotRule {
   public getRules() {
     return [PassingPreExecRule];
@@ -115,6 +131,10 @@ const failingNotRuleInline = `{
   not: PassingPreExecRule
 }`;
 
+const failingNotRuleInlineSchema = {
+  not: 'PassingPreExecRule'
+};
+
 class PassingNotRule extends NotRule {
   public getRules() {
     return [FailingPostExecRule];
@@ -126,6 +146,10 @@ const PassingNotRuleFunctional = not(FailingPostExecRuleFunctional);
 const passingNotRuleInline = `{
   not: FailingPostExecRule
 }`;
+
+const passingNotRuleInlineSchema = {
+  not: 'FailingPostExecRule'
+};
 
 class FailingDeepAndRule extends AndRule {
   public getRules() {
@@ -149,6 +173,17 @@ const failingDeepAndRuleInline = `{
   ]
 }`;
 
+const failingDeepAndRuleInlineSchema = {
+  and: [
+    {
+      and: [{ id: 'FailingPreExecRule' }, { id: 'PassingPostExecRule' }]
+    },
+    {
+      or: [{ id: 'FailingPreExecRule' }, { id: 'PassingPostExecRule' }]
+    }
+  ]
+};
+
 class PassingDeepAndRule extends AndRule {
   public getRules() {
     return [PassingOrRule, PassingAndRule];
@@ -170,6 +205,17 @@ const passingDeepAndRuleInline = `{
     }
   ]
 }`;
+
+const passingDeepAndRuleInlineSchema = {
+  and: [
+    {
+      or: [{ id: 'FailingPreExecRule' }, { id: 'PassingPostExecRule' }]
+    },
+    {
+      and: [{ id: 'PassingPreExecRule' }, { id: 'PassingPostExecRule' }]
+    }
+  ]
+};
 
 class FailingDeepOrRule extends OrRule {
   public getRules() {
@@ -193,6 +239,17 @@ const failingDeepOrRuleInline = `{
   ]
 }`;
 
+const failingDeepOrRuleInlineSchema = {
+  or: [
+    {
+      and: [{ id: 'FailingPreExecRule' }, { id: 'PassingPostExecRule' }]
+    },
+    {
+      or: [{ id: 'FailingPreExecRule' }, { id: 'FailingPostExecRule' }]
+    }
+  ]
+};
+
 class PassingDeepOrRule extends OrRule {
   public getRules() {
     return [PassingAndRule, FailingOrRule];
@@ -215,6 +272,17 @@ const passingDeepOrRuleInline = `{
   ]
 }`;
 
+const passingDeepOrRuleInlineSchema = {
+  or: [
+    {
+      and: [{ id: 'PassingPreExecRule' }, { id: 'PassingPostExecRule' }]
+    },
+    {
+      or: [{ id: 'FailingPreExecRule' }, { id: 'FailingPostExecRule' }]
+    }
+  ]
+};
+
 class FailingDeepNotRule extends NotRule {
   public getRules() {
     return [PassingDeepOrRule];
@@ -236,6 +304,15 @@ const failingDeepNotRuleInline = `{
     ]
   }
 }`;
+
+const failingDeepNotRuleInlineSchema = {
+  not: {
+    or: [
+      { and: [{ id: 'PassingPreExecRule' }, { id: 'PassingPostExecRule' }] },
+      { or: [{ id: 'FailingPreExecRule' }, { id: 'FailingPostExecRule' }] }
+    ]
+  }
+};
 
 class PassingDeepNotRule extends NotRule {
   public getRules() {
@@ -262,6 +339,19 @@ const passingDeepNotRuleInline = `{
     ]
   }
 }`;
+
+const passingDeepNotRuleInlineSchema = {
+  not: {
+    and: [
+      {
+        and: [{ id: 'FailingPreExecRule' }, { id: 'PassingPostExecRule' }]
+      },
+      {
+        or: [{ id: 'FailingPreExecRule' }, { id: 'PassingPostExecRule' }]
+      }
+    ]
+  }
+};
 
 export const rules = {
   FailingPreExecRule,
@@ -314,4 +404,19 @@ export const inlineRules = {
   passingDeepOrRuleInline,
   failingDeepNotRuleInline,
   passingDeepNotRuleInline
+};
+
+export const inlineSchemaRules = {
+  failingAndRuleInlineSchema,
+  passingAndRuleInlineSchema,
+  failingOrRuleInlineSchema,
+  passingOrRuleInlineSchema,
+  failingNotRuleInlineSchema,
+  passingNotRuleInlineSchema,
+  failingDeepAndRuleInlineSchema,
+  passingDeepAndRuleInlineSchema,
+  failingDeepOrRuleInlineSchema,
+  passingDeepOrRuleInlineSchema,
+  failingDeepNotRuleInlineSchema,
+  passingDeepNotRuleInlineSchema
 };

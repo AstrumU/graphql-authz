@@ -30,6 +30,8 @@ import {
   composeWithAndIfNeeded
 } from './rules-composer';
 import { IExtensionsDirective } from './authz-directive';
+import { AuthSchema } from './auth-schema';
+import { IAuthConfig } from './auth-config';
 
 export interface ICompiledRules {
   preExecutionRules: PreExecutionRule[];
@@ -40,16 +42,49 @@ export interface ICompiledRules {
   };
 }
 
-function getExecutableRulesByExtensions(
+interface ICompilerParams {
+  ast: DocumentNode;
+  schema: GraphQLSchema;
+  rules: RulesObject;
+  variables: Record<string, unknown>;
+  directiveName: string;
+  authSchemaKey: string;
+  authSchema?: AuthSchema;
+}
+
+function getConfigsByTypeAndAuthSchema(
+  typeName: string,
+  authSchema: AuthSchema,
+  authSchemaKey: string
+) {
+  const config = authSchema[typeName]?.[authSchemaKey];
+  return config ? [config] : [];
+}
+
+function getConfigsByFieldAndAuthSchema(
+  parentTypeName: string,
+  fieldName: string,
+  authSchema: AuthSchema,
+  authSchemaKey: string
+): IAuthConfig[] {
+  const fieldSchema = authSchema[parentTypeName]?.[fieldName];
+
+  const config =
+    fieldSchema &&
+    authSchemaKey in fieldSchema &&
+    (fieldSchema[authSchemaKey as keyof typeof fieldSchema] as IAuthConfig);
+
+  return config ? [config] : [];
+}
+
+function getConfigsByExtensions(
   extensions: (
     | GraphQLObjectType
     | GraphQLInterfaceType
     | GraphQLField<unknown, unknown>
   )['extensions'],
-  rules: RulesObject,
-  directiveName: string,
-  fieldArgs: Record<string, unknown>
-) {
+  directiveName: string
+): IAuthConfig[] {
   if (!extensions?.authz?.directives?.length) {
     return [];
   }
@@ -59,34 +94,48 @@ function getExecutableRulesByExtensions(
       (directive: IExtensionsDirective) => directive.name === directiveName
     );
 
-  return authZDirectives.flatMap(authZDirective => {
+  return authZDirectives.map(authZDirective => {
     if (!authZDirective.arguments) {
       throw new Error(`No arguments found in @${directiveName}`);
     }
 
-    const {
-      rules: rulesArgument,
-      compositeRules: compositeRulesArgument,
-      deepCompositeRules: deepCompositeRulesArgument
-    } = authZDirective.arguments;
+    const { rules, compositeRules, deepCompositeRules } =
+      authZDirective.arguments;
 
-    if (
-      !(rulesArgument || compositeRulesArgument || deepCompositeRulesArgument)
-    ) {
+    if (!(rules || compositeRules || deepCompositeRules)) {
       throw new Error(
         `@${directiveName} directive requires at least one of the following arguments to be provided: rules, compositeRules, deepCompositeRules`
       );
     }
 
-    const simpleRule = rulesArgument && composeSimpleRule(rules, rulesArgument);
+    return {
+      rules,
+      compositeRules,
+      deepCompositeRules
+    };
+  });
+}
+
+function getExecutableRulesByConfigs(
+  configs: IAuthConfig[],
+  rules: RulesObject,
+  fieldArgs: Record<string, unknown>
+) {
+  return configs.flatMap(config => {
+    const {
+      rules: rulesConfig,
+      compositeRules: compositeRulesConfig,
+      deepCompositeRules: deepCompositeRulesConfig
+    } = config;
+
+    const simpleRule = rulesConfig && composeSimpleRule(rules, rulesConfig);
 
     const compositeRule =
-      compositeRulesArgument &&
-      composeCompositeRule(rules, compositeRulesArgument);
+      compositeRulesConfig && composeCompositeRule(rules, compositeRulesConfig);
 
     const deepCompositeRule =
-      deepCompositeRulesArgument &&
-      composeDeepCompositeRule(rules, deepCompositeRulesArgument);
+      deepCompositeRulesConfig &&
+      composeDeepCompositeRule(rules, deepCompositeRulesConfig);
 
     const ruleClasses = [simpleRule, compositeRule, deepCompositeRule].filter(
       (item): item is Exclude<typeof item, undefined> => !!item
@@ -98,13 +147,15 @@ function getExecutableRulesByExtensions(
   });
 }
 
-export function compileRules(
-  ast: DocumentNode,
-  schema: GraphQLSchema,
-  rules: RulesObject,
-  variables: Record<string, unknown>,
-  directiveName: string
-): ICompiledRules {
+export function compileRules({
+  ast,
+  schema,
+  rules,
+  variables,
+  directiveName,
+  authSchemaKey,
+  authSchema
+}: ICompilerParams): ICompiledRules {
   const compiledRules: ICompiledRules = {
     preExecutionRules: [],
     postExecutionRules: {
@@ -126,12 +177,21 @@ export function compileRules(
 
       if (type) {
         const deepType = getDeepType(type);
-        const executableRules = getExecutableRulesByExtensions(
+        const extensionsConfigs = getConfigsByExtensions(
           deepType.extensions,
-          rules,
-          directiveName,
-          {}
+          directiveName
         );
+        const authSchemaConfigs = authSchema
+          ? getConfigsByTypeAndAuthSchema(
+              deepType.name,
+              authSchema,
+              authSchemaKey
+            )
+          : [];
+
+        const configs = [...extensionsConfigs, ...authSchemaConfigs];
+
+        const executableRules = getExecutableRulesByConfigs(configs, rules, {});
 
         const rulesByType = compiledRules.postExecutionRules.byType;
         const typeName = deepType.name;
@@ -147,19 +207,35 @@ export function compileRules(
       }
 
       if (parentType && !isUnionType(parentType)) {
+        const parentTypeName = parentType.name;
         const graphqlField = parentType.getFields()[node.name.value];
 
         const fieldArgs = getArgumentValues(graphqlField, node, variables);
-        const executableRules = getExecutableRulesByExtensions(
+
+        const extensionsConfigs = getConfigsByExtensions(
           graphqlField.extensions,
+          directiveName
+        );
+
+        const authSchemaConfigs = authSchema
+          ? getConfigsByFieldAndAuthSchema(
+              parentTypeName,
+              graphqlField.name,
+              authSchema,
+              authSchemaKey
+            )
+          : [];
+
+        const configs = [...extensionsConfigs, ...authSchemaConfigs];
+
+        const executableRules = getExecutableRulesByConfigs(
+          configs,
           rules,
-          directiveName,
           fieldArgs
         );
 
         const fieldName = getNodeAliasOrName(node);
         const rulesByField = compiledRules.postExecutionRules.byField;
-        const parentTypeName = parentType.name;
 
         executableRules.forEach(rule => {
           if (rule instanceof PreExecutionRule) {
