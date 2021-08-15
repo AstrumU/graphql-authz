@@ -13,7 +13,8 @@
     "start:apollo-server-code-first": "node dist/apollo-server-code-first/index.js",
     "start:nestjs": "node dist/nestjs/index.js",
     "start:type-graphql": "node dist/type-graphql/index.js",
-    "start:schema-stitching": "node dist/schema-stitching/index.js & node dist/schema-stitching/services/users/index.js & node dist/schema-stitching/services/posts/index.js"
+    "start:schema-stitching": "node dist/schema-stitching/index.js & node dist/schema-stitching/services/users/index.js & node dist/schema-stitching/services/posts/index.js",
+    "start:apollo-federation": "node dist/apollo-federation/index.js & node dist/apollo-federation/services/users/index.js & node dist/apollo-federation/services/posts/index.js"
   },
   "author": "",
   "license": "MIT",
@@ -26,6 +27,8 @@
     "apollo-server-plugin-base": "0.9.1"
   },
   "devDependencies": {
+    "@apollo/federation": "0.28.0",
+    "@apollo/gateway": "0.37.0",
     "@graphql-tools/stitch": "7.5.3",
     "@graphql-tools/stitching-directives": "1.3.3",
     "@nestjs/common": "7.6.5",
