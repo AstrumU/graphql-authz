@@ -1,0 +1,37 @@
+{
+  "name": "@graphql-authz/envelop-plugin",
+  "version": "1.0.0",
+  "description": "Envelop plugin for graphql-authz",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "author": "Dmitry Til <till.dima@gmail.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AstrumU/graphql-authz.git"
+  },
+  "keywords": [
+    "typescript",
+    "graphql",
+    "schema",
+    "directives",
+    "authorization",
+    "authz",
+    "apollo"
+  ],
+  "dependencies": {
+    "@graphql-authz/core": "1.0.0"
+  },
+  "devDependencies": {
+    "@envelop/core": "1.0.3"
+  },
+  "peerDependencies": {
+    "@envelop/core": "^1.0.3"
+  }
+}

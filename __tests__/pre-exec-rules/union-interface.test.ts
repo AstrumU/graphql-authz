@@ -1,4 +1,4 @@
-import { PreExecutionRule } from '../../src';
+import { PreExecutionRule } from '@graphql-authz/core';
 import { ApolloServerMock, mockServer } from '../mock-server';
 
 class Rule1 extends PreExecutionRule {
@@ -126,53 +126,62 @@ function __resolveType(obj: Record<string, unknown>) {
   return null;
 }
 
-describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
-  describe('pre execution rule', () => {
-    let server: ApolloServerMock;
+describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
+  '%s',
+  integrationMode => {
+    describe.each(['directive', 'authSchema'] as const)(
+      '%s',
+      declarationMode => {
+        describe('pre execution rule', () => {
+          let server: ApolloServerMock;
 
-    beforeAll(async () => {
-      server = mockServer({
-        rules,
-        rawSchema,
-        rawSchemaWithoutDirectives,
-        declarationMode,
-        authSchema,
-        apolloServerConfig: {
-          resolvers: {
-            TestUnion: {
-              __resolveType
-            },
-            TestInterface: {
-              __resolveType
-            }
-          }
-        }
-      });
+          beforeAll(async () => {
+            server = mockServer({
+              integrationMode,
+              rules,
+              rawSchema,
+              rawSchemaWithoutDirectives,
+              declarationMode,
+              authSchema,
+              apolloServerConfig: {
+                resolvers: {
+                  TestUnion: {
+                    __resolveType
+                  },
+                  TestInterface: {
+                    __resolveType
+                  }
+                }
+              }
+            });
 
-      await server.willStart();
-    });
+            await server.willStart();
+          });
 
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
+          afterEach(() => {
+            jest.clearAllMocks();
+          });
 
-    it('should handle interfaces', async () => {
-      await server.executeOperation({
-        query: testInterfaceQuery
-      });
+          it('should handle interfaces', async () => {
+            await server.executeOperation({
+              query: testInterfaceQuery
+            });
 
-      expect(Rule1.prototype.execute).toBeCalledTimes(1);
-      expect(Rule2.prototype.execute).toBeCalledTimes(1);
-      expect(Rule3.prototype.execute).toBeCalledTimes(1);
-    });
+            expect(Rule1.prototype.execute).toBeCalledTimes(1);
+            expect(Rule2.prototype.execute).toBeCalledTimes(1);
+            expect(Rule3.prototype.execute).toBeCalledTimes(1);
+          });
 
-    it('should handle unions', async () => {
-      await server.executeOperation({
-        query: testUnionQuery
-      });
+          it('should handle unions', async () => {
+            await server.executeOperation({
+              query: testUnionQuery
+            });
 
-      expect(Rule2.prototype.execute).toBeCalledTimes(1);
-      expect(Rule3.prototype.execute).toBeCalledTimes(1);
-    });
-  });
-});
+            expect(Rule2.prototype.execute).toBeCalledTimes(1);
+            expect(Rule3.prototype.execute).toBeCalledTimes(1);
+          });
+        });
+      }
+    );
+  }
+);

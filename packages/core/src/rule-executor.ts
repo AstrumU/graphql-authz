@@ -1,10 +1,18 @@
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
-import { getNullableType, TypeInfo } from 'graphql';
+import {
+  DocumentNode,
+  FragmentDefinitionNode,
+  getNullableType,
+  TypeInfo,
+  visitWithTypeInfo,
+  visit,
+  GraphQLSchema
+} from 'graphql';
 
 import { getDeepType } from './graphql-utils';
 import { ResultInfo } from './result-info';
 import { PostExecutionRule } from './rules';
 import { ICompiledRules } from './rules-compiler';
+import { visitWithResultInfo } from './visit-with-result-info';
 
 type PostExecRuleExecutor = (
   resultInfo: ResultInfo,
@@ -14,11 +22,11 @@ type PostExecRuleExecutor = (
 function executePostExecRule(
   rule: PostExecutionRule,
   rules: ICompiledRules,
-  requestContext: GraphQLRequestContext,
+  context: unknown,
   resultInfo: ResultInfo
 ) {
   const result = rule.execute(
-    requestContext,
+    context,
     rule.config.fieldArgs,
     resultInfo.getValue(),
     resultInfo.getParentValue(),
@@ -30,10 +38,10 @@ function executePostExecRule(
   }
 }
 
-function executePostExecRules(
+function executePostExecRulesForType(
   resultInfo: ResultInfo,
   typeInfo: TypeInfo,
-  requestContext: GraphQLRequestContext,
+  context: unknown,
   rules: ICompiledRules
 ) {
   const type = typeInfo.getType();
@@ -53,24 +61,62 @@ function executePostExecRules(
 
   if (typeName && typeName in rulesByType) {
     rulesByType[typeName].forEach(rule =>
-      executePostExecRule(rule, rules, requestContext, resultInfo)
+      executePostExecRule(rule, rules, context, resultInfo)
     );
   }
 
   if (parentTypeName && parentTypeName in rulesByField) {
     if (key && key in rulesByField[parentTypeName]) {
       rulesByField[parentTypeName][key].forEach(rule =>
-        executePostExecRule(rule, rules, requestContext, resultInfo)
+        executePostExecRule(rule, rules, context, resultInfo)
       );
     }
   }
 }
 
-export function getPostExecRulesExecutor(
-  requestContext: GraphQLRequestContext,
+function getPostExecRulesExecutor(
+  context: unknown,
   rules: ICompiledRules
 ): PostExecRuleExecutor {
   return function (resultInfo: ResultInfo, typeInfo: TypeInfo) {
-    return executePostExecRules(resultInfo, typeInfo, requestContext, rules);
+    return executePostExecRulesForType(resultInfo, typeInfo, context, rules);
   };
+}
+
+interface IExecutePostExecRulesParams {
+  context: unknown;
+  schema: GraphQLSchema;
+  resultData: unknown;
+  document: DocumentNode;
+  rules: ICompiledRules;
+  fragmentDefinitions: FragmentDefinitionNode[];
+  variables: Record<string, unknown>;
+}
+
+export function executePostExecRules({
+  context,
+  schema,
+  resultData,
+  document,
+  rules,
+  fragmentDefinitions,
+  variables
+}: IExecutePostExecRulesParams): Promise<boolean | void>[] {
+  if (!resultData) {
+    return [];
+  }
+  const typeInfo = new TypeInfo(schema);
+  const resultInfo = new ResultInfo(resultData);
+  const typeInfoVisitor = visitWithTypeInfo(
+    typeInfo,
+    visitWithResultInfo(
+      resultInfo,
+      typeInfo,
+      fragmentDefinitions,
+      variables,
+      getPostExecRulesExecutor(context, rules)
+    )
+  );
+  visit(document, typeInfoVisitor);
+  return rules.postExecutionRules.executionPromises;
 }

@@ -2,7 +2,6 @@ src
 test
 tsconfig.json
 tsconfig.module.json
-.travis.yml
 .github
 .prettierignore
 .vscode

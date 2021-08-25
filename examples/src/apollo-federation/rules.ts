@@ -1,20 +1,25 @@
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
 import {
   postExecRule,
   preExecRule,
   UnauthorizedError
-} from '@astrumu/graphql-authz';
+} from '@graphql-authz/core';
 
 import { posts, users } from './db';
 
+interface IContext {
+  user?: {
+    id: string;
+  };
+}
+
 const IsAuthenticated = preExecRule({
   error: new UnauthorizedError('User is not authenticated')
-})((requestContext: GraphQLRequestContext) => !!requestContext.context.user);
+})((context: IContext) => !!context.user);
 
 const IsAdmin = preExecRule({
   error: new UnauthorizedError('User is not admin')
-})(async (requestContext: GraphQLRequestContext) => {
-  const { id: userId } = requestContext.context.user;
+})(async (context: IContext) => {
+  const userId = context.user?.id;
 
   if (!userId) {
     return false;
@@ -30,20 +35,15 @@ const CanReadPost = postExecRule({
   selectionSet: '{ status author { id } }'
 })(
   (
-    requestContext: GraphQLRequestContext,
+    context: IContext,
     fieldArgs: unknown,
     post: { status: string; author: { id: string } }
-  ) =>
-    post.status === 'public' ||
-    requestContext.context.user?.id === post.author.id
+  ) => post.status === 'public' || context.user?.id === post.author.id
 );
 
 const CanPublishPost = preExecRule()(
-  async (
-    requestContext: GraphQLRequestContext,
-    fieldArgs: { postId: string }
-  ) => {
-    const userId = requestContext.context.user?.id;
+  async (context: IContext, fieldArgs: { postId: string }) => {
+    const userId = context.user?.id;
 
     if (!userId) {
       return false;

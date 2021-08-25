@@ -12,15 +12,11 @@ import {
   InlineFragmentNode,
   isListType,
   Kind,
-  parse,
-  DefinitionNode,
-  Location,
   isLeafType,
   GraphQLSchema,
   GraphQLDirective,
   printSchema
 } from 'graphql';
-import { Maybe } from 'graphql/jsutils/Maybe';
 
 type WrappedType = GraphQLList<any> | GraphQLNonNull<any>; // eslint-disable-line
 type DeepType = Exclude<GraphQLType, WrappedType>;
@@ -30,7 +26,7 @@ export function isWrappedType(type: GraphQLType): type is WrappedType {
 }
 
 export function getListTypeDepth(
-  type: Maybe<GraphQLType>,
+  type: GraphQLType | null | undefined,
   initialDepth = 0
 ): number {
   let depth = initialDepth;
@@ -65,31 +61,26 @@ export function getNodeAliasOrName(node: FieldNode): string {
   return (node.alias?.kind === 'Name' && node.alias.value) || node.name.value;
 }
 
-export function getFilteredAst(
-  query: string,
-  operationName?: string
-): {
-  definitions: readonly DefinitionNode[];
-  kind: 'Document';
-  loc?: Location | undefined;
-} {
-  const ast = parse(query);
+export function getFilteredDocument(
+  document: DocumentNode,
+  operationName?: string | null
+): DocumentNode {
   // by default, definitions contains all queries, mutations, fragments of the document
   // TODO: throw Error if there are no definitions matched with operationName?
   // there can be anonymous definitions without name
   // introspection query from graphql-codegen has no operationName at all
   const filteredDefinitions = operationName
-    ? ast.definitions.filter(
+    ? document.definitions.filter(
         definition =>
           definition.kind !== 'OperationDefinition' ||
           ('name' in definition && definition.name?.value === operationName)
       )
-    : ast.definitions;
-  const filteredAst = {
-    ...ast,
+    : document.definitions;
+  const filteredDocument = {
+    ...document,
     definitions: filteredDefinitions
   };
-  return filteredAst;
+  return filteredDocument;
 }
 
 export function getFragmentDefinitions(
@@ -103,7 +94,7 @@ export function getFragmentDefinitions(
 
 /**
  * // TODO: create an issue for exporting this function
- * Copied from graphql-js. They should export this function for plugin writers
+ * Copied from graphql-js.
  * Determines if a field should be included based on the @include and @skip
  * directives, where @skip has higher precedence than @include.
  */

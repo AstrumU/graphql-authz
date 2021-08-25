@@ -4,10 +4,15 @@ import {
   print,
   TypeInfo,
   Kind,
-  parse
+  parse,
+  DocumentNode,
+  GraphQLSchema,
+  visitWithTypeInfo,
+  FieldNode,
+  visit
 } from 'graphql';
 
-import { getNodeAliasOrName } from './graphql-utils';
+import { getNodeAliasOrName, shouldIncludeNode } from './graphql-utils';
 import { PostExecutionRule } from './rules';
 import { ICompiledRules } from './rules-compiler';
 
@@ -129,7 +134,7 @@ function extractSelectionSets(rules: Record<string, PostExecutionRule[]>) {
   );
 }
 
-export function getVisitor(
+function getVisitor(
   typeInfo: TypeInfo,
   rules: ICompiledRules
 ): (node: SelectionSetNode) => void | SelectionSetNode {
@@ -157,4 +162,25 @@ export function getVisitor(
       selectionSetsByField
     );
   };
+}
+
+export function addSelectionSetsToDocument(
+  document: DocumentNode,
+  rules: ICompiledRules,
+  schema: GraphQLSchema,
+  variables: Record<string, unknown>
+): DocumentNode {
+  const typeInfo = new TypeInfo(schema);
+  const typeInfoVisitor = visitWithTypeInfo(typeInfo, {
+    SelectionSet: getVisitor(typeInfo, rules),
+    Field(node: FieldNode) {
+      if (!shouldIncludeNode({ variableValues: variables }, node)) {
+        return false;
+      }
+      return undefined;
+    }
+  });
+
+  const visited = visit(document, typeInfoVisitor);
+  return visited;
 }

@@ -1,4 +1,4 @@
-import { preExecRule, PreExecutionRule } from '../../src';
+import { preExecRule, PreExecutionRule } from '@graphql-authz/core';
 
 class FailingPreExecRule extends PreExecutionRule {
   public execute() {

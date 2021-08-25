@@ -1,4 +1,4 @@
-import { postExecRule, PostExecutionRule } from '../../src';
+import { postExecRule, PostExecutionRule } from '@graphql-authz/core';
 
 class FailingPostExecRule extends PostExecutionRule {
   public async execute() {

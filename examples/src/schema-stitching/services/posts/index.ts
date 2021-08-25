@@ -1,10 +1,8 @@
 import { ApolloServer, gql } from 'apollo-server';
 import { stitchingDirectives } from '@graphql-tools/stitching-directives';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import {
-  authZGraphQLDirective,
-  directiveTypeDefs
-} from '@astrumu/graphql-authz';
+import { directiveTypeDefs } from '@graphql-authz/core';
+import { authZGraphQLDirective } from '@graphql-authz/directive';
 
 import { authZRules } from '../../lib/rules';
 
@@ -12,8 +10,7 @@ import { authZRules } from '../../lib/rules';
 const directive = authZGraphQLDirective(authZRules);
 const authZDirectiveTypeDefs = directiveTypeDefs(directive);
 
-const { stitchingDirectivesTypeDefs, stitchingDirectivesValidator } =
-  stitchingDirectives();
+const { stitchingDirectivesTypeDefs } = stitchingDirectives();
 
 // schema
 const typeDefs = gql`
@@ -99,7 +96,6 @@ const resolvers = {
 };
 
 const schema = makeExecutableSchema({
-  schemaTransforms: [stitchingDirectivesValidator],
   typeDefs,
   resolvers
 });

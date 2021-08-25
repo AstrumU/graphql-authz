@@ -1,20 +1,10 @@
 import { ApolloServer, gql } from 'apollo-server';
 import { buildFederatedSchema } from '@apollo/federation';
-import {
-  authZGraphQLDirective,
-  directiveTypeDefs
-} from '@astrumu/graphql-authz';
 
 import { users } from '../../db';
-import { authZRules } from '../../rules';
-
-// authz directive to print definitions to schema
-const directive = authZGraphQLDirective(authZRules);
-const authZDirectiveTypeDefs = directiveTypeDefs(directive);
 
 // schema
 const typeDefs = gql`
-  ${authZDirectiveTypeDefs}
   type User @key(fields: "id") {
     id: ID!
     username: String!

@@ -1,5 +1,3 @@
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
-
 export enum RuleType {
   preExec = 'preExec',
   postExec = 'postExec',
@@ -47,7 +45,7 @@ export abstract class Rule {
 
 export abstract class ExecutableRule extends Rule {
   abstract execute(
-    requestContext: GraphQLRequestContext,
+    context: unknown,
     fieldArgs: Record<string, unknown>,
     ...args: unknown[]
   ): void | Promise<void> | boolean | Promise<boolean>;
@@ -115,7 +113,7 @@ export abstract class CompositeRule extends Rule {
 
 export abstract class PreExecutionRule extends ExecutableRule {
   abstract execute(
-    requestContext: GraphQLRequestContext,
+    context: unknown,
     fieldArgs: Record<string, unknown>
   ): void | Promise<void> | boolean | Promise<boolean>;
 
@@ -124,7 +122,7 @@ export abstract class PreExecutionRule extends ExecutableRule {
 
 export abstract class PostExecutionRule extends ExecutableRule {
   abstract execute(
-    requestContext: GraphQLRequestContext,
+    context: unknown,
     fieldArgs: Record<string, unknown>,
     value: unknown,
     parentValue: unknown,

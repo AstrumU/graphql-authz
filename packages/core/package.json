@@ -1,0 +1,34 @@
+{
+  "name": "@graphql-authz/core",
+  "version": "1.0.0",
+  "description": "GraphQL authorization layer core",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "author": "Dmitry Til <till.dima@gmail.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AstrumU/graphql-authz.git"
+  },
+  "keywords": [
+    "typescript",
+    "graphql",
+    "schema",
+    "directives",
+    "authorization",
+    "authz",
+    "apollo"
+  ],
+  "devDependencies": {
+    "graphql": "^15.5.1"
+  },
+  "peerDependencies": {
+    "graphql": "^14.0.0 || ^15.0.0"
+  }
+}

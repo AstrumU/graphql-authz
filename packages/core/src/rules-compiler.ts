@@ -29,9 +29,15 @@ import {
   composeSimpleRule,
   composeWithAndIfNeeded
 } from './rules-composer';
-import { IExtensionsDirective } from './authz-directive';
 import { AuthSchema } from './auth-schema';
 import { IAuthConfig } from './auth-config';
+
+export interface IExtensionsDirective<
+  TRules extends RulesObject = RulesObject
+> {
+  name: string;
+  arguments: IAuthConfig<TRules>;
+}
 
 export interface ICompiledRules {
   preExecutionRules: PreExecutionRule[];
@@ -43,7 +49,7 @@ export interface ICompiledRules {
 }
 
 interface ICompilerParams {
-  ast: DocumentNode;
+  document: DocumentNode;
   schema: GraphQLSchema;
   rules: RulesObject;
   variables: Record<string, unknown>;
@@ -148,7 +154,7 @@ function getExecutableRulesByConfigs(
 }
 
 export function compileRules({
-  ast,
+  document,
   schema,
   rules,
   variables,
@@ -253,7 +259,7 @@ export function compileRules({
     }
   });
 
-  visit(ast, typeInfoVisitor);
+  visit(document, typeInfoVisitor);
 
   return compiledRules;
 }

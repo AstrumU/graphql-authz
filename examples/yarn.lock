@@ -162,9 +162,6 @@
   dependencies:
     tslib "~2.0.1"
 
-"@astrumu/graphql-authz@file:../dist":
-  version "0.0.0"
-
 "@babel/code-frame@^7.0.0", "@babel/code-frame@^7.12.13":
   version "7.12.13"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.13.tgz#dcfc826beef65e75c50e21d3837d7d95798dd658"
@@ -466,6 +463,18 @@
   dependencies:
     is-absolute "^1.0.0"
     is-negated-glob "^1.0.0"
+
+"@envelop/core@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@envelop/core/-/core-1.0.3.tgz#80effebd5f41faff229b9b34dbe0d6b13beed4f2"
+  integrity sha512-lJ4/NEk8h2oe7cnTY8FXRHOiYdWnXyfUJwfN2trJNZksllwUxaabD1KK/Y/MH8brtQ2NbOR3YGUtiurRbrFzzQ==
+  dependencies:
+    "@envelop/types" "1.0.2"
+
+"@envelop/types@1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@envelop/types/-/types-1.0.2.tgz#c0eb58929209aa3c6563921a9fc58f63448c02fc"
+  integrity sha512-uL1Nn0aiDN72nEPvhJixH0DoCGxkPPW6/HZcl9lwnaVld1TDQhs72TVuX3vTsZQIvk2s62T5XsvrcdIbMkKfJw==
 
 "@graphql-tools/batch-delegate@^7.0.0":
   version "7.0.2"
@@ -1811,7 +1820,7 @@ apollo-server-core@^2.15.1, apollo-server-core@^2.22.2:
     sha.js "^2.4.11"
     uuid "^8.0.0"
 
-apollo-server-core@^2.25.2:
+apollo-server-core@^2.25.0, apollo-server-core@^2.25.2:
   version "2.25.2"
   resolved "https://registry.yarnpkg.com/apollo-server-core/-/apollo-server-core-2.25.2.tgz#ff65da5e512d9b5ca54c8e5e8c78ee28b5987247"
   integrity sha512-lrohEjde2TmmDTO7FlOs8x5QQbAS0Sd3/t0TaK2TWaodfzi92QAvIsq321Mol6p6oEqmjm8POIDHW1EuJd7XMA==
@@ -1888,7 +1897,7 @@ apollo-server-errors@^2.5.0:
   resolved "https://registry.yarnpkg.com/apollo-server-errors/-/apollo-server-errors-3.0.1.tgz#0dfcc1fe8b10eab311fc7e4f6da93189ea6bcdae"
   integrity sha512-PSp64IFeN1YK5EYZ3V/8iDRESMMyE00h1vE5aCr83wHL3T0mN7VRiMKoOIZ+2rUtnn7CpK73o6QLmouhxPtXsQ==
 
-apollo-server-express@^2.22.2:
+apollo-server-express@^2.25.0:
   version "2.25.2"
   resolved "https://registry.yarnpkg.com/apollo-server-express/-/apollo-server-express-2.25.2.tgz#58cd819694ff4c2dec6945a95c5dff6aa2719ef6"
   integrity sha512-A2gF2e85vvDugPlajbhr0A14cDFDIGX0mteNOJ8P3Z3cIM0D4hwrWxJidI+SzobefDIyIHu1dynFedJVhV0euQ==
@@ -1998,13 +2007,13 @@ apollo-server-types@^0.9.0:
     apollo-server-caching "^3.0.1"
     apollo-server-env "^4.0.3"
 
-apollo-server@2.22.2:
-  version "2.22.2"
-  resolved "https://registry.yarnpkg.com/apollo-server/-/apollo-server-2.22.2.tgz#77b1bfc8bc2f3b7468049dbe8c5b091460ba4ed5"
-  integrity sha512-Lt+7FxqweSMg2cn5HXksEhdZj1lOojJ+5RMNKys0hkKp9xP/qwHW7+NrFTcItRstHPz27filleAHjoziaWdpiA==
+apollo-server@2.25.0:
+  version "2.25.0"
+  resolved "https://registry.yarnpkg.com/apollo-server/-/apollo-server-2.25.0.tgz#2b76dca152b82f978ae2f634103164a8ac13df65"
+  integrity sha512-cIXrEWzYWH2y4P4HrfTS0ql6UfJuPO1czb5u9Ch8bLPcWcL1lC84ZbsHzQHNNMLkNApSCAgoS3GZja7dF111Hw==
   dependencies:
-    apollo-server-core "^2.22.2"
-    apollo-server-express "^2.22.2"
+    apollo-server-core "^2.25.0"
+    apollo-server-express "^2.25.0"
     express "^4.0.0"
     graphql-subscriptions "^1.0.0"
     graphql-tools "^4.0.8"

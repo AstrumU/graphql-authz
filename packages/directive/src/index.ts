@@ -1,27 +1,18 @@
+import { mapSchema, MapperKind, getDirective } from '@graphql-tools/utils';
+import { RulesObject } from '@graphql-authz/core';
 import {
   DirectiveLocation,
   GraphQLDirective,
   GraphQLEnumType,
   GraphQLEnumValueConfigMap,
-  GraphQLField,
+  GraphQLFieldConfig,
   GraphQLInputObjectType,
   GraphQLInterfaceType,
   GraphQLList,
-  GraphQLObjectType
+  GraphQLObjectType,
+  GraphQLSchema
 } from 'graphql';
-import { SchemaDirectiveVisitor } from 'apollo-server';
 
-import { RulesObject } from './rules';
-import { IAuthConfig } from './auth-config';
-
-export interface IExtensionsDirective<
-  TRules extends RulesObject = RulesObject
-> {
-  name: string;
-  arguments: IAuthConfig<TRules>;
-}
-
-// TODO: implement directive validation
 export function authZGraphQLDirective(
   rules: RulesObject,
   directiveName = 'authz'
@@ -72,44 +63,54 @@ export function authZGraphQLDirective(
   });
 }
 
-export class AuthZDirectiveVisitor extends SchemaDirectiveVisitor {
-  private addAuthZExtensionsDirective(
-    schemaItem:
-      | GraphQLField<unknown, unknown>
-      | GraphQLObjectType
-      | GraphQLInterfaceType,
-    authZExtensionsDirective: IExtensionsDirective
-  ): void {
+type SchemaItem =
+  | GraphQLFieldConfig<unknown, unknown>
+  | GraphQLObjectType
+  | GraphQLInterfaceType;
+
+export function authZDirective(directiveName = 'authz'): {
+  authZDirectiveTransformer: (schema: GraphQLSchema) => GraphQLSchema;
+} {
+  function addAuthZExtensionsDirective<T extends SchemaItem>(
+    schema: GraphQLSchema,
+    schemaItem: T
+  ): T | undefined {
+    const authZDirectiveArgs = getDirective(
+      schema,
+      schemaItem,
+      directiveName
+    )?.[0];
+
+    if (!authZDirectiveArgs) {
+      return undefined;
+    }
+
     schemaItem.extensions = {
       ...schemaItem.extensions,
       authz: {
         ...schemaItem.extensions?.authz,
         directives: [
           ...(schemaItem.extensions?.authz?.directives || []),
-          authZExtensionsDirective
+          {
+            name: directiveName,
+            arguments: authZDirectiveArgs
+          }
         ]
       }
     };
+    return schemaItem;
   }
-
-  public visitFieldDefinition(field: GraphQLField<unknown, unknown>): void {
-    this.addAuthZExtensionsDirective(field, {
-      name: this.name,
-      arguments: this.args
-    });
-  }
-
-  public visitObject(object: GraphQLObjectType): void {
-    this.addAuthZExtensionsDirective(object, {
-      name: this.name,
-      arguments: this.args
-    });
-  }
-
-  public visitInterface(iface: GraphQLInterfaceType): void {
-    this.addAuthZExtensionsDirective(iface, {
-      name: this.name,
-      arguments: this.args
-    });
-  }
+  return {
+    authZDirectiveTransformer: schema =>
+      mapSchema(schema, {
+        [MapperKind.INTERFACE_FIELD]: fieldConfig =>
+          addAuthZExtensionsDirective(schema, fieldConfig),
+        [MapperKind.OBJECT_FIELD]: fieldConfig =>
+          addAuthZExtensionsDirective(schema, fieldConfig),
+        [MapperKind.OBJECT_TYPE]: type =>
+          addAuthZExtensionsDirective(schema, type),
+        [MapperKind.INTERFACE_TYPE]: type =>
+          addAuthZExtensionsDirective(schema, type)
+      })
+  };
 }
