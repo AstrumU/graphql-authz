@@ -84,79 +84,96 @@ const authSchema = {
   }
 };
 
-describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
-  describe.each([
-    ['sync', syncRules],
-    ['async', asyncRules],
-    ['sync functional', syncFunctionalRules],
-    ['async functional', asyncFunctionalRules]
-  ])('%s', (name, rules) => {
-    describe('pre execution rule', () => {
-      describe('on object', () => {
-        let server: ApolloServerMock;
+describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
+  '%s',
+  integrationMode => {
+    describe.each(['directive', 'authSchema'] as const)(
+      '%s',
+      declarationMode => {
+        describe.each([
+          ['sync', syncRules],
+          ['async', asyncRules],
+          ['sync functional', syncFunctionalRules],
+          ['async functional', asyncFunctionalRules]
+        ])('%s', (name, rules) => {
+          describe('pre execution rule', () => {
+            describe('on object', () => {
+              let server: ApolloServerMock;
 
-        beforeAll(async () => {
-          server = mockServer({
-            rules,
-            rawSchema,
-            rawSchemaWithoutDirectives,
-            declarationMode,
-            authSchema
+              beforeAll(async () => {
+                server = mockServer({
+                  integrationMode,
+                  rules,
+                  rawSchema,
+                  rawSchemaWithoutDirectives,
+                  declarationMode,
+                  authSchema
+                });
+
+                await server.willStart();
+              });
+
+              afterEach(() => {
+                jest.clearAllMocks();
+              });
+
+              it('should execute affected rule', async () => {
+                await server.executeOperation({
+                  query: postQuery
+                });
+
+                expect(rules.FailingPreExecRule.prototype.execute).toBeCalled();
+                expect(
+                  rules.FailingPreExecRule.prototype.execute
+                ).toBeCalledTimes(1);
+              });
+
+              it('should not execute not affected rule', async () => {
+                await server.executeOperation({
+                  query: userQuery
+                });
+
+                expect(
+                  rules.FailingPreExecRule.prototype.execute
+                ).not.toBeCalled();
+              });
+
+              it('failing rule should fail query', async () => {
+                const result = await server.executeOperation({
+                  query: postQuery
+                });
+
+                expect(result.errors).toHaveLength(1);
+                expect(result.errors?.[0].extensions?.code).toEqual(
+                  'FORBIDDEN'
+                );
+                expect(result.data).toBeUndefined();
+              });
+
+              it('passing rule should not fail query', async () => {
+                const result = await server.executeOperation({
+                  query: userQuery
+                });
+
+                expect(result.errors).toBeUndefined();
+                expect(result.data).toBeDefined();
+              });
+
+              it('rule should be executed for nested entity', async () => {
+                const result = await server.executeOperation({
+                  query: userWithPostsQuery
+                });
+
+                expect(result.errors).toHaveLength(1);
+                expect(result.errors?.[0].extensions?.code).toEqual(
+                  'FORBIDDEN'
+                );
+                expect(result.data).toBeUndefined();
+              });
+            });
           });
-
-          await server.willStart();
         });
-
-        afterEach(() => {
-          jest.clearAllMocks();
-        });
-
-        it('should execute affected rule', async () => {
-          await server.executeOperation({
-            query: postQuery
-          });
-
-          expect(rules.FailingPreExecRule.prototype.execute).toBeCalled();
-          expect(rules.FailingPreExecRule.prototype.execute).toBeCalledTimes(1);
-        });
-
-        it('should not execute not affected rule', async () => {
-          await server.executeOperation({
-            query: userQuery
-          });
-
-          expect(rules.FailingPreExecRule.prototype.execute).not.toBeCalled();
-        });
-
-        it('failing rule should fail query', async () => {
-          const result = await server.executeOperation({
-            query: postQuery
-          });
-
-          expect(result.errors).toHaveLength(1);
-          expect(result.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
-          expect(result.data).toBeUndefined();
-        });
-
-        it('passing rule should not fail query', async () => {
-          const result = await server.executeOperation({
-            query: userQuery
-          });
-
-          expect(result.errors).toBeUndefined();
-          expect(result.data).toBeDefined();
-        });
-
-        it('rule should be executed for nested entity', async () => {
-          const result = await server.executeOperation({
-            query: userWithPostsQuery
-          });
-
-          expect(result.errors).toHaveLength(1);
-          expect(result.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
-          expect(result.data).toBeUndefined();
-        });
-      });
-    });
-  });
-});
+      }
+    );
+  }
+);

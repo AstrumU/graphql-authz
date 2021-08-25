@@ -3,12 +3,13 @@ import { buildSchema } from 'graphql';
 import waitOn from 'wait-on';
 import { stitchSchemas } from '@graphql-tools/stitch';
 import { stitchingDirectives } from '@graphql-tools/stitching-directives';
-import { authZApolloPlugin } from '@astrumu/graphql-authz';
+import { authZApolloPlugin } from '@graphql-authz/apollo-server-plugin';
+import { authZDirective } from '@graphql-authz/directive';
 
 import { makeRemoteExecutor } from './lib/make_remote_executor';
 import { authZRules } from './lib/rules';
-import { AuthZDirective } from './authz-directive';
 
+const { authZDirectiveTransformer } = authZDirective();
 const { stitchingDirectivesTransformer } = stitchingDirectives();
 
 async function fetchRemoteSDL(executor: ReturnType<typeof makeRemoteExecutor>) {
@@ -21,8 +22,6 @@ async function makeGatewaySchema() {
   const postsExec = makeRemoteExecutor('http://localhost:4002/graphql');
 
   return stitchSchemas({
-    // authz directive visitor
-    schemaDirectives: { authz: AuthZDirective },
     mergeDirectives: true,
     subschemaConfigTransforms: [stitchingDirectivesTransformer],
     subschemas: [
@@ -39,7 +38,8 @@ async function makeGatewaySchema() {
 }
 
 async function bootstrap() {
-  const schema = await makeGatewaySchema();
+  const gatewaySchema = await makeGatewaySchema();
+  const schema = authZDirectiveTransformer(gatewaySchema);
 
   const server = new ApolloServer({
     schema,
@@ -48,6 +48,7 @@ async function bootstrap() {
     context: ({ req }) => {
       const userId = req.get('x-user-id');
       return {
+        schema,
         user: userId ? { id: req.get('x-user-id') } : null
       };
     }

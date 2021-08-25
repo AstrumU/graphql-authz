@@ -9,7 +9,7 @@ import {
   PostExecutionRule,
   preExecRule,
   PreExecutionRule
-} from '../../src';
+} from '@graphql-authz/core';
 
 class FailingPreExecRule extends PreExecutionRule {
   public execute() {

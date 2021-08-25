@@ -1,4 +1,4 @@
-import { PostExecutionRule } from '../../src';
+import { PostExecutionRule } from '@graphql-authz/core';
 import { ApolloServerMock, mockServer } from '../mock-server';
 
 class Rule1 extends PostExecutionRule {
@@ -152,98 +152,107 @@ function __resolveType(obj: Record<string, unknown>) {
   return null;
 }
 
-describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
-  describe('post execution rule', () => {
-    let server: ApolloServerMock;
+describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
+  '%s',
+  integrationMode => {
+    describe.each(['directive', 'authSchema'] as const)(
+      '%s',
+      declarationMode => {
+        describe('post execution rule', () => {
+          let server: ApolloServerMock;
 
-    beforeAll(async () => {
-      server = mockServer({
-        rules,
-        rawSchema,
-        rawSchemaWithoutDirectives,
-        declarationMode,
-        authSchema,
-        apolloServerConfig: {
-          mocks: {
-            Query: () => ({
-              testUnionQuery: () => [
-                {
-                  testField1: 'testField1Value',
-                  testField2: 'testField2Value',
-                  __typename: 'SubType1'
+          beforeAll(async () => {
+            server = mockServer({
+              integrationMode,
+              rules,
+              rawSchema,
+              rawSchemaWithoutDirectives,
+              declarationMode,
+              authSchema,
+              apolloServerConfig: {
+                mocks: {
+                  Query: () => ({
+                    testUnionQuery: () => [
+                      {
+                        testField1: 'testField1Value',
+                        testField2: 'testField2Value',
+                        __typename: 'SubType1'
+                      },
+                      {
+                        testField1: 'testField1Value',
+                        testField3: 'testField3Value',
+                        __typename: 'SubType2'
+                      }
+                    ],
+                    testInterfaceQuery: () => [
+                      {
+                        testField1: 'testField1Value',
+                        testField2: 'testField2Value',
+                        __typename: 'SubType1'
+                      },
+                      {
+                        testField1: 'testField1Value',
+                        testField3: 'testField3Value',
+                        __typename: 'SubType2'
+                      }
+                    ],
+                    testUnionWithSelectionSetQuery: () => ({
+                      testField1: 'testField1Value',
+                      testField2: 'testField2Value',
+                      __typename: 'SubType1'
+                    })
+                  })
                 },
-                {
-                  testField1: 'testField1Value',
-                  testField3: 'testField3Value',
-                  __typename: 'SubType2'
+                resolvers: {
+                  TestUnion: {
+                    __resolveType
+                  },
+                  TestInterface: {
+                    __resolveType
+                  }
                 }
-              ],
-              testInterfaceQuery: () => [
-                {
-                  testField1: 'testField1Value',
-                  testField2: 'testField2Value',
-                  __typename: 'SubType1'
-                },
-                {
-                  testField1: 'testField1Value',
-                  testField3: 'testField3Value',
-                  __typename: 'SubType2'
-                }
-              ],
-              testUnionWithSelectionSetQuery: () => ({
-                testField1: 'testField1Value',
-                testField2: 'testField2Value',
-                __typename: 'SubType1'
-              })
-            })
-          },
-          resolvers: {
-            TestUnion: {
-              __resolveType
-            },
-            TestInterface: {
-              __resolveType
-            }
-          }
-        }
-      });
+              }
+            });
 
-      await server.willStart();
-    });
+            await server.willStart();
+          });
 
-    afterEach(() => {
-      jest.clearAllMocks();
-    });
+          afterEach(() => {
+            jest.clearAllMocks();
+          });
 
-    it('should handle interfaces', async () => {
-      await server.executeOperation({
-        query: testInterfaceQuery
-      });
+          it('should handle interfaces', async () => {
+            await server.executeOperation({
+              query: testInterfaceQuery
+            });
 
-      expect(Rule1.prototype.execute).toBeCalledTimes(2);
-      expect(Rule2.prototype.execute).toBeCalledTimes(1);
-      expect(Rule3.prototype.execute).toBeCalledTimes(1);
-    });
+            expect(Rule1.prototype.execute).toBeCalledTimes(2);
+            expect(Rule2.prototype.execute).toBeCalledTimes(1);
+            expect(Rule3.prototype.execute).toBeCalledTimes(1);
+          });
 
-    it('should handle unions', async () => {
-      await server.executeOperation({
-        query: testUnionQuery
-      });
+          it('should handle unions', async () => {
+            await server.executeOperation({
+              query: testUnionQuery
+            });
 
-      expect(Rule2.prototype.execute).toBeCalledTimes(1);
-      expect(Rule3.prototype.execute).toBeCalledTimes(1);
-    });
+            expect(Rule2.prototype.execute).toBeCalledTimes(1);
+            expect(Rule3.prototype.execute).toBeCalledTimes(1);
+          });
 
-    it('should clean result', async () => {
-      const result = await server.executeOperation({
-        query: testUnionWithSelectionSetQuery
-      });
+          it('should clean result', async () => {
+            const result = await server.executeOperation({
+              query: testUnionWithSelectionSetQuery
+            });
 
-      expect(result.data?.testUnionWithSelectionSetQuery).toBeDefined();
+            expect(result.data?.testUnionWithSelectionSetQuery).toBeDefined();
 
-      expect(
-        result.data?.testUnionWithSelectionSetQuery?.testField1
-      ).toBeUndefined();
-    });
-  });
-});
+            expect(
+              result.data?.testUnionWithSelectionSetQuery?.testField1
+            ).toBeUndefined();
+          });
+        });
+      }
+    );
+  }
+);

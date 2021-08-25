@@ -104,165 +104,185 @@ const authSchema = {
   }
 };
 
-describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
-  describe.each([
-    ['sync', syncRules],
-    ['async', asyncRules],
-    ['sync functional', syncFunctionalRules],
-    ['async functional', asyncFunctionalRules]
-  ] as const)('%s', (name, rules) => {
-    describe('pre execution rule', () => {
-      describe('on object field', () => {
-        let server: ApolloServerMock;
+describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
+  '%s',
+  integrationMode => {
+    describe.each(['directive', 'authSchema'] as const)(
+      '%s',
+      declarationMode => {
+        describe.each([
+          ['sync', syncRules],
+          ['async', asyncRules],
+          ['sync functional', syncFunctionalRules],
+          ['async functional', asyncFunctionalRules]
+        ] as const)('%s', (name, rules) => {
+          describe('pre execution rule', () => {
+            describe('on object field', () => {
+              let server: ApolloServerMock;
 
-        beforeAll(async () => {
-          server = mockServer({
-            rules,
-            rawSchema,
-            rawSchemaWithoutDirectives,
-            declarationMode,
-            authSchema
-          });
+              beforeAll(async () => {
+                server = mockServer({
+                  integrationMode,
+                  rules,
+                  rawSchema,
+                  rawSchemaWithoutDirectives,
+                  declarationMode,
+                  authSchema
+                });
 
-          await server.willStart();
-        });
+                await server.willStart();
+              });
 
-        afterEach(() => {
-          jest.clearAllMocks();
-        });
+              afterEach(() => {
+                jest.clearAllMocks();
+              });
 
-        it('should execute affected rule', async () => {
-          await server.executeOperation({
-            query: postWithTitleQuery
-          });
+              it('should execute affected rule', async () => {
+                await server.executeOperation({
+                  query: postWithTitleQuery
+                });
 
-          expect(rules.FailingPreExecRule.prototype.execute).toBeCalled();
-          expect(rules.FailingPreExecRule.prototype.execute).toBeCalledTimes(1);
-        });
+                expect(rules.FailingPreExecRule.prototype.execute).toBeCalled();
+                expect(
+                  rules.FailingPreExecRule.prototype.execute
+                ).toBeCalledTimes(1);
+              });
 
-        it('should not execute not affected rule', async () => {
-          await server.executeOperation({
-            query: userQuery
-          });
+              it('should not execute not affected rule', async () => {
+                await server.executeOperation({
+                  query: userQuery
+                });
 
-          await server.executeOperation({
-            query: postQuery
-          });
+                await server.executeOperation({
+                  query: postQuery
+                });
 
-          await server.executeOperation({
-            query: userWithPostsQuery
-          });
+                await server.executeOperation({
+                  query: userWithPostsQuery
+                });
 
-          expect(rules.FailingPreExecRule.prototype.execute).not.toBeCalled();
-        });
+                expect(
+                  rules.FailingPreExecRule.prototype.execute
+                ).not.toBeCalled();
+              });
 
-        it('failing rule should fail query', async () => {
-          const result = await server.executeOperation({
-            query: postWithTitleQuery
-          });
+              it('failing rule should fail query', async () => {
+                const result = await server.executeOperation({
+                  query: postWithTitleQuery
+                });
 
-          expect(result.errors).toHaveLength(1);
-          expect(result.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
-          expect(result.data).toBeUndefined();
-        });
+                expect(result.errors).toHaveLength(1);
+                expect(result.errors?.[0].extensions?.code).toEqual(
+                  'FORBIDDEN'
+                );
+                expect(result.data).toBeUndefined();
+              });
 
-        it('passing rule should not fail query', async () => {
-          const result = await server.executeOperation({
-            query: userQuery
-          });
+              it('passing rule should not fail query', async () => {
+                const result = await server.executeOperation({
+                  query: userQuery
+                });
 
-          expect(result.errors).toBeUndefined();
-          expect(result.data).toBeDefined();
-        });
+                expect(result.errors).toBeUndefined();
+                expect(result.data).toBeDefined();
+              });
 
-        it('rule should be executed for nested entity', async () => {
-          const result = await server.executeOperation({
-            query: userWithPostTitleQuery
-          });
+              it('rule should be executed for nested entity', async () => {
+                const result = await server.executeOperation({
+                  query: userWithPostTitleQuery
+                });
 
-          expect(rules.FailingPreExecRule.prototype.execute).toBeCalled();
-          expect(rules.FailingPreExecRule.prototype.execute).toBeCalledTimes(1);
+                expect(rules.FailingPreExecRule.prototype.execute).toBeCalled();
+                expect(
+                  rules.FailingPreExecRule.prototype.execute
+                ).toBeCalledTimes(1);
 
-          expect(result.errors).toHaveLength(1);
-          expect(result.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
-          expect(result.data).toBeUndefined();
-        });
+                expect(result.errors).toHaveLength(1);
+                expect(result.errors?.[0].extensions?.code).toEqual(
+                  'FORBIDDEN'
+                );
+                expect(result.data).toBeUndefined();
+              });
 
-        it('should skip fields with @skip(if: true) directive', async () => {
-          const result = await server.executeOperation({
-            query: `query getUser($shouldSkip: Boolean!) {
+              it('should skip fields with @skip(if: true) directive', async () => {
+                const result = await server.executeOperation({
+                  query: `query getUser($shouldSkip: Boolean!) {
                 user {
                   id
                   email @skip(if: $shouldSkip)
                 }
               }`,
-            variables: {
-              shouldSkip: true
-            }
-          });
+                  variables: {
+                    shouldSkip: true
+                  }
+                });
 
-          expect(rules.PassingPreExecRule.prototype.execute).not.toBeCalled();
-          expect(result?.data?.user).toBeDefined();
-          expect(result?.data?.user).not.toHaveProperty('email');
-        });
+                expect(
+                  rules.PassingPreExecRule.prototype.execute
+                ).not.toBeCalled();
+                expect(result?.data?.user).toBeDefined();
+                expect(result?.data?.user).not.toHaveProperty('email');
+              });
 
-        it('should not skip fields with @skip(if: false) directive', async () => {
-          const result = await server.executeOperation({
-            query: `query getUser($shouldSkip: Boolean!) {
+              it('should not skip fields with @skip(if: false) directive', async () => {
+                const result = await server.executeOperation({
+                  query: `query getUser($shouldSkip: Boolean!) {
                 user {
                   id
                   email @skip(if: $shouldSkip)
                 }
               }`,
-            variables: {
-              shouldSkip: false
-            }
-          });
+                  variables: {
+                    shouldSkip: false
+                  }
+                });
 
-          expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
-          expect(result?.data?.user).toBeDefined();
-          expect(result?.data?.user).toHaveProperty('email');
-        });
+                expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
+                expect(result?.data?.user).toBeDefined();
+                expect(result?.data?.user).toHaveProperty('email');
+              });
 
-        it('should skip fields with @include(if: false) directive', async () => {
-          const result = await server.executeOperation({
-            query: `query getUser($shouldInclude: Boolean!) {
+              it('should skip fields with @include(if: false) directive', async () => {
+                const result = await server.executeOperation({
+                  query: `query getUser($shouldInclude: Boolean!) {
                 user {
                   id
                   email @include(if: $shouldInclude)
                 }
               }`,
-            variables: {
-              shouldInclude: false
-            }
-          });
+                  variables: {
+                    shouldInclude: false
+                  }
+                });
 
-          expect(rules.PassingPreExecRule.prototype.execute).not.toBeCalled();
-          expect(result?.data?.user).toBeDefined();
-          expect(result?.data?.user).not.toHaveProperty('email');
-        });
+                expect(
+                  rules.PassingPreExecRule.prototype.execute
+                ).not.toBeCalled();
+                expect(result?.data?.user).toBeDefined();
+                expect(result?.data?.user).not.toHaveProperty('email');
+              });
 
-        it('should not skip fields with @include(if: true) directive', async () => {
-          const result = await server.executeOperation({
-            query: `query getUser($shouldInclude: Boolean!) {
+              it('should not skip fields with @include(if: true) directive', async () => {
+                const result = await server.executeOperation({
+                  query: `query getUser($shouldInclude: Boolean!) {
                 user {
                   id
                   email @include(if: $shouldInclude)
                 }
               }`,
-            variables: {
-              shouldInclude: true
-            }
-          });
+                  variables: {
+                    shouldInclude: true
+                  }
+                });
 
-          expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
-          expect(result?.data?.user).toBeDefined();
-          expect(result?.data?.user).toHaveProperty('email');
-        });
+                expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
+                expect(result?.data?.user).toBeDefined();
+                expect(result?.data?.user).toHaveProperty('email');
+              });
 
-        it('should handle fragments', async () => {
-          await server.executeOperation({
-            query: `query getUser {
+              it('should handle fragments', async () => {
+                await server.executeOperation({
+                  query: `query getUser {
                 user {
                   id
                   ...Fragment1
@@ -275,28 +295,28 @@ describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
                 email
               }
               `
-          });
+                });
 
-          expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
-        });
+                expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
+              });
 
-        it('should handle aliases', async () => {
-          await server.executeOperation({
-            query: `query getUser {
+              it('should handle aliases', async () => {
+                await server.executeOperation({
+                  query: `query getUser {
                 user {
                   id
                   emailAlias: email
                 }
               }
               `
-          });
+                });
 
-          expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
-        });
+                expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
+              });
 
-        it('should handle aliases in fragments', async () => {
-          await server.executeOperation({
-            query: `query getUser {
+              it('should handle aliases in fragments', async () => {
+                await server.executeOperation({
+                  query: `query getUser {
                 user {
                   id
                   ...Fragment1
@@ -309,11 +329,14 @@ describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
                 emailAlias: email
               }
               `
-          });
+                });
 
-          expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
+                expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
+              });
+            });
+          });
         });
-      });
-    });
-  });
-});
+      }
+    );
+  }
+);

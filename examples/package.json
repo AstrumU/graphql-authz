@@ -1,5 +1,6 @@
 {
-  "name": "@astrumu/graphql-authz-examples",
+  "name": "@graphql-authz-examples/examples",
+  "private": true,
   "version": "1.0.0",
   "description": "Examples for GraphQL authorization layer",
   "main": "dist/index.js",
@@ -14,7 +15,8 @@
     "start:nestjs": "node dist/nestjs/index.js",
     "start:type-graphql": "node dist/type-graphql/index.js",
     "start:schema-stitching": "node dist/schema-stitching/index.js & node dist/schema-stitching/services/users/index.js & node dist/schema-stitching/services/posts/index.js",
-    "start:apollo-federation": "node dist/apollo-federation/index.js & node dist/apollo-federation/services/users/index.js & node dist/apollo-federation/services/posts/index.js"
+    "start:apollo-federation": "node dist/apollo-federation/index.js & node dist/apollo-federation/services/users/index.js & node dist/apollo-federation/services/posts/index.js",
+    "start:envelop": "node dist/envelop/index.js"
   },
   "author": "",
   "license": "MIT",
@@ -22,7 +24,8 @@
     "access": "restricted"
   },
   "dependencies": {
-    "@astrumu/graphql-authz": "file:../dist",
+    "@graphql-authz/core": "*",
+    "@envelop/core": "1.0.3",
     "apollo-server-errors": "2.4.2",
     "apollo-server-plugin-base": "0.9.1"
   },
@@ -38,7 +41,7 @@
     "@types/lodash": "4.14.165",
     "@types/jest": "26.0.20",
     "@types/wait-on": "5.3.1",
-    "apollo-server": "2.22.2",
+    "apollo-server": "2.25.0",
     "apollo-server-core": "2.21.2",
     "cross-fetch": "3.1.4",
     "jest": "^26.6.3",

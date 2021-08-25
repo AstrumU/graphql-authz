@@ -1,6 +1,6 @@
 import { ApolloServer } from 'apollo-server';
 import { ApolloGateway } from '@apollo/gateway';
-import { authZApolloPlugin } from '@astrumu/graphql-authz';
+import { authZApolloPlugin } from '@graphql-authz/apollo-server-plugin';
 
 import { authZRules } from './rules';
 

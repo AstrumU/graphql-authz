@@ -1,27 +1,16 @@
 import { ApolloServer, gql } from 'apollo-server';
 import { buildFederatedSchema } from '@apollo/federation';
-import {
-  authZGraphQLDirective,
-  directiveTypeDefs
-} from '@astrumu/graphql-authz';
 
 import { posts } from '../../db';
-import { authZRules } from '../../rules';
-
-// authz directive to print definitions to schema
-const directive = authZGraphQLDirective(authZRules);
-const authZDirectiveTypeDefs = directiveTypeDefs(directive);
 
 // schema
 const typeDefs = gql`
-  ${authZDirectiveTypeDefs}
-
   extend type User @key(fields: "id") {
     id: ID! @external
     posts: [Post!]!
   }
 
-  type Post @authz(rules: [CanReadPost]) {
+  type Post {
     id: ID!
     title: String!
     body: String!
@@ -40,7 +29,7 @@ const typeDefs = gql`
   }
 
   extend type Mutation {
-    publishPost(postId: ID!): Post! @authz(rules: [CanPublishPost])
+    publishPost(postId: ID!): Post!
   }
 `;
 

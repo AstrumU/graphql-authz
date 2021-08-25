@@ -260,79 +260,88 @@ const authSchema = {
   }
 };
 
-describe.each(['directive', 'authSchema'] as const)('%s', declarationMode => {
-  describe.each([
-    ['', rules],
-    ['functional', functionalRules]
-  ])('%s', (name, rules) => {
-    describe('Composite rules', () => {
-      let server: ApolloServerMock;
+describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
+  '%s',
+  integrationMode => {
+    describe.each(['directive', 'authSchema'] as const)(
+      '%s',
+      declarationMode => {
+        describe.each([
+          ['', rules],
+          ['functional', functionalRules]
+        ])('%s', (name, rules) => {
+          describe('Composite rules', () => {
+            let server: ApolloServerMock;
 
-      beforeAll(async () => {
-        server = mockServer({
-          rules,
-          rawSchema,
-          rawSchemaWithoutDirectives,
-          declarationMode,
-          authSchema
-        });
+            beforeAll(async () => {
+              server = mockServer({
+                integrationMode,
+                rules,
+                rawSchema,
+                rawSchemaWithoutDirectives,
+                declarationMode,
+                authSchema
+              });
 
-        await server.willStart();
-      });
+              await server.willStart();
+            });
 
-      afterEach(() => {
-        jest.clearAllMocks();
-      });
+            afterEach(() => {
+              jest.clearAllMocks();
+            });
 
-      describe.each([
-        'FailingAndRule',
-        'PassingAndRule',
-        'FailingOrRule',
-        'PassingOrRule',
-        'FailingNotRule',
-        'PassingNotRule',
-        'FailingDeepAndRule',
-        'PassingDeepAndRule',
-        'FailingDeepOrRule',
-        'PassingDeepOrRule',
-        'FailingDeepNotRule',
-        'PassingDeepNotRule'
-      ])('%s', ruleName => {
-        describe.each(['', 'Inline'])('%s', ruleVariant => {
-          describe.each(['', 'List'])('%s', resultVariant => {
-            it('should fail on failing rules and not fail on passing rules', async () => {
-              let result;
-              let error;
-              try {
-                result = await server.executeOperation({
-                  query: `query Test {
+            describe.each([
+              'FailingAndRule',
+              'PassingAndRule',
+              'FailingOrRule',
+              'PassingOrRule',
+              'FailingNotRule',
+              'PassingNotRule',
+              'FailingDeepAndRule',
+              'PassingDeepAndRule',
+              'FailingDeepOrRule',
+              'PassingDeepOrRule',
+              'FailingDeepNotRule',
+              'PassingDeepNotRule'
+            ])('%s', ruleName => {
+              describe.each(['', 'Inline'])('%s', ruleVariant => {
+                describe.each(['', 'List'])('%s', resultVariant => {
+                  it('should fail on failing rules and not fail on passing rules', async () => {
+                    let result;
+                    let error;
+                    try {
+                      result = await server.executeOperation({
+                        query: `query Test {
                       ${ruleName}${ruleVariant}${resultVariant}Query
                     }`
-                });
-              } catch (e) {
-                error = e;
-              }
+                      });
+                    } catch (e) {
+                      error = e;
+                    }
 
-              if (ruleName.startsWith('Failing')) {
-                const requestError = error || result?.errors?.[0];
-                expect(requestError).toBeDefined();
-                expect(requestError.extensions.code).toEqual('FORBIDDEN');
-              } else {
-                expect(result).toBeDefined();
-                const queryResult =
-                  result?.data?.[
-                    `${ruleName}${ruleVariant}${resultVariant}Query`
-                  ];
-                expect(
-                  typeof (resultVariant === 'List'
-                    ? queryResult[0]
-                    : queryResult)
-                ).toEqual('string');
-              }
+                    if (ruleName.startsWith('Failing')) {
+                      const requestError = error || result?.errors?.[0];
+                      expect(requestError).toBeDefined();
+                      expect(requestError.extensions.code).toEqual('FORBIDDEN');
+                    } else {
+                      expect(result).toBeDefined();
+                      const queryResult =
+                        result?.data?.[
+                          `${ruleName}${ruleVariant}${resultVariant}Query`
+                        ];
+                      expect(
+                        typeof (resultVariant === 'List'
+                          ? queryResult[0]
+                          : queryResult)
+                      ).toEqual('string');
+                    }
+                  });
+                });
+              });
             });
           });
         });
-      });
-    });
-  });
-});
+      }
+    );
+  }
+);

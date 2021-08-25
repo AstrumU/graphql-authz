@@ -32,6 +32,7 @@ function shouldWriteToResult(
   return false;
 }
 
+// TODO: replace it with graphql call?
 export function cleanupResult(
   ast: DocumentNode,
   schema: GraphQLSchema,

@@ -1,6 +1,6 @@
 {
-  "name": "@astrumu/graphql-authz",
-  "version": "1.0.0",
+  "name": "graphql-authz-monorepo",
+  "private": true,
   "description": "GraphQL authorization layer",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -8,12 +8,15 @@
     "/dist"
   ],
   "scripts": {
-    "build": "tsc --build .",
-    "test": "yarn jest --collectCoverageFrom=src/**/*.ts",
-    "lint": "eslint src __tests__",
-    "lint:fix": "eslint src __tests__ --fix",
-    "prettier": "prettier --check src __tests__",
-    "prettier:fix": "prettier --write src __tests__"
+    "clean": "run-s clean:*",
+    "clean:packages": "rimraf packages/{,plugins}/*/{dist,node_modules,tsconfig.tsbuildinfo}",
+    "clean:root": "rimraf {node_modules,coverage,tsconfig.tsbuildinfo}",
+    "build": "tsc --build tsconfig.json",
+    "test": "yarn jest --coverage",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prettier": "prettier --check packages __tests__",
+    "prettier:fix": "prettier --write"
   },
   "author": "Dmitry Til <till.dima@gmail.com>",
   "license": "MIT",
@@ -34,9 +37,12 @@
     "apollo"
   ],
   "devDependencies": {
+    "@envelop/types": "^1.0.2",
+    "@graphql-tools/schema": "^8.1.2",
     "@types/jest": "^26.0.24",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
+    "apollo-server-plugin-base": "^0.9.0",
     "apollo-server": "^2.25.2",
     "eslint": "^7.30.0",
     "eslint-config-airbnb-base": "^14.2.1",
@@ -46,14 +52,19 @@
     "eslint-plugin-security": "^1.4.0",
     "graphql": "^15.5.1",
     "jest": "^27.0.6",
-    "prettier": "2.3.2",
-    "ts-jest": "27.0.3",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.3.2",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^27.0.3",
     "typescript": "^4.3.5"
   },
   "peerDependencies": {
-    "apollo-server": "^2.14.0",
-    "apollo-server-errors": "^2.14.0",
-    "apollo-server-plugin-base": "^0.9.0",
     "graphql": "^14.0.0 || ^15.0.0"
-  }
+  },
+  "workspaces": [
+    "./packages/*",
+    "./packages/plugins/*",
+    "./examples"
+  ]
+  
 }

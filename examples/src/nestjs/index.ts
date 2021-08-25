@@ -1,4 +1,3 @@
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
 import {
   ObjectType,
   Field,
@@ -18,13 +17,15 @@ import { NestFactory } from '@nestjs/core';
 
 import {
   UnauthorizedError,
-  authZApolloPlugin,
-  authZGraphQLDirective,
-  AuthZDirectiveVisitor,
   preExecRule,
   postExecRule,
   IAuthConfig
-} from '@astrumu/graphql-authz';
+} from '@graphql-authz/core';
+import {
+  authZApolloPlugin,
+  AuthZDirectiveVisitor
+} from '@graphql-authz/apollo-server-plugin';
+import { authZGraphQLDirective } from '@graphql-authz/directive';
 
 // data
 const users = [
@@ -59,40 +60,39 @@ const posts = [
   }
 ];
 
+interface IContext {
+  user?: {
+    id: string;
+    role: string;
+  };
+}
+
 // authz rules
 const IsAuthenticated = preExecRule({
   error: new UnauthorizedError('User is not authenticated')
-})((requestContext: GraphQLRequestContext) => !!requestContext.context.user);
+})((context: IContext) => !!context.user);
 
 const IsAdmin = preExecRule({
   error: new UnauthorizedError('User is not admin')
-})(
-  (requestContext: GraphQLRequestContext) =>
-    requestContext.context.user?.role === 'Admin'
-);
+})((context: IContext) => context.user?.role === 'Admin');
 
 const CanReadPost = postExecRule({
   error: new UnauthorizedError('Access denied'),
   selectionSet: '{ status author { id } }'
 })(
   (
-    requestContext: GraphQLRequestContext,
+    context: IContext,
     fieldArgs: unknown,
     post: { status: string; author: { id: string } }
-  ) =>
-    post.status === 'public' ||
-    requestContext.context.user?.id === post.author.id
+  ) => post.status === 'public' || context.user?.id === post.author.id
 );
 
 const CanPublishPost = preExecRule()(
-  async (
-    requestContext: GraphQLRequestContext,
-    fieldArgs: { postId: string }
-  ) => {
+  async (context: IContext, fieldArgs: { postId: string }) => {
     const post = await Promise.resolve(
       posts.find(({ id }) => id === fieldArgs.postId)
     );
-    return !post || post.authorId === requestContext.context.user?.id;
+    return !post || post.authorId === context.user?.id;
   }
 );
 

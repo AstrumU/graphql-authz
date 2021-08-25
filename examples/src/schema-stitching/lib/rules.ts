@@ -1,20 +1,26 @@
-import { GraphQLRequestContext } from 'apollo-server-plugin-base';
-import { graphql } from 'graphql';
+import { graphql, GraphQLSchema } from 'graphql';
 import {
   postExecRule,
   preExecRule,
   UnauthorizedError
-} from '@astrumu/graphql-authz';
+} from '@graphql-authz/core';
+
+interface IContext {
+  schema: GraphQLSchema;
+  user?: {
+    id: string;
+  };
+}
 
 // authz rules
 const IsAuthenticated = preExecRule({
   error: new UnauthorizedError('User is not authenticated')
-})((requestContext: GraphQLRequestContext) => !!requestContext.context.user);
+})((context: IContext) => !!context.user);
 
 const IsAdmin = preExecRule({
   error: new UnauthorizedError('User is not admin')
-})(async (requestContext: GraphQLRequestContext) => {
-  const userId = requestContext.context.user?.id;
+})(async (context: IContext) => {
+  const userId = context.user?.id;
 
   if (!userId) {
     return false;
@@ -22,7 +28,7 @@ const IsAdmin = preExecRule({
 
   // query executable schema from rules
   const graphQLResult = await graphql({
-    schema: requestContext.schema,
+    schema: context.schema,
     source: `query user { user(id: ${String(userId)}) { role } }`
   });
 
@@ -34,20 +40,15 @@ const CanReadPost = postExecRule({
   selectionSet: '{ status author { id } }'
 })(
   (
-    requestContext: GraphQLRequestContext,
+    context: IContext,
     fieldArgs: unknown,
     post: { status: string; author: { id: string } }
-  ) =>
-    post.status === 'public' ||
-    requestContext.context.user?.id === post.author.id
+  ) => post.status === 'public' || context.user?.id === post.author.id
 );
 
 const CanPublishPost = preExecRule()(
-  async (
-    requestContext: GraphQLRequestContext,
-    fieldArgs: { postId: string }
-  ) => {
-    const userId = requestContext.context.user?.id;
+  async (context: IContext, fieldArgs: { postId: string }) => {
+    const userId = context.user?.id;
 
     if (!userId) {
       return false;
@@ -55,7 +56,7 @@ const CanPublishPost = preExecRule()(
 
     // query executable schema from rules
     const graphQLResult = await graphql({
-      schema: requestContext.schema,
+      schema: context.schema,
       source: `query post { post(id: ${fieldArgs.postId}) { author { id } } }`
     });
 
