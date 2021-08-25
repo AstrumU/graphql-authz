@@ -13,6 +13,7 @@ jobs:
           node-version: '14'
           cache: 'yarn'
       - run: yarn install
+      - run: yarn build
       - run: yarn test
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
