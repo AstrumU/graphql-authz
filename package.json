@@ -15,8 +15,8 @@
     "test": "yarn jest --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "prettier": "prettier --check packages __tests__",
-    "prettier:fix": "prettier --write"
+    "prettier": "prettier --check packages/*/src/**/*.ts packages/plugins/*/src/**/*.ts __tests__",
+    "prettier:fix": "prettier --write packages/*/src/**/*.ts packages/plugins/*/src/**/*.ts __tests__"
   },
   "author": "Dmitry Til <till.dima@gmail.com>",
   "license": "MIT",
