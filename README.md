@@ -4,7 +4,7 @@
 
 [![codecov](https://codecov.io/gh/AstrumU/graphql-authz/branch/main/graph/badge.svg?token=5IMVNTLQGF)](https://codecov.io/gh/AstrumU/graphql-authz)
 
-### 🚧 🚧 Documentation is still in progress 🚧 🚧
+### 🚧 Documentation is still in progress 🚧
 
 ## Overview
 
@@ -466,7 +466,19 @@ Rules that are passed to `@authz` directive as `rules` list are composing with A
 
 ### Create composition rules
 
-To create different composition rules new class extended from `AndRule`, `OrRule` or `NotRule` should be created
+To create different composition rules `and`, `or`, `not` functions should be used
+
+```ts
+import { and, or, not } from "@graphql-authz/core";
+
+const TestAndRule = and([Rule01, Rule02, Rule03]);
+
+const TestOrRule = or([Rule01, Rule02, Rule03]);
+
+const TestNotRule = not([Rule01, Rule02, Rule03]);
+```
+
+Alternatively new class extended from `AndRule`, `OrRule` or `NotRule` can be created
 
 ```ts
 import {
