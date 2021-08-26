@@ -16,10 +16,12 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prettier": "prettier --check packages/*/src/**/*.ts packages/plugins/*/src/**/*.ts __tests__",
-    "prettier:fix": "prettier --write packages/*/src/**/*.ts packages/plugins/*/src/**/*.ts __tests__"
+    "prettier:fix": "prettier --write packages/*/src/**/*.ts packages/plugins/*/src/**/*.ts __tests__",
+    "prerelease": "yarn build",
+    "release": "changeset publish"
   },
   "author": "Dmitry Til <till.dima@gmail.com>",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "publishConfig": {
     "access": "restricted"
   },
@@ -37,13 +39,14 @@
     "apollo"
   ],
   "devDependencies": {
+    "@changesets/cli": "^2.16.0",
     "@envelop/types": "^1.0.2",
     "@graphql-tools/schema": "^8.1.2",
     "@types/jest": "^26.0.24",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
-    "apollo-server-plugin-base": "^0.9.0",
     "apollo-server": "^2.25.2",
+    "apollo-server-plugin-base": "^0.9.0",
     "eslint": "^7.30.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.3.0",
@@ -66,5 +69,4 @@
     "./packages/plugins/*",
     "./examples"
   ]
-  
 }
