@@ -21,7 +21,7 @@
     "release": "changeset publish"
   },
   "author": "Dmitry Til <till.dima@gmail.com>",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "publishConfig": {
     "access": "restricted"
   },
