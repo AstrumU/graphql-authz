@@ -58,7 +58,7 @@ Read more
 
 ## Installation
 
-`yarn add graphql-authz`
+`yarn add @graphql-authz/core`
 
 ## Creating Rules
 
@@ -411,7 +411,7 @@ class CanReadPost extends PostExecutionRule {
 }
 ```
 
-By adding `selectionSet` field we ensure that even if the client originally didn't request fields that are needed to perform authorization these fields are present in the result value that comes to rule as an argument.
+By adding `selectionSet` we ensure that even if the client originally didn't request fields that are needed to perform authorization these fields are present in the result value that comes to rule as an argument.
 
 **Please note** that with Post execution rules resolvers are executed even if the rule throws an Unauthorized error, so such rules are not suitable for Mutations or Queries that update some counters (count of views for example)
 
@@ -426,9 +426,7 @@ const CanPublishPost = preExecRule()(
     fieldArgs: { postId: string }
   ) => {
     const post = await db.posts.get(fieldArgs.postId);
-    if (post.authorId !== context.user?.id) {
-      throw this.error;
-    }
+    return post.authorId === context.user?.id;
   }
 );
 ```
@@ -462,7 +460,7 @@ const CanPublishPost = preExecRule()(
 
 ### Default composition
 
-Rules that are passed to `@authz` directive as `rules` list are composing with AND logical operator. So `@authz(rules: [Rule01, Rule02])` means that authorization will be passed only if `Rule01` AND `Rule02` didn't throw any error.
+Rules that are passed to `@authz` directive as `rules` list are composing with AND logical operator. So `@authz(rules: [Rule01, Rule02])` means that authorization will be passed only if `Rule01` AND `Rule02` passed.
 
 ### Create composition rules
 
@@ -508,11 +506,11 @@ class TestNotRule extends NotRule {
 
 With such code
 
-`TestAndRule` will pass only if all of `Rule01`, `Rule02`, `Rule03` not throw error
+`TestAndRule` will pass only if all of `Rule01`, `Rule02`, `Rule03` pass
 
-`TestOrRule` will pass if any of `Rule01`, `Rule02`, `Rule03` not throw an error
+`TestOrRule` will pass if any of `Rule01`, `Rule02`, `Rule03` pass
 
-`TestNotRule` will pass only if every of `Rule01`, `Rule02`, `Rule03` throw error
+`TestNotRule` will pass only if every of `Rule01`, `Rule02`, `Rule03` pass
 
 Composition rules can be used just like regular rules
 
@@ -589,10 +587,20 @@ Pre and Post execution rules can be mixed in any way inside all types of composi
 
 ## Custom errors
 
-To provide custom error for rule the `error` field should be provided to the rule class.
+To provide custom error for rule the `error` option should be provided
 
 ```ts
-import { UnauthorizedError } from 'graphql-authz';
+import { UnauthorizedError } from '@graphql-authz/core';
+
+const SomeRule = postExecRule({
+  error: new UnauthorizedError("User is not authenticated")
+})(() => {/* rule body */});
+```
+
+Using rule class
+
+```ts
+import { UnauthorizedError } from '@graphql-authz/core';
 
 class SomeRule extends PreExecutionRule {
   public error = new UnauthorizedError("User is not authenticated");
@@ -602,4 +610,4 @@ class SomeRule extends PreExecutionRule {
 }
 ```
 
-It's important to throw an instance of `UnauthorizedError` imported from `graphql-authz` to enable composite rules to correctly handle errors thrown from rules. If an instance of `UnauthorizedError` is thrown it's treated as a certain rule didn't pass. If the rule is wrapped with `NotRule` then execution should continue. Any other errors are treated as runtime errors and are thrown up, so if any other error is thrown from the rule that is wrapped with `NotRule` it will fail the entire request.
+It's important to throw an instance of `UnauthorizedError` imported from `@graphql-authz/core` to enable composite rules to correctly handle errors thrown from rules. If an instance of `UnauthorizedError` is thrown it's treated as a certain rule didn't pass. If the rule is wrapped with `NotRule` then execution should continue. Any other errors are treated as runtime errors and are thrown up, so if any other error is thrown from the rule that is wrapped with `NotRule` it will fail the entire request.
