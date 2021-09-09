@@ -22,22 +22,10 @@
   },
   "author": "Dmitry Til <till.dima@gmail.com>",
   "license": "MIT",
-  "publishConfig": {
-    "access": "restricted"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/AstrumU/graphql-authz.git"
   },
-  "keywords": [
-    "typescript",
-    "graphql",
-    "schema",
-    "directives",
-    "authorization",
-    "authz",
-    "apollo"
-  ],
   "devDependencies": {
     "@changesets/cli": "^2.16.0",
     "@envelop/types": "^1.0.2",
