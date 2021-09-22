@@ -15,12 +15,7 @@ import {
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 
-import {
-  UnauthorizedError,
-  preExecRule,
-  postExecRule,
-  IAuthConfig
-} from '@graphql-authz/core';
+import { preExecRule, postExecRule, IAuthConfig } from '@graphql-authz/core';
 import {
   authZApolloPlugin,
   AuthZDirectiveVisitor
@@ -69,15 +64,15 @@ interface IContext {
 
 // authz rules
 const IsAuthenticated = preExecRule({
-  error: new UnauthorizedError('User is not authenticated')
+  error: 'User is not authenticated'
 })((context: IContext) => !!context.user);
 
 const IsAdmin = preExecRule({
-  error: new UnauthorizedError('User is not admin')
+  error: 'User is not admin'
 })((context: IContext) => context.user?.role === 'Admin');
 
 const CanReadPost = postExecRule({
-  error: new UnauthorizedError('Access denied'),
+  error: 'Access denied',
   selectionSet: '{ status author { id } }'
 })(
   (

@@ -7,7 +7,7 @@ export interface IAuthZConfig {
   directiveName?: string;
   authSchemaKey?: string;
   authSchema?: AuthSchema;
-  processError?: (error: Error) => never;
+  processError?: (error: unknown) => never;
 }
 
 export function completeConfig(

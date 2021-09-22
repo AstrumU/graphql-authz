@@ -10,12 +10,18 @@ import {
 } from './rules';
 
 interface IPreExecRuleOptions {
-  error?: Error;
-  notError?: Error;
+  error?: string | UnauthorizedError;
+  notError?: string | UnauthorizedError;
 }
 
 interface IPostExecRuleOptions extends IPreExecRuleOptions {
   selectionSet?: string;
+}
+
+function prepareError(error?: string | UnauthorizedError): UnauthorizedError {
+  return error instanceof UnauthorizedError
+    ? error
+    : new UnauthorizedError(error);
 }
 
 export function preExecRule(
@@ -23,16 +29,13 @@ export function preExecRule(
 ): (
   execute: PreExecutionRule['execute']
 ) => new (config: IRuleConfig) => PreExecutionRule {
-  const {
-    error = new UnauthorizedError(),
-    notError = new UnauthorizedError()
-  } = options;
+  const { error, notError } = options;
 
   return function (execute: PreExecutionRule['execute']) {
     class BuiltRule extends PreExecutionRule {
-      public error = error;
+      public error = prepareError(error);
 
-      public notError = notError;
+      public notError = prepareError(notError);
 
       public execute(...args: Parameters<PreExecutionRule['execute']>) {
         return execute(...args);
@@ -48,17 +51,13 @@ export function postExecRule(
 ): (
   execute: PostExecutionRule['execute']
 ) => new (config: IRuleConfig) => PostExecutionRule {
-  const {
-    error = new UnauthorizedError(),
-    notError = new UnauthorizedError(),
-    selectionSet
-  } = options;
+  const { error, notError, selectionSet } = options;
 
   return function (execute: PostExecutionRule['execute']) {
     class BuiltRule extends PostExecutionRule {
-      public error = error;
+      public error = prepareError(error);
 
-      public notError = notError;
+      public notError = prepareError(notError);
 
       public selectionSet = selectionSet;
 

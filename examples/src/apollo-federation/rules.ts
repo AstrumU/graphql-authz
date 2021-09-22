@@ -1,8 +1,4 @@
-import {
-  postExecRule,
-  preExecRule,
-  UnauthorizedError
-} from '@graphql-authz/core';
+import { postExecRule, preExecRule } from '@graphql-authz/core';
 
 import { posts, users } from './db';
 
@@ -13,11 +9,11 @@ interface IContext {
 }
 
 const IsAuthenticated = preExecRule({
-  error: new UnauthorizedError('User is not authenticated')
+  error: 'User is not authenticated'
 })((context: IContext) => !!context.user);
 
 const IsAdmin = preExecRule({
-  error: new UnauthorizedError('User is not admin')
+  error: 'User is not admin'
 })(async (context: IContext) => {
   const userId = context.user?.id;
 
@@ -31,7 +27,7 @@ const IsAdmin = preExecRule({
 });
 
 const CanReadPost = postExecRule({
-  error: new UnauthorizedError('Access denied'),
+  error: 'Access denied',
   selectionSet: '{ status author { id } }'
 })(
   (
