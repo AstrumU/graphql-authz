@@ -510,7 +510,7 @@ With such code
 
 `TestOrRule` will pass if any of `Rule01`, `Rule02`, `Rule03` pass
 
-`TestNotRule` will pass only if every of `Rule01`, `Rule02`, `Rule03` pass
+`TestNotRule` will pass only if every of `Rule01`, `Rule02`, `Rule03` fail
 
 Composition rules can be used just like regular rules
 
@@ -593,7 +593,7 @@ To provide custom error for rule the `error` option should be provided
 import { UnauthorizedError } from '@graphql-authz/core';
 
 const SomeRule = postExecRule({
-  error: new UnauthorizedError("User is not authenticated")
+  error: 'User is not authenticated'
 })(() => {/* rule body */});
 ```
 
