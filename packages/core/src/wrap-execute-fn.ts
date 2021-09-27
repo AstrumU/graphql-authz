@@ -8,17 +8,37 @@ import { compileRules } from './rules-compiler';
 import { addSelectionSetsToDocument } from './visit-selection-set';
 
 type ExecuteFn = typeof execute;
+// Parameters<...> infers only one overload
+type ExecuteParameters = Parameters<ExecuteFn> | [ExecutionArgs];
+
+function normalizeExecuteParameters(
+  ...executeParameters: ExecuteParameters
+): ExecutionArgs {
+  return executeParameters.length === 1
+    ? executeParameters[0]
+    : {
+        schema: executeParameters[0],
+        document: executeParameters[1],
+        rootValue: executeParameters[2],
+        contextValue: executeParameters[3],
+        variableValues: executeParameters[4],
+        operationName: executeParameters[5],
+        fieldResolver: executeParameters[6],
+        typeResolver: executeParameters[7]
+      };
+}
 
 export function wrapExecuteFn(
   executeFn: ExecuteFn,
   config: IAuthZConfig
-): (args: ExecutionArgs) => ReturnType<ExecuteFn> {
+): (...executeParameters: ExecuteParameters) => ReturnType<ExecuteFn> {
   const { rules, authSchema, directiveName, authSchemaKey, processError } =
     completeConfig(config);
 
   return async function executeWrapper(
-    args: ExecutionArgs
+    ...executeParameters: ExecuteParameters
   ): Promise<ExecutionResult> {
+    const args = normalizeExecuteParameters(...executeParameters);
     const variables = args.variableValues || {};
     const filteredDocument = getFilteredDocument(
       args.document,
