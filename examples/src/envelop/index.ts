@@ -1,74 +1,18 @@
-import { ApolloServer, gql } from 'apollo-server';
-import { envelop, useSchema, useTiming } from '@envelop/core';
+import { createServer } from 'http';
+import { envelop, useExtendContext, useSchema, useTiming } from '@envelop/core';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { preExecRule, postExecRule } from '@graphql-authz/core';
+import {
+  preExecRule,
+  postExecRule,
+  directiveTypeDefs
+} from '@graphql-authz/core';
 import { authZEnvelopPlugin } from '@graphql-authz/envelop-plugin';
-import { authZDirective } from '@graphql-authz/directive';
+import {
+  authZDirective,
+  authZGraphQLDirective
+} from '@graphql-authz/directive';
 
 const { authZDirectiveTransformer } = authZDirective();
-
-// schema
-const typeDefs = gql`
-  type User {
-    id: ID!
-    username: String!
-    email: String! @authz(rules: [IsAdmin])
-    posts: [Post!]!
-  }
-
-  type Post @authz(rules: [CanReadPost]) {
-    id: ID!
-    title: String!
-    body: String!
-    status: Status!
-    author: User!
-  }
-
-  enum Status {
-    draft
-    public
-  }
-
-  type Query {
-    users: [User!]! @authz(rules: [IsAuthenticated])
-    posts: [Post!]!
-    post(id: ID!): Post
-  }
-
-  type Mutation {
-    publishPost(postId: ID!): Post! @authz(rules: [CanPublishPost])
-  }
-
-  # authz rules enum
-  enum AuthZRules {
-    IsAuthenticated
-    IsAdmin
-    CanReadPost
-    CanPublishPost
-  }
-
-  # this is a common boilerplate
-  input AuthZDirectiveCompositeRulesInput {
-    and: [AuthZRules]
-    or: [AuthZRules]
-    not: AuthZRules
-  }
-
-  # this is a common boilerplate
-  input AuthZDirectiveDeepCompositeRulesInput {
-    id: AuthZRules
-    and: [AuthZDirectiveDeepCompositeRulesInput]
-    or: [AuthZDirectiveDeepCompositeRulesInput]
-    not: AuthZDirectiveDeepCompositeRulesInput
-  }
-
-  # this is a common boilerplate
-  directive @authz(
-    rules: [AuthZRules]
-    compositeRules: [AuthZDirectiveCompositeRulesInput]
-    deepCompositeRules: [AuthZDirectiveDeepCompositeRulesInput]
-  ) on FIELD_DEFINITION | OBJECT | INTERFACE
-`;
 
 // data
 const users = [
@@ -174,6 +118,74 @@ const authZRules = {
   CanPublishPost
 } as const;
 
+const directive = authZGraphQLDirective(authZRules);
+const authZDirectiveTypeDefs = directiveTypeDefs(directive);
+
+// schema
+const typeDefs = `
+  ${authZDirectiveTypeDefs}
+
+  type User {
+    id: ID!
+    username: String!
+    email: String! @authz(rules: [IsAdmin])
+    posts: [Post!]!
+  }
+
+  type Post @authz(rules: [CanReadPost]) {
+    id: ID!
+    title: String!
+    body: String!
+    status: Status!
+    author: User!
+  }
+
+  enum Status {
+    draft
+    public
+  }
+
+  type Query {
+    users: [User!]! @authz(rules: [IsAuthenticated])
+    posts: [Post!]!
+    post(id: ID!): Post
+  }
+
+  type Mutation {
+    publishPost(postId: ID!): Post! @authz(rules: [CanPublishPost])
+  }
+
+  # authz rules enum
+  enum AuthZRules {
+    IsAuthenticated
+    IsAdmin
+    CanReadPost
+    CanPublishPost
+  }
+
+  # this is a common boilerplate
+  input AuthZDirectiveCompositeRulesInput {
+    and: [AuthZRules]
+    or: [AuthZRules]
+    not: AuthZRules
+  }
+
+  # this is a common boilerplate
+  input AuthZDirectiveDeepCompositeRulesInput {
+    id: AuthZRules
+    and: [AuthZDirectiveDeepCompositeRulesInput]
+    or: [AuthZDirectiveDeepCompositeRulesInput]
+    not: AuthZDirectiveDeepCompositeRulesInput
+  }
+
+  # this is a common boilerplate
+  directive @authz(
+    rules: [AuthZRules]
+    compositeRules: [AuthZDirectiveCompositeRulesInput]
+    deepCompositeRules: [AuthZDirectiveDeepCompositeRulesInput]
+  ) on FIELD_DEFINITION | OBJECT | INTERFACE
+`;
+
 const schema = authZDirectiveTransformer(
   makeExecutableSchema({
     typeDefs,
@@ -185,32 +197,61 @@ const getEnveloped = envelop({
   plugins: [
     useSchema(schema),
     useTiming(),
+    // authenticator
+    useExtendContext(req => ({
+      user: users.find(({ id }) => id === req.headers['x-user-id']) || null
+    })),
+    // graphql-authz plugin
     authZEnvelopPlugin({ rules: authZRules })
   ]
 });
 
-const { schema: envelopedSchema } = getEnveloped();
+const server = createServer((req, res) => {
+  const { parse, validate, contextFactory, execute, schema } = getEnveloped({
+    req
+  });
+  let payload = '';
 
-const server = new ApolloServer({
-  schema: envelopedSchema,
-  context: ({ req }) => ({
-    user: users.find(({ id }) => id === req.get('x-user-id')) || null
-  }),
-  executor: async requestContext => {
-    const { schema, execute, contextFactory } = getEnveloped(
-      requestContext.context
-    );
+  req.on('data', chunk => {
+    payload += chunk.toString();
+  });
 
-    return execute({
-      schema: schema,
-      document: requestContext.document,
-      contextValue: await contextFactory(),
-      variableValues: requestContext.request.variables,
-      operationName: requestContext.operationName
-    });
-  }
+  req.on('end', () => {
+    const { query, variables, operationName } = JSON.parse(payload);
+    const document = parse(query);
+    const validationErrors = validate(schema, document);
+
+    if (validationErrors.length > 0) {
+      res.end(
+        JSON.stringify({
+          errors: validationErrors
+        })
+      );
+
+      return;
+    }
+
+    void (async () => {
+      try {
+        const context = await contextFactory(req);
+        const result = await execute({
+          operationName,
+          document,
+          schema,
+          variableValues: variables,
+          contextValue: context
+        });
+
+        res.end(JSON.stringify(result));
+      } catch (error) {
+        res.end(
+          JSON.stringify({
+            errors: [error]
+          })
+        );
+      }
+    })();
+  });
 });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀  Server ready at ${url}`);
-});
+server.listen(4000);

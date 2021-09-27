@@ -2,14 +2,38 @@
 
 ## Configuring for Envelop
 
+Ensure context parser is configured to perform authentication and add user info to context
+```ts
+  const getEnveloped = envelop({
+    plugins: [
+      ...
+      useExtendContext(req => ({
+        user: someHowAuthenticateUser(req.get("authorization"))),
+      })),
+      ...
+    ]
+  });
+
+```
+
+or
+
+```ts
+  getEnveloped({
+    user: someHowAuthenticateUser(req.get("authorization"))),
+  });
+
+```
+
 Add plugin to envelop
   ```ts
     import { authZEnvelopPlugin } from "@graphql-authz/envelop-plugin";
     
     const getEnveloped = envelop({
       plugins: [
-        useSchema(schema),
+        ...
         authZEnvelopPlugin({ rules })
+        ...
       ]
     });
   ```
@@ -19,8 +43,10 @@ Add plugin to envelop
 
 Apply directive transformer to schema
   ```ts
-  import { authZDirectiveTransformer } from "@graphql-authz/directive";
+  import { authZDirective } from '@graphql-authz/directive';
   import { authZEnvelopPlugin } from "@graphql-authz/envelop-plugin";
+
+  const { authZDirectiveTransformer } = authZDirective();
 
   const transformedSchema = authZDirectiveTransformer(schema);
 
@@ -28,6 +54,7 @@ Apply directive transformer to schema
     plugins: [
       useSchema(transformedSchema),
       authZEnvelopPlugin({ rules })
+      ...
     ]
   });
   ```
@@ -40,8 +67,9 @@ Pass additional parameter `authSchema` to `authZEnvelopPlugin`
     
   const getEnveloped = envelop({
     plugins: [
-      useSchema(schema),
+      ...
       authZEnvelopPlugin({ rules, authSchema })
+      ...
     ]
   });
   ```
