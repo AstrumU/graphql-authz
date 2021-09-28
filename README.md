@@ -8,21 +8,23 @@
 
 ## Overview
 
-GraphQL authorization layer, flexible, (not only) directive-based, compatible with any GraphQL architecture.
+GraphQL authorization layer, flexible, (not only) directive-based, compatible with all modern GraphQL architectures.
 
 ## Features
 - Attaching rules to Query/Mutation/Object/Interface/Field
 - Attaching rules using directives, extensions or authSchema
 - Pre and Post execution rules
 - Any sync/async JS code inside rules
-- Compatible with any GraphQL architecture
+- Compatible with all modern GraphQL architectures
 
 ## Examples
 
 Check examples in `examples` folder:
-- [Plain Apollo Server (schema-first, directives)](examples/src/apollo-server-schema-first/index.ts)
-- [Plain Apollo Server (code-first, extensions)](examples/src/apollo-server-code-first/index.ts)
-- [Apollo Server with Envelop (schema-first, directives)](examples/src/envelop/index.ts)
+- [Apollo Server (schema-first, directives)](examples/src/apollo-server-schema-first/index.ts)
+- [Apollo Server (code-first, extensions)](examples/src/apollo-server-code-first/index.ts)
+- [express-graphql (schema-first, directives)](examples/src/express-graphql/index.ts)
+- [GraphQL Helix (schema-first, authSchema)](examples/src/graphql-helix/index.ts)
+- [Envelop (schema-first, directives)](examples/src/envelop/index.ts)
 - [TypeGraphQL (code-first, extensions)](examples/src/type-graphql/index.ts)
 - [NestJS (code-first, directives)](examples/src/nestjs/index.ts)
 - [Schema Stitching (gateway, directives)](examples/src/schema-stitching/)
@@ -39,6 +41,8 @@ To integrate graphql-authz into project follow several steps depending on your a
 - [Configuring server](#configuring-server)
   - [Configuring Apollo Server plugin](#configuring-apollo-server-plugin)
   - [Configuring Envelop plugin](#configuring-envelop-plugin)
+  - [Configuring express-graphql](#configuring-express-graphql)
+  - [Configuring graphql-helix](#configuring-graphql-helix)
 - [Configuring schema for directive usage](#configuring-schema-for-directive-usage)
   - [Schema First](#schema-first)
   - [Code First](#code-first)
@@ -92,22 +96,159 @@ Alternatively you can create rule as a class
 
 ## Configuring server
 
+<details>
+  <summary>
+    <h3 id="configuring-apollo-server-plugin" style="display: inline-block">Configuring Apollo Server plugin</h3>
+  </summary>
+
+  See [Apollo Server plugin readme](packages/plugins/apollo-server/README.md)
+  or check examples:
+
+  [Apollo Server (schema-first, directives)](examples/src/apollo-server-schema-first/index.ts)
+
+  [Apollo Server (code-first, extensions)](examples/src/apollo-server-code-first/index.ts)
+
+</details>
+<br>
+
+<details>
+  <summary>
+    <h3 id="configuring-envelop-plugin" style="display: inline-block">Configuring Envelop plugin</h3>
+  </summary>
+
+  See [Envelop plugin readme](packages/plugins/envelop/README.md) or check an example:
+  
+  [Envelop (schema-first, directives)](examples/src/envelop/index.ts)
+</details>
+<br>
+
+<details>
+<summary><h3 id="configuring-express-graphql" style="display: inline-block">Configuring express-graphql</h3></summary>
+
+Ensure authenticator is configured to add user info to the request object
+```ts
+const authenticator = (req, res, next) => {
+  const user = someHowAuthenticateUser(req.get("authorization")));
+  req.user = user;
+  next();
+};
+
+app.use(authenticator);
+```
+
+Provide `customExecuteFn` to `graphqlHTTP`
+```ts
+import { execute } from 'graphql';
+import { graphqlHTTP } from 'express-graphql';
+import { wrapExecuteFn } from '@graphql-authz/core';
+
+graphqlHTTP({
+  ...
+  customExecuteFn: wrapExecuteFn(execute, { rules }),
+  ...
+})
+```
+
+### For Directives usage
+
+Apply directive transformer to schema
+```ts
+import { authZDirective } from '@graphql-authz/directive';
+
+const { authZDirectiveTransformer } = authZDirective();
+
+graphqlHTTP({
+    ...
+    schema: authZDirectiveTransformer(schema),
+    customExecuteFn: wrapExecuteFn(execute, { rules }),
+    ...
+  })
+```
+
+### For AuthSchema usage
+
+Pass additional parameter `authSchema` to `wrapExecuteFn`
+```ts
+import { execute } from 'graphql';
+import { wrapExecuteFn } from '@graphql-authz/core';
+
+graphqlHTTP({
+  ...
+  customExecuteFn: wrapExecuteFn(execute, { rules: authZRules, authSchema }),
+  ...
+})
+```
+
+
+Check an example: [express-graphql (schema-first, directives)](examples/src/express-graphql/index.ts)
+
+</details>
+<br>
+
+<details>
+<summary><h3 id="configuring-graphql-helix" style="display: inline-block">Configuring GraphQL Helix</h3></summary>
+
 Ensure context parser is configured to perform authentication and add user info to context
-  ```ts
+```ts
+import { processRequest } from 'graphql-helix';
+
+processRequest({
+  ...
+  contextFactory: () => ({
+    user: someHowAuthenticateUser(req.get("authorization")))
+  }),
+  ...
+})
+```
+
+Provide `execute` option to `processRequest`
+```ts
+import { execute } from 'graphql';
+import { processRequest } from 'graphql-helix';
+import { wrapExecuteFn } from '@graphql-authz/core';
+
+processRequest({
+  ...
+  execute: wrapExecuteFn(execute, { rules })
+  ...
+})
+```
+
+### For Directives usage
+
+Apply directive transformer to schema
+```ts
+import { authZDirective } from '@graphql-authz/directive';
+
+const { authZDirectiveTransformer } = authZDirective();
+
+processRequest({
     ...
-    context: ({ req }) => {
-      return {
-        user: someHowAuthenticateUser(req.get("authorization"))),
-      };
-    },
+    schema: authZDirectiveTransformer(schema),
+    execute: wrapExecuteFn(execute, { rules }),
     ...
-  ```
+  })
+```
 
-### [Configuring Apollo Server plugin](/packages/plugins/apollo-server/README.md)
+### For AuthSchema usage
 
-### [Configuring Envelop plugin](/packages/plugins/envelop/README.md)
+Pass additional parameter `authSchema` to `wrapExecuteFn`
+```ts
+import { execute } from 'graphql';
+import { processRequest } from 'graphql-helix';
+import { wrapExecuteFn } from '@graphql-authz/core';
 
+processRequest({
+  ...
+  execute: wrapExecuteFn(execute, { rules, authSchema })
+  ...
+})
+```
 
+Check an example: [GraphQL Helix (schema-first, authSchema)](examples/src/graphql-helix/index.ts)
+</details>
+<br>
+<br>
 
 ## Configuring schema for directive usage
 
@@ -594,7 +735,7 @@ import { UnauthorizedError } from '@graphql-authz/core';
 
 const SomeRule = postExecRule({
   error: 'User is not authenticated'
-})(() => {/* rule body */});
+})(() => { /* rule body */ });
 ```
 
 Using rule class
