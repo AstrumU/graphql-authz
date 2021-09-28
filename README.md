@@ -98,7 +98,7 @@ Alternatively you can create rule as a class
 
 <details>
   <summary>
-    <h3 id="configuring-apollo-server-plugin" style="display: inline-block">Configuring Apollo Server plugin</h3>
+    <strong id="configuring-apollo-server-plugin">Configuring Apollo Server plugin</strong>
   </summary>
 
   See [Apollo Server plugin readme](packages/plugins/apollo-server/README.md)
@@ -113,7 +113,7 @@ Alternatively you can create rule as a class
 
 <details>
   <summary>
-    <h3 id="configuring-envelop-plugin" style="display: inline-block">Configuring Envelop plugin</h3>
+    <strong id="configuring-envelop-plugin">Configuring Envelop plugin</strong>
   </summary>
 
   See [Envelop plugin readme](packages/plugins/envelop/README.md) or check an example:
@@ -123,129 +123,133 @@ Alternatively you can create rule as a class
 <br>
 
 <details>
-<summary><h3 id="configuring-express-graphql" style="display: inline-block">Configuring express-graphql</h3></summary>
+  <summary>
+    <strong id="configuring-express-graphql">Configuring express-graphql</strong>
+  </summary>
 
-Ensure authenticator is configured to add user info to the request object
-```ts
-const authenticator = (req, res, next) => {
-  const user = someHowAuthenticateUser(req.get("authorization")));
-  req.user = user;
-  next();
-};
-
-app.use(authenticator);
-```
-
-Provide `customExecuteFn` to `graphqlHTTP`
-```ts
-import { execute } from 'graphql';
-import { graphqlHTTP } from 'express-graphql';
-import { wrapExecuteFn } from '@graphql-authz/core';
-
-graphqlHTTP({
-  ...
-  customExecuteFn: wrapExecuteFn(execute, { rules }),
-  ...
-})
-```
-
-### For Directives usage
-
-Apply directive transformer to schema
-```ts
-import { authZDirective } from '@graphql-authz/directive';
-
-const { authZDirectiveTransformer } = authZDirective();
-
-graphqlHTTP({
+  Ensure authenticator is configured to add user info to the request object
+  ```ts
+  const authenticator = (req, res, next) => {
+    const user = someHowAuthenticateUser(req.get("authorization")));
+    req.user = user;
+    next();
+  };
+  
+  app.use(authenticator);
+  ```
+  
+  Provide `customExecuteFn` to `graphqlHTTP`
+  ```ts
+  import { execute } from 'graphql';
+  import { graphqlHTTP } from 'express-graphql';
+  import { wrapExecuteFn } from '@graphql-authz/core';
+  
+  graphqlHTTP({
     ...
-    schema: authZDirectiveTransformer(schema),
     customExecuteFn: wrapExecuteFn(execute, { rules }),
     ...
   })
-```
-
-### For AuthSchema usage
-
-Pass additional parameter `authSchema` to `wrapExecuteFn`
-```ts
-import { execute } from 'graphql';
-import { wrapExecuteFn } from '@graphql-authz/core';
-
-graphqlHTTP({
-  ...
-  customExecuteFn: wrapExecuteFn(execute, { rules: authZRules, authSchema }),
-  ...
-})
-```
-
-
-Check an example: [express-graphql (schema-first, directives)](examples/src/express-graphql/index.ts)
+  ```
+  
+  ### For Directives usage
+  
+  Apply directive transformer to schema
+  ```ts
+  import { authZDirective } from '@graphql-authz/directive';
+  
+  const { authZDirectiveTransformer } = authZDirective();
+  
+  graphqlHTTP({
+      ...
+      schema: authZDirectiveTransformer(schema),
+      customExecuteFn: wrapExecuteFn(execute, { rules }),
+      ...
+    })
+  ```
+  
+  ### For AuthSchema usage
+  
+  Pass additional parameter `authSchema` to `wrapExecuteFn`
+  ```ts
+  import { execute } from 'graphql';
+  import { wrapExecuteFn } from '@graphql-authz/core';
+  
+  graphqlHTTP({
+    ...
+    customExecuteFn: wrapExecuteFn(execute, { rules: authZRules, authSchema }),
+    ...
+  })
+  ```
+  
+  
+  Check an example: [express-graphql (schema-first, directives)](examples/src/express-graphql/index.ts)
 
 </details>
 <br>
 
 <details>
-<summary><h3 id="configuring-graphql-helix" style="display: inline-block">Configuring GraphQL Helix</h3></summary>
+  <summary>
+    <strong id="configuring-graphql-helix">Configuring GraphQL Helix</strong>
+  </summary>
 
-Ensure context parser is configured to perform authentication and add user info to context
-```ts
-import { processRequest } from 'graphql-helix';
-
-processRequest({
-  ...
-  contextFactory: () => ({
-    user: someHowAuthenticateUser(req.get("authorization")))
-  }),
-  ...
-})
-```
-
-Provide `execute` option to `processRequest`
-```ts
-import { execute } from 'graphql';
-import { processRequest } from 'graphql-helix';
-import { wrapExecuteFn } from '@graphql-authz/core';
-
-processRequest({
-  ...
-  execute: wrapExecuteFn(execute, { rules })
-  ...
-})
-```
-
-### For Directives usage
-
-Apply directive transformer to schema
-```ts
-import { authZDirective } from '@graphql-authz/directive';
-
-const { authZDirectiveTransformer } = authZDirective();
-
-processRequest({
+  Ensure context parser is configured to perform authentication and add user info to context
+  ```ts
+  import { processRequest } from 'graphql-helix';
+  
+  processRequest({
     ...
-    schema: authZDirectiveTransformer(schema),
-    execute: wrapExecuteFn(execute, { rules }),
+    contextFactory: () => ({
+      user: someHowAuthenticateUser(req.get("authorization")))
+    }),
     ...
   })
-```
-
-### For AuthSchema usage
-
-Pass additional parameter `authSchema` to `wrapExecuteFn`
-```ts
-import { execute } from 'graphql';
-import { processRequest } from 'graphql-helix';
-import { wrapExecuteFn } from '@graphql-authz/core';
-
-processRequest({
-  ...
-  execute: wrapExecuteFn(execute, { rules, authSchema })
-  ...
-})
-```
-
-Check an example: [GraphQL Helix (schema-first, authSchema)](examples/src/graphql-helix/index.ts)
+  ```
+  
+  Provide `execute` option to `processRequest`
+  ```ts
+  import { execute } from 'graphql';
+  import { processRequest } from 'graphql-helix';
+  import { wrapExecuteFn } from '@graphql-authz/core';
+  
+  processRequest({
+    ...
+    execute: wrapExecuteFn(execute, { rules })
+    ...
+  })
+  ```
+  
+  ### For Directives usage
+  
+  Apply directive transformer to schema
+  ```ts
+  import { authZDirective } from '@graphql-authz/directive';
+  
+  const { authZDirectiveTransformer } = authZDirective();
+  
+  processRequest({
+      ...
+      schema: authZDirectiveTransformer(schema),
+      execute: wrapExecuteFn(execute, { rules }),
+      ...
+    })
+  ```
+  
+  ### For AuthSchema usage
+  
+  Pass additional parameter `authSchema` to `wrapExecuteFn`
+  ```ts
+  import { execute } from 'graphql';
+  import { processRequest } from 'graphql-helix';
+  import { wrapExecuteFn } from '@graphql-authz/core';
+  
+  processRequest({
+    ...
+    execute: wrapExecuteFn(execute, { rules, authSchema })
+    ...
+  })
+  ```
+  
+  Check an example: [GraphQL Helix (schema-first, authSchema)](examples/src/graphql-helix/index.ts)
 </details>
 <br>
 <br>
