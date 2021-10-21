@@ -252,7 +252,6 @@ Alternatively you can create rule as a class
   Check an example: [GraphQL Helix (schema-first, authSchema)](examples/src/graphql-helix/index.ts)
 </details>
 <br>
-<br>
 
 ## Configuring schema for directive usage
 

@@ -43,6 +43,7 @@ async function bootstrap() {
 
   const server = new ApolloServer({
     schema,
+    playground: true,
     // authz apollo plugin
     plugins: [authZApolloPlugin({ rules: authZRules })],
     context: ({ req }) => {
