@@ -154,36 +154,6 @@ const typeDefs = `
   type Mutation {
     publishPost(postId: ID!): Post! @authz(rules: [CanPublishPost])
   }
-
-  # authz rules enum
-  enum AuthZRules {
-    IsAuthenticated
-    IsAdmin
-    CanReadPost
-    CanPublishPost
-  }
-
-  # this is a common boilerplate
-  input AuthZDirectiveCompositeRulesInput {
-    and: [AuthZRules]
-    or: [AuthZRules]
-    not: AuthZRules
-  }
-
-  # this is a common boilerplate
-  input AuthZDirectiveDeepCompositeRulesInput {
-    id: AuthZRules
-    and: [AuthZDirectiveDeepCompositeRulesInput]
-    or: [AuthZDirectiveDeepCompositeRulesInput]
-    not: AuthZDirectiveDeepCompositeRulesInput
-  }
-
-  # this is a common boilerplate
-  directive @authz(
-    rules: [AuthZRules]
-    compositeRules: [AuthZDirectiveCompositeRulesInput]
-    deepCompositeRules: [AuthZDirectiveDeepCompositeRulesInput]
-  ) on FIELD_DEFINITION | OBJECT | INTERFACE
 `;
 
 const schema = authZDirectiveTransformer(
