@@ -54,13 +54,6 @@ export function wrapExecuteFn(
       authSchema
     });
 
-    const fullDocument = addSelectionSetsToDocument(
-      filteredDocument,
-      compiledRules,
-      args.schema,
-      variables
-    );
-
     try {
       await Promise.all(
         compiledRules.preExecutionRules.map(rule =>
@@ -70,6 +63,13 @@ export function wrapExecuteFn(
     } catch (error) {
       processError(error);
     }
+
+    const fullDocument = addSelectionSetsToDocument(
+      filteredDocument,
+      compiledRules,
+      args.schema,
+      variables
+    );
 
     const executionResult = await executeFn({
       ...args,
