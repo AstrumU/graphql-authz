@@ -16,7 +16,8 @@ import {
   getFragmentDefinitions,
   completeConfig,
   IAuthZConfig,
-  IExtensionsDirective
+  IExtensionsDirective,
+  hasPostExecutionRules
 } from '@graphql-authz/core';
 
 export function authZApolloPlugin(config: IAuthZConfig): ApolloServerPlugin {
@@ -62,7 +63,10 @@ export function authZApolloPlugin(config: IAuthZConfig): ApolloServerPlugin {
         },
         async willSendResponse(requestContext) {
           try {
-            if (requestContext.response.data) {
+            if (
+              requestContext.response.data &&
+              hasPostExecutionRules(compiledRules)
+            ) {
               const fragmentDefinitions =
                 getFragmentDefinitions(filteredDocument);
 
