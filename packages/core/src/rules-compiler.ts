@@ -8,7 +8,8 @@ import {
   isUnionType,
   GraphQLObjectType,
   GraphQLInterfaceType,
-  GraphQLField
+  GraphQLField,
+  isIntrospectionType
 } from 'graphql';
 import { getArgumentValues } from 'graphql/execution/values';
 
@@ -153,6 +154,15 @@ function getExecutableRulesByConfigs(
   });
 }
 
+export function hasPostExecutionRules({
+  postExecutionRules: { byType, byField }
+}: ICompiledRules): boolean {
+  return !!Object.keys({
+    ...byType,
+    ...byField
+  }).length;
+}
+
 export function compileRules({
   document,
   schema,
@@ -181,8 +191,16 @@ export function compileRules({
       const type = typeInfo.getType();
       const parentType = typeInfo.getParentType();
 
+      if (parentType && isIntrospectionType(parentType)) {
+        return false;
+      }
+
       if (type) {
         const deepType = getDeepType(type);
+
+        if (isIntrospectionType(deepType)) {
+          return false;
+        }
         const extensionsConfigs = getConfigsByExtensions(
           deepType.extensions,
           directiveName

@@ -4,7 +4,7 @@ import { completeConfig, IAuthZConfig } from './config';
 import { getFilteredDocument, getFragmentDefinitions } from './graphql-utils';
 import { cleanupResult } from './result-cleaner';
 import { executePostExecRules } from './rule-executor';
-import { compileRules } from './rules-compiler';
+import { compileRules, hasPostExecutionRules } from './rules-compiler';
 import { addSelectionSetsToDocument } from './visit-selection-set';
 
 type ExecuteFn = typeof execute;
@@ -76,35 +76,36 @@ export function wrapExecuteFn(
       document: fullDocument
     });
 
-    try {
-      if (executionResult.data) {
-        const fragmentDefinitions = getFragmentDefinitions(filteredDocument);
-
-        const executionPromises = executePostExecRules({
-          context: args.contextValue,
-          schema: args.schema,
-          resultData: executionResult.data,
-          document: filteredDocument,
-          rules: compiledRules,
-          fragmentDefinitions,
-          variables
-        });
-
-        const cleanResult = cleanupResult(
-          filteredDocument,
-          args.schema,
-          fragmentDefinitions,
-          variables,
-          executionResult.data
-        );
-
-        await Promise.all(executionPromises);
-        return {
-          ...executionResult,
-          data: cleanResult
-        };
-      }
+    if (!(executionResult.data && hasPostExecutionRules(compiledRules))) {
       return executionResult;
+    }
+
+    try {
+      const fragmentDefinitions = getFragmentDefinitions(filteredDocument);
+
+      const executionPromises = executePostExecRules({
+        context: args.contextValue,
+        schema: args.schema,
+        resultData: executionResult.data,
+        document: filteredDocument,
+        rules: compiledRules,
+        fragmentDefinitions,
+        variables
+      });
+
+      const cleanResult = cleanupResult(
+        filteredDocument,
+        args.schema,
+        fragmentDefinitions,
+        variables,
+        executionResult.data
+      );
+
+      await Promise.all(executionPromises);
+      return {
+        ...executionResult,
+        data: cleanResult
+      };
     } catch (error) {
       processError(error);
     }

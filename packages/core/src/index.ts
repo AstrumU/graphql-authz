@@ -4,7 +4,11 @@ export * from './auth-config';
 
 export { directiveTypeDefs } from './graphql-utils';
 export { executePostExecRules } from './rule-executor';
-export { compileRules, IExtensionsDirective } from './rules-compiler';
+export {
+  compileRules,
+  hasPostExecutionRules,
+  IExtensionsDirective
+} from './rules-compiler';
 export { addSelectionSetsToDocument } from './visit-selection-set';
 export { cleanupResult } from './result-cleaner';
 export { getFilteredDocument, getFragmentDefinitions } from './graphql-utils';

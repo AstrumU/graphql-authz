@@ -84,9 +84,9 @@ export function getFilteredDocument(
 }
 
 export function getFragmentDefinitions(
-  ast: DocumentNode
+  document: DocumentNode
 ): FragmentDefinitionNode[] {
-  return ast.definitions.filter<FragmentDefinitionNode>(
+  return document.definitions.filter<FragmentDefinitionNode>(
     (node): node is FragmentDefinitionNode =>
       node.kind === Kind.FRAGMENT_DEFINITION
   );
