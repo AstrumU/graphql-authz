@@ -7,7 +7,8 @@ export { executePostExecRules } from './rule-executor';
 export {
   compileRules,
   hasPostExecutionRules,
-  IExtensionsDirective
+  IExtensionsDirective,
+  IExtensionsData
 } from './rules-compiler';
 export { addSelectionSetsToDocument } from './visit-selection-set';
 export { cleanupResult } from './result-cleaner';

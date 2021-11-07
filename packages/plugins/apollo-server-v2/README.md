@@ -1,4 +1,4 @@
-# @graphql-authz/apollo-server-plugin
+# @graphql-authz/apollo-server-plugin-v2
 
 ## Configuring Apollo Server
 
@@ -17,25 +17,14 @@ Ensure context parser is configured to perform authentication and add user info 
 
 ### For Directives usage
 
-Apply authZDirectiveTransformer to schema and add plugin to apollo-server
+Add plugin and directive visitor to apollo-server
   ```ts
-    import { makeExecutableSchema } from '@graphql-tools/schema';
-    import { authZDirective } from '@graphql-authz/directive';
-    import { authZApolloPlugin } from "@graphql-authz/apollo-server-plugin";
-
-    const { authZDirectiveTransformer } = authZDirective();
-
-    const schema = makeExecutableSchema({
-      typeDefs,
-      resolvers
-    });
-    
-    const transformedSchema = authZDirectiveTransformer(schema);
+    import { authZApolloPlugin, AuthZDirectiveVisitor } from "@graphql-authz/apollo-server-plugin";
 
     const server = new ApolloServer({
       ...
-      schema: transformedSchema,
       plugins: [authZApolloPlugin({ rules })],
+      schemaDirectives: { authz: AuthZDirectiveVisitor },
       ...
     });
   ```

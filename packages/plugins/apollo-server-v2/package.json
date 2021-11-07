@@ -1,7 +1,7 @@
 {
-  "name": "@graphql-authz/envelop-plugin",
+  "name": "@graphql-authz/apollo-server-v2-plugin",
   "version": "1.0.0",
-  "description": "Envelop plugin for graphql-authz",
+  "description": "Apollo Server v2 plugin for graphql-authz",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -15,7 +15,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/AstrumU/graphql-authz.git",
-    "directory": "packages/plugins/envelop"
+    "directory": "packages/plugins/apollo-server"
   },
   "keywords": [
     "typescript",
@@ -24,15 +24,17 @@
     "directives",
     "authorization",
     "authz",
-    "envelop"
+    "apollo"
   ],
   "dependencies": {
     "@graphql-authz/core": "1.0.0"
   },
   "devDependencies": {
-    "@envelop/core": "1.5.0"
+    "apollo-server": "2.25.2",
+    "apollo-server-plugin-base": "0.13.0"
   },
   "peerDependencies": {
-    "@envelop/core": "^1.0.3"
+    "apollo-server": "^2.25.2",
+    "graphql": "^14.0.0 || ^15.0.0"
   }
 }

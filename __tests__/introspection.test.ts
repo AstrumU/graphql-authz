@@ -1,7 +1,8 @@
+import { ApolloServer } from 'apollo-server';
 import { getIntrospectionQuery } from 'graphql';
 import { postExecRule } from '@graphql-authz/core';
 
-import { ApolloServerMock, mockServer } from './mock-server';
+import { mockServer } from './mock-server';
 
 const rawSchema = `
 type Query {
@@ -34,9 +35,9 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
   '%s',
   integrationMode => {
     describe('Introspection Query', () => {
-      let server: ApolloServerMock;
+      let server: ApolloServer;
 
-      beforeAll(async () => {
+      beforeAll(() => {
         server = mockServer({
           integrationMode,
           rules,
@@ -45,8 +46,6 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           declarationMode: 'authSchema',
           authSchema
         });
-
-        await server.willStart();
       });
 
       afterEach(() => {

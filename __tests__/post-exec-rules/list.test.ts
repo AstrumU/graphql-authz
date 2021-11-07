@@ -1,4 +1,6 @@
-import { ApolloServerMock, mockServer } from '../mock-server';
+import { ApolloServer } from 'apollo-server';
+
+import { mockServer } from '../mock-server';
 import { asyncRules } from './rules-async';
 
 const rawSchema = `
@@ -174,9 +176,9 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
       '%s',
       declarationMode => {
         describe('post execution rule with list result', () => {
-          let server: ApolloServerMock;
+          let server: ApolloServer;
 
-          beforeAll(async () => {
+          beforeAll(() => {
             server = mockServer({
               integrationMode,
               rules: asyncRules,
@@ -228,8 +230,6 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 }
               }
             });
-
-            await server.willStart();
           });
 
           afterEach(() => {

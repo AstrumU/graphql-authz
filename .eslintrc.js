@@ -84,6 +84,10 @@ module.exports = {
       }
     },
     {
+      files: ['*.js'],
+      extends: ['eslint:recommended', 'prettier'],
+    }
+    {
       files: ['./examples/**/*.ts'],
       rules: {
         'promise/catch-or-return': ['off'],

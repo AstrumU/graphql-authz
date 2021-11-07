@@ -462,7 +462,7 @@ const Query = new GraphQLObjectType({
   name: 'Query',
   fields: {
     post: {
-      type: GraphQLNonNull(GraphQLList(GraphQLNonNull(Post))),
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Post))),
       extensions: createAuthZExtensions({
         rules: ['IsAuthenticated']
       }),

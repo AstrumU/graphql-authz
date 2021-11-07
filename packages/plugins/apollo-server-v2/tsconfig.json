@@ -1,12 +1,13 @@
 {
+  "extends": "../../../tsconfig.json",
   "compilerOptions": {
     "incremental": true,
     "composite": true,
     "target": "es2018",
     "moduleResolution": "node",
     "module": "commonjs",
-    "rootDir": "packages",
     "outDir": "dist",
+    "rootDir": "src",
     "declaration": true,
     "declarationMap": true,
     "inlineSourceMap": true,
@@ -45,26 +46,14 @@
   "compileOnSave": false,
   "references": [
     {
-      "path": "packages/core"
-    },
-    {
-      "path": "packages/directive"
-    },
-    {
-      "path": "packages/plugins/apollo-server"
-    },
-    {
-      "path": "packages/plugins/apollo-server-v2"
-    },
-    {
-      "path": "packages/plugins/envelop"
+      "path": "../../core"
     }
   ],
   "include": [
-    "packages"
+    "src"
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "**dist"
   ]
 }

@@ -14,18 +14,42 @@ type ExecuteParameters = Parameters<ExecuteFn> | [ExecutionArgs];
 function normalizeExecuteParameters(
   ...executeParameters: ExecuteParameters
 ): ExecutionArgs {
-  return executeParameters.length === 1
-    ? executeParameters[0]
-    : {
-        schema: executeParameters[0],
-        document: executeParameters[1],
-        rootValue: executeParameters[2],
-        contextValue: executeParameters[3],
-        variableValues: executeParameters[4],
-        operationName: executeParameters[5],
-        fieldResolver: executeParameters[6],
-        typeResolver: executeParameters[7]
-      };
+  if (executeParameters.length === 1) {
+    return executeParameters[0];
+  }
+
+  // for graphql < 16
+
+  const [
+    schema,
+    document,
+    rootValue,
+    contextValue,
+    variableValues,
+    operationName,
+    fieldResolver,
+    typeResolver
+  ] = executeParameters as unknown as [
+    ExecutionArgs['schema'],
+    ExecutionArgs['document'],
+    ExecutionArgs['rootValue'],
+    ExecutionArgs['contextValue'],
+    ExecutionArgs['variableValues'],
+    ExecutionArgs['operationName'],
+    ExecutionArgs['fieldResolver'],
+    ExecutionArgs['typeResolver']
+  ];
+
+  return {
+    schema,
+    document,
+    rootValue,
+    contextValue,
+    variableValues,
+    operationName,
+    fieldResolver,
+    typeResolver
+  };
 }
 
 export function wrapExecuteFn(
