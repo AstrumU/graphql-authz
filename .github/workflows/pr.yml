@@ -35,6 +35,7 @@ jobs:
       - run: yarn prettier
 
   test:
+    name: Test on GraphQL ${{matrix.graphql_version}}
     runs-on: ubuntu-latest
     strategy:
       matrix:
