@@ -7,7 +7,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '14.18.1'
           cache: 'yarn'
       - run: yarn install
       - run: yarn build
@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '14.18.1'
           cache: 'yarn'
       - run: yarn install
       - run: yarn lint
@@ -29,19 +29,27 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '14.18.1'
           cache: 'yarn'
       - run: yarn install
       - run: yarn prettier
 
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        graphql_version:
+          - 16
+          - 15
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: '14'
+          node-version: '14.18.1'
           cache: 'yarn'
+      - name: Downgrade GraphQL v${{matrix.graphql_version}}
+        if: ${{matrix.graphql_version != 16}}
+        run: node ./scripts/downgrade-graphql-version.js ${{matrix.graphql_version}}
       - run: yarn install
       - run: yarn build
       - run: yarn test
