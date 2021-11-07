@@ -36,12 +36,13 @@ async function run() {
   const packageJsonContentList = await Promise.all(
     packageJsonList.map(async item => ({
       ...item,
+      // eslint-disable-next-line security/detect-non-literal-fs-filename
       content: await fs.promises.readFile(item.path, 'utf-8').then(JSON.parse)
     }))
   );
 
   switch (version) {
-    case '15':
+    case '15': {
       async function renamePluginInTests() {
         await fs.promises.rename(
           './__tests__/apollo-server-plugin.ts',
@@ -57,6 +58,7 @@ async function run() {
       function updatePackageJson() {
         return Promise.all(
           packageJsonContentList.map(item =>
+            // eslint-disable-next-line security/detect-non-literal-fs-filename
             fs.promises.writeFile(
               item.path,
               JSON.stringify(
@@ -77,9 +79,10 @@ async function run() {
         );
       }
 
-      return Promise.all([renamePluginInTests(), updatePackageJson()]);
+      await Promise.all([renamePluginInTests(), updatePackageJson()]);
 
       break;
+    }
     default:
       throw new Error(
         `downgrade-graphql-version script supports only version 15. Got ${version}`

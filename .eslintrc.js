@@ -85,7 +85,11 @@ module.exports = {
     },
     {
       files: ['*.js'],
-      extends: ['eslint:recommended', 'prettier']
+      extends: ['eslint:recommended', 'prettier'],
+      rules: {
+        'no-inner-declarations': ['off'],
+        '@typescript-eslint/no-var-requires': ['off']
+      }
     },
     {
       files: ['./examples/**/*.ts'],
