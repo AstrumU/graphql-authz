@@ -85,8 +85,8 @@ module.exports = {
     },
     {
       files: ['*.js'],
-      extends: ['eslint:recommended', 'prettier'],
-    }
+      extends: ['eslint:recommended', 'prettier']
+    },
     {
       files: ['./examples/**/*.ts'],
       rules: {
