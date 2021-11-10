@@ -1,6 +1,6 @@
 {
   "name": "@graphql-authz/envelop-plugin",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Envelop plugin for graphql-authz",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -27,7 +27,7 @@
     "envelop"
   ],
   "dependencies": {
-    "@graphql-authz/core": "1.0.0"
+    "@graphql-authz/core": "1.1.0"
   },
   "devDependencies": {
     "@envelop/core": "1.5.0"

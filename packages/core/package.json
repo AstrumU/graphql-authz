@@ -1,6 +1,6 @@
 {
   "name": "@graphql-authz/core",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "GraphQL authorization layer core",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

@@ -1,6 +1,9 @@
-# @graphql-authz/apollo-server-v2-plugin
+# @graphql-authz/directive
 
-## 1.0.1
+## 1.1.0
+### Minor Changes
+
+- 64cad9d: Compatibility with GraphQL v16 and Apollo Server v3
 
 ### Patch Changes
 
