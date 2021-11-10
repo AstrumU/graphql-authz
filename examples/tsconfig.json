@@ -43,6 +43,35 @@
     ]
   },
   "compileOnSave": false,
+  "references": [
+    {
+      "path": "packages/apollo-federation"
+    },
+    {
+      "path": "packages/apollo-server-code-first"
+    },
+    {
+      "path": "packages/apollo-server-schema-first"
+    },
+    {
+      "path": "packages/envelop"
+    },
+    {
+      "path": "packages/express-graphql"
+    },
+    {
+      "path": "packages/graphql-helix"
+    },
+    {
+      "path": "packages/nestjs"
+    },
+    {
+      "path": "packages/schema-stitching"
+    },
+    {
+      "path": "packages/type-graphql"
+    }
+  ],
   "include": [
     "src/**/*.ts"
   ],

@@ -40,6 +40,12 @@ export interface IExtensionsDirective<
   arguments: IAuthConfig<TRules>;
 }
 
+export interface IExtensionsData<TRules extends RulesObject = RulesObject> {
+  authz?: {
+    directives: IExtensionsDirective<TRules>[];
+  };
+}
+
 export interface ICompiledRules {
   preExecutionRules: PreExecutionRule[];
   postExecutionRules: {
@@ -85,21 +91,24 @@ function getConfigsByFieldAndAuthSchema(
 }
 
 function getConfigsByExtensions(
-  extensions: (
-    | GraphQLObjectType
-    | GraphQLInterfaceType
-    | GraphQLField<unknown, unknown>
-  )['extensions'],
+  extensions:
+    | ((
+        | GraphQLObjectType
+        | GraphQLInterfaceType
+        | GraphQLField<unknown, unknown>
+      )['extensions'] &
+        IExtensionsData)
+    | null
+    | undefined,
   directiveName: string
 ): IAuthConfig[] {
   if (!extensions?.authz?.directives?.length) {
     return [];
   }
 
-  const authZDirectives: IExtensionsDirective[] =
-    extensions.authz.directives.filter(
-      (directive: IExtensionsDirective) => directive.name === directiveName
-    );
+  const authZDirectives = extensions.authz.directives.filter(
+    directive => directive.name === directiveName
+  );
 
   return authZDirectives.map(authZDirective => {
     if (!authZDirective.arguments) {

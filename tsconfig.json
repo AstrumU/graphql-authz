@@ -54,6 +54,9 @@
       "path": "packages/plugins/apollo-server"
     },
     {
+      "path": "packages/plugins/apollo-server-v2"
+    },
+    {
       "path": "packages/plugins/envelop"
     }
   ],

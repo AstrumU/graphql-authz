@@ -124,7 +124,7 @@ function extractSelectionSets(rules: Record<string, PostExecutionRule[]>) {
         .flat<SelectionNode[][][], 2>(2);
 
       result[key] = {
-        kind: 'SelectionSet',
+        kind: Kind.SELECTION_SET,
         selections
       };
 

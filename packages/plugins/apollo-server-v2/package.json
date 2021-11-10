@@ -1,0 +1,40 @@
+{
+  "name": "@graphql-authz/apollo-server-v2-plugin",
+  "version": "1.0.0",
+  "description": "Apollo Server v2 plugin for graphql-authz",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "author": "Dmitry Til <till.dima@gmail.com>",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AstrumU/graphql-authz.git",
+    "directory": "packages/plugins/apollo-server"
+  },
+  "keywords": [
+    "typescript",
+    "graphql",
+    "schema",
+    "directives",
+    "authorization",
+    "authz",
+    "apollo"
+  ],
+  "dependencies": {
+    "@graphql-authz/core": "1.0.0"
+  },
+  "devDependencies": {
+    "apollo-server": "2.25.2",
+    "apollo-server-plugin-base": "0.13.0"
+  },
+  "peerDependencies": {
+    "apollo-server": "^2.25.2",
+    "graphql": "^14.0.0 || ^15.0.0"
+  }
+}

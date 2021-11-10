@@ -1,13 +1,9 @@
 import { makeExecutableSchema } from '@graphql-tools/schema';
+import { addMocksToSchema } from '@graphql-tools/mock';
 import { envelop, useSchema } from '@envelop/core';
-import { Config } from 'apollo-server';
-import { ApolloServerBase } from 'apollo-server-core';
+import { Config, ApolloServer } from 'apollo-server';
 import { GraphQLSchema } from 'graphql';
 
-import {
-  authZApolloPlugin,
-  AuthZDirectiveVisitor
-} from '@graphql-authz/apollo-server-plugin';
 import { authZEnvelopPlugin } from '@graphql-authz/envelop-plugin';
 import {
   authZDirective,
@@ -20,11 +16,9 @@ import {
   IAuthZConfig
 } from '@graphql-authz/core';
 
-export class ApolloServerMock extends ApolloServerBase {
-  public async willStart(): Promise<void> {
-    return super.willStart();
-  }
-}
+import { authZApolloPlugin } from './apollo-server-plugin';
+
+const { authZDirectiveTransformer } = authZDirective();
 
 export interface IMockServerParams {
   rules: RulesObject;
@@ -48,19 +42,27 @@ function mockServerWithApolloPlugin(
 ) {
   if (declarationMode === 'directive') {
     const plugin = authZApolloPlugin({ rules });
+    const schema = makeExecutableSchema({
+      typeDefs: fullRawSchema
+    });
 
-    return new ApolloServerMock({
-      typeDefs: fullRawSchema,
+    const transformedSchema = authZDirectiveTransformer(schema);
+
+    return new ApolloServer({
+      schema: transformedSchema,
       mocks: true,
       mockEntireSchema: true,
-      schemaDirectives: { authz: AuthZDirectiveVisitor },
       plugins: [plugin],
       ...apolloServerConfig
     });
   } else {
     const plugin = authZApolloPlugin({ rules, authSchema });
-    return new ApolloServerMock({
-      typeDefs: rawSchemaWithoutDirectives,
+    const schema = makeExecutableSchema({
+      typeDefs: rawSchemaWithoutDirectives
+    });
+
+    return new ApolloServer({
+      schema,
       mocks: true,
       mockEntireSchema: true,
       plugins: [plugin],
@@ -98,13 +100,23 @@ function mockServerWithEnvelopPlugin(
     pluginConfig = { rules, authSchema };
   }
 
+  const mocks =
+    apolloServerConfig?.mocks && typeof apolloServerConfig.mocks !== 'boolean'
+      ? apolloServerConfig.mocks
+      : {};
+
+  const schemaWithMocks = addMocksToSchema({
+    schema,
+    mocks
+  });
+
   const getEnveloped = envelop({
-    plugins: [useSchema(schema), authZEnvelopPlugin(pluginConfig)]
+    plugins: [useSchema(schemaWithMocks), authZEnvelopPlugin(pluginConfig)]
   });
 
   const { schema: envelopedSchema } = getEnveloped();
 
-  return new ApolloServerMock({
+  return new ApolloServer({
     schema: envelopedSchema,
     mocks: true,
     mockEntireSchema: true,
@@ -123,7 +135,7 @@ function mockServerWithEnvelopPlugin(
   });
 }
 
-export function mockServer(params: IMockServerParams): ApolloServerMock {
+export function mockServer(params: IMockServerParams): ApolloServer {
   const directive = authZGraphQLDirective(params.rules);
 
   const fullRawSchema = `${directiveTypeDefs(directive)}

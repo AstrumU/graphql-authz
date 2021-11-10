@@ -1,5 +1,7 @@
+import { ApolloServer } from 'apollo-server';
 import { PostExecutionRule } from '@graphql-authz/core';
-import { ApolloServerMock, mockServer } from '../mock-server';
+
+import { mockServer } from '../mock-server';
 
 class Rule1 extends PostExecutionRule {
   public execute() {
@@ -159,9 +161,9 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
       '%s',
       declarationMode => {
         describe('post execution rule', () => {
-          let server: ApolloServerMock;
+          let server: ApolloServer;
 
-          beforeAll(async () => {
+          beforeAll(() => {
             server = mockServer({
               integrationMode,
               rules,
@@ -213,8 +215,6 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 }
               }
             });
-
-            await server.willStart();
           });
 
           afterEach(() => {

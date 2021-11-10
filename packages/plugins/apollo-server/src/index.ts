@@ -1,12 +1,5 @@
-import { SchemaDirectiveVisitor } from 'apollo-server';
 import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import {
-  GraphQLField,
-  GraphQLInterfaceType,
-  GraphQLObjectType,
-  parse,
-  print
-} from 'graphql';
+import { parse, print } from 'graphql';
 import {
   executePostExecRules,
   compileRules,
@@ -16,7 +9,6 @@ import {
   getFragmentDefinitions,
   completeConfig,
   IAuthZConfig,
-  IExtensionsDirective,
   hasPostExecutionRules
 } from '@graphql-authz/core';
 
@@ -49,7 +41,7 @@ export function authZApolloPlugin(config: IAuthZConfig): ApolloServerPlugin {
       );
       requestContext.request.query = print(fullDocument);
 
-      return {
+      return Promise.resolve({
         async didResolveOperation(requestContext) {
           try {
             await Promise.all(
@@ -100,49 +92,7 @@ export function authZApolloPlugin(config: IAuthZConfig): ApolloServerPlugin {
             processError(error);
           }
         }
-      };
+      });
     }
   };
-}
-
-export class AuthZDirectiveVisitor extends SchemaDirectiveVisitor {
-  private addAuthZExtensionsDirective(
-    schemaItem:
-      | GraphQLField<unknown, unknown>
-      | GraphQLObjectType
-      | GraphQLInterfaceType,
-    authZExtensionsDirective: IExtensionsDirective
-  ): void {
-    schemaItem.extensions = {
-      ...schemaItem.extensions,
-      authz: {
-        ...schemaItem.extensions?.authz,
-        directives: [
-          ...(schemaItem.extensions?.authz?.directives || []),
-          authZExtensionsDirective
-        ]
-      }
-    };
-  }
-
-  public visitFieldDefinition(field: GraphQLField<unknown, unknown>): void {
-    this.addAuthZExtensionsDirective(field, {
-      name: this.name,
-      arguments: this.args
-    });
-  }
-
-  public visitObject(object: GraphQLObjectType): void {
-    this.addAuthZExtensionsDirective(object, {
-      name: this.name,
-      arguments: this.args
-    });
-  }
-
-  public visitInterface(iface: GraphQLInterfaceType): void {
-    this.addAuthZExtensionsDirective(iface, {
-      name: this.name,
-      arguments: this.args
-    });
-  }
 }

@@ -22,7 +22,7 @@ type WrappedType = GraphQLList<any> | GraphQLNonNull<any>; // eslint-disable-lin
 type DeepType = Exclude<GraphQLType, WrappedType>;
 
 export function isWrappedType(type: GraphQLType): type is WrappedType {
-  return 'ofType' in type && type.ofType;
+  return !!('ofType' in type && type.ofType);
 }
 
 export function getListTypeDepth(

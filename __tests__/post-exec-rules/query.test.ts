@@ -1,6 +1,10 @@
+import { ApolloServer } from 'apollo-server';
+import { GraphQLResponse } from 'apollo-server-plugin-base';
+import { GraphQLError } from 'graphql';
+
 import { syncFunctionalRules, syncRules } from './rules-sync';
 import { asyncFunctionalRules, asyncRules } from './rules-async';
-import { ApolloServerMock, mockServer } from '../mock-server';
+import { mockServer } from '../mock-server';
 
 const rawSchema = `
 type Post {
@@ -93,9 +97,9 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
         ])('%s', (name, rules) => {
           describe('post execution rule', () => {
             describe('on query', () => {
-              let server: ApolloServerMock;
+              let server: ApolloServer;
 
-              beforeAll(async () => {
+              beforeAll(() => {
                 server = mockServer({
                   integrationMode,
                   rules,
@@ -104,8 +108,6 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                   declarationMode,
                   authSchema
                 });
-
-                await server.willStart();
               });
 
               afterEach(() => {
@@ -178,21 +180,21 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('failing rule should fail query', async () => {
-                let result;
-                let error;
+                let result: GraphQLResponse | undefined = undefined;
+                let error: GraphQLError | undefined = undefined;
                 try {
                   result = await server.executeOperation({
                     query: postQuery
                   });
                 } catch (e) {
-                  error = e;
+                  error = e as GraphQLError;
                 }
 
                 expect(result && result?.data).toBeUndefined();
                 expect(error || result?.errors?.[0]).toBeDefined();
-                expect((error || result?.errors?.[0]).extensions.code).toEqual(
-                  'FORBIDDEN'
-                );
+                expect(
+                  (error || result?.errors?.[0])?.extensions?.code
+                ).toEqual('FORBIDDEN');
               });
 
               it('passing rule should not fail query', async () => {

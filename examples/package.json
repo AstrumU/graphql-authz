@@ -9,54 +9,36 @@
     "/dist"
   ],
   "scripts": {
+    "clean": "run-s clean:*",
+    "clean:packages": "rimraf packages/*/{dist,node_modules,tsconfig.tsbuildinfo}",
+    "clean:root": "rimraf {node_modules,coverage,tsconfig.tsbuildinfo}",
     "build": "tsc --build .",
-    "start:apollo-server-schema-first": "node dist/apollo-server-schema-first/index.js",
-    "start:apollo-server-code-first": "node dist/apollo-server-code-first/index.js",
-    "start:nestjs": "node dist/nestjs/index.js",
-    "start:type-graphql": "node dist/type-graphql/index.js",
-    "start:schema-stitching": "node dist/schema-stitching/index.js & node dist/schema-stitching/services/users/index.js & node dist/schema-stitching/services/posts/index.js",
-    "start:apollo-federation": "node dist/apollo-federation/index.js & node dist/apollo-federation/services/users/index.js & node dist/apollo-federation/services/posts/index.js",
-    "start:envelop": "node dist/envelop/index.js",
-    "start:express-graphql": "node dist/express-graphql/index.js",
-    "start:graphql-helix": "node dist/graphql-helix/index.js"
+    "postinstall": "rimraf node_modules/graphql",
+    "start:apollo-server-schema-first": "node packages/apollo-server-schema-first/dist/index.js",
+    "start:apollo-server-code-first": "node packages/apollo-server-code-first/dist/index.js",
+    "start:nestjs": "node --inspect packages/nestjs/dist/index.js",
+    "start:type-graphql": "node packages/type-graphql/dist/index.js",
+    "start:envelop": "node packages/envelop/dist/index.js",
+    "start:express-graphql": "node packages/express-graphql/dist/index.js",
+    "start:graphql-helix": "node packages/graphql-helix/dist/index.js",
+    "start:schema-stitching": "node packages/schema-stitching/dist/index.js & node packages/schema-stitching/dist/services/users/index.js & node packages/schema-stitching/dist/services/posts/index.js",
+    "start:apollo-federation": "node packages/apollo-federation/dist/index.js & node packages/apollo-federation/dist/services/users/index.js & node packages/apollo-federation/dist/services/posts/index.js"
   },
   "author": "",
   "license": "MIT",
   "publishConfig": {
     "access": "restricted"
   },
-  "dependencies": {
-    "@graphql-authz/core": "1.0.0",
-    "@envelop/core": "1.0.3",
-    "apollo-server-errors": "2.4.2",
-    "apollo-server-plugin-base": "0.9.1"
+  "resolutions": {
+    "graphql": "16.0.1"
   },
+  "dependencies": {},
   "devDependencies": {
-    "@apollo/federation": "0.28.0",
-    "@apollo/gateway": "0.37.0",
-    "@graphql-tools/stitch": "7.5.3",
-    "@graphql-tools/stitching-directives": "1.3.3",
-    "@nestjs/common": "7.6.5",
-    "@nestjs/core": "7.6.4",
-    "@nestjs/graphql": "7.9.8",
-    "@nestjs/platform-express": "7.6.4",
-    "@types/lodash": "4.14.165",
-    "@types/jest": "26.0.20",
-    "@types/wait-on": "5.3.1",
-    "apollo-server": "2.25.0",
-    "apollo-server-core": "2.21.2",
-    "cross-fetch": "3.1.4",
-    "express-graphql": "0.12.0",
-    "graphql-helix": "1.8.0",
-    "jest": "^26.6.3",
-    "reflect-metadata": "0.1.13",
-    "rxjs": "6.6.3",
-    "ts-node": "^9.1.1",
-    "type-graphql": "1.1.1",
-    "typescript": "^4.1.3",
-    "wait-on": "6.0.0"
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^3.0.2",
+    "typescript": "4.4.4"
   },
-  "peerDependencies": {
-    "graphql": "^14.0.0 || ^15.0.0"
-  }
+  "workspaces": [
+    "./packages/*"
+  ]
 }

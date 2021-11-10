@@ -1,0 +1,30 @@
+{
+  "name": "@graphql-authz-examples/type-graphql",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Examples for GraphQL authorization layer",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsc --build .",
+    "start": "node dist/index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "dependencies": {
+    "apollo-server-errors": "3.3.0",
+    "apollo-server-plugin-base": "3.3.0",
+    "apollo-server": "3.4.0",
+    "apollo-server-core": "3.4.0",
+    "type-graphql": "1.1.1"
+  },
+  "devDependencies": {
+    "typescript": "4.4.4"
+  }
+}

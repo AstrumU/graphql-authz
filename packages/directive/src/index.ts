@@ -1,5 +1,5 @@
 import { mapSchema, MapperKind, getDirective } from '@graphql-tools/utils';
-import { RulesObject } from '@graphql-authz/core';
+import { RulesObject, IExtensionsData } from '@graphql-authz/core';
 import {
   DirectiveLocation,
   GraphQLDirective,
@@ -21,7 +21,7 @@ export function authZGraphQLDirective(
     name: 'AuthZRules',
     values: Object.keys(rules).reduce<GraphQLEnumValueConfigMap>(
       (result, key) => {
-        result[key] = { value: rules[key].name };
+        result[key] = { value: key };
         return result;
       },
       {}
@@ -63,10 +63,13 @@ export function authZGraphQLDirective(
   });
 }
 
-type SchemaItem =
+type SchemaItem = (
   | GraphQLFieldConfig<unknown, unknown>
   | GraphQLObjectType
-  | GraphQLInterfaceType;
+  | GraphQLInterfaceType
+) & {
+  extensions?: IExtensionsData | null;
+};
 
 export function authZDirective(directiveName = 'authz'): {
   authZDirectiveTransformer: (schema: GraphQLSchema) => GraphQLSchema;

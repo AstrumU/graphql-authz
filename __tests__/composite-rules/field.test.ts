@@ -1,4 +1,8 @@
-import { ApolloServerMock, mockServer } from '../mock-server';
+import { ApolloServer } from 'apollo-server';
+import { GraphQLResponse } from 'apollo-server-plugin-base';
+import { GraphQLError } from 'graphql';
+
+import { mockServer } from '../mock-server';
 import {
   inlineRules,
   rules,
@@ -281,9 +285,9 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           ['functional', functionalRules]
         ])('%s', (name, rules) => {
           describe('Composite rules', () => {
-            let server: ApolloServerMock;
+            let server: ApolloServer;
 
-            beforeAll(async () => {
+            beforeAll(() => {
               server = mockServer({
                 integrationMode,
                 rules,
@@ -292,8 +296,6 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 declarationMode,
                 authSchema
               });
-
-              await server.willStart();
             });
 
             afterEach(() => {
@@ -317,8 +319,8 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               describe.each(['', 'Inline'])('%s', ruleVariant => {
                 describe.each(['', 'List'])('%s', resultVariant => {
                   it('should fail on failing rules and not fail on passing rules', async () => {
-                    let result;
-                    let error;
+                    let result: GraphQLResponse | undefined = undefined;
+                    let error: GraphQLError | undefined = undefined;
                     try {
                       result = await server.executeOperation({
                         query: `query Test {
@@ -328,13 +330,15 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                     }`
                       });
                     } catch (e) {
-                      error = e;
+                      error = e as GraphQLError;
                     }
 
                     if (ruleName.startsWith('failing')) {
                       const requestError = error || result?.errors?.[0];
                       expect(requestError).toBeDefined();
-                      expect(requestError.extensions.code).toEqual('FORBIDDEN');
+                      expect(requestError?.extensions?.code).toEqual(
+                        'FORBIDDEN'
+                      );
                     } else {
                       expect(result).toBeDefined();
                       expect(result?.data?.testQuery).toHaveProperty(
