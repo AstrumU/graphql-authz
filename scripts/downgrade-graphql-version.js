@@ -27,7 +27,7 @@ const rootDeps = {
   '15': {
     ...commonDeps['15'],
     'apollo-server': '^2',
-    'apollo-server-plugin-base': '^0.9',
+    'apollo-server-plugin-base': '^0.13',
     'apollo-server-core': '^2'
   }
 };

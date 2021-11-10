@@ -4,8 +4,6 @@
 
 [![codecov](https://codecov.io/gh/AstrumU/graphql-authz/branch/main/graph/badge.svg?token=5IMVNTLQGF)](https://codecov.io/gh/AstrumU/graphql-authz)
 
-### 🚧 Documentation is still in progress 🚧
-
 ## Overview
 
 GraphQL authorization layer, flexible, (not only) directive-based, compatible with all modern GraphQL architectures.
@@ -20,19 +18,19 @@ GraphQL authorization layer, flexible, (not only) directive-based, compatible wi
 ## Examples
 
 Check examples in `examples` folder:
-- [Apollo Server (schema-first, directives)](examples/src/apollo-server-schema-first/index.ts)
-- [Apollo Server (code-first, extensions)](examples/src/apollo-server-code-first/index.ts)
-- [express-graphql (schema-first, directives)](examples/src/express-graphql/index.ts)
-- [GraphQL Helix (schema-first, authSchema)](examples/src/graphql-helix/index.ts)
-- [Envelop (schema-first, directives)](examples/src/envelop/index.ts)
-- [TypeGraphQL (code-first, extensions)](examples/src/type-graphql/index.ts)
-- [NestJS (code-first, directives)](examples/src/nestjs/index.ts)
-- [Schema Stitching (gateway, directives)](examples/src/schema-stitching/)
-- [Apollo Federation (gateway, authSchema)](examples/src/apollo-federation/)
+- [Apollo Server (schema-first, directives)](examples/packages/apollo-server-schema-first/src/index.ts)
+- [Apollo Server (code-first, extensions)](examples/packages/apollo-server-code-first/src/index.ts)
+- [express-graphql (schema-first, directives)](examples/packages/express-graphql/src/index.ts)
+- [GraphQL Helix (schema-first, authSchema)](examples/packages/graphql-helix/src/index.ts)
+- [Envelop (schema-first, directives)](examples/packages/envelop/src/index.ts)
+- [TypeGraphQL (code-first, extensions)](examples/packages/type-graphql/src/index.ts)
+- [NestJS (code-first, directives)](examples/packages/nestjs/src/index.ts)
+- [Schema Stitching (gateway, directives)](examples/packages/schema-stitching/src)
+- [Apollo Federation (gateway, authSchema)](examples/packages/apollo-federation/src)
 
 ## Integration
 
-To integrate graphql-authz into project follow several steps depending on your architecture:
+To integrate graphql-authz into the project you can follow several steps depending on your architecture:
 
 
 
@@ -77,7 +75,7 @@ const rules = {
 } as const;
 ```
 
-Alternatively you can create rule as a class
+Alternatively you can create a rule as a class
   ```ts
   import { PreExecutionRule } from "@graphql-authz/core";
 
@@ -116,9 +114,9 @@ Alternatively you can create rule as a class
     <strong id="configuring-envelop-plugin">Configuring Envelop plugin</strong>
   </summary>
 
-  See [Envelop plugin readme](packages/plugins/envelop/README.md) or check an example:
+  See [Envelop plugin readme](packages/plugins/envelop/README.md) or check examples:
   
-  [Envelop (schema-first, directives)](examples/src/envelop/index.ts)
+  [Envelop (schema-first, directives)](examples/packages/envelop/src/index.ts)
 </details>
 <br>
 
@@ -182,7 +180,7 @@ Alternatively you can create rule as a class
   ```
   
   
-  Check an example: [express-graphql (schema-first, directives)](examples/src/express-graphql/index.ts)
+  Check an example: [express-graphql (schema-first, directives)](examples/packages/express-graphql/src/index.ts)
 
 </details>
 <br>
@@ -249,7 +247,7 @@ Alternatively you can create rule as a class
   })
   ```
   
-  Check an example: [GraphQL Helix (schema-first, authSchema)](examples/src/graphql-helix/index.ts)
+  Check an example: [GraphQL Helix (schema-first, authSchema)](examples/packages/graphql-helix/src/index.ts)
 </details>
 <br>
 
@@ -406,7 +404,7 @@ class TestInterface {
 
 ### Using extensions (Code-First only)
 
-using decorators looks pretty similar to the directive usage with decorators
+Using decorators looks pretty similar to the directive usage with decorators
 ```ts
 import { IAuthConfig } from "@graphql-authz/core";
 
@@ -494,9 +492,9 @@ const Query = new GraphQLObjectType({
 
 `context` is GraphQL context
 
-`fieldArgs` is object that has all arguments passed to `Query`/`Mutation`/`Field` the rule is applied to. If the rule is applied to `ObjectType` or `InterfaceType` then `fieldArgs` is an empty object.
+`fieldArgs` is an object that has all arguments passed to `Query`/`Mutation`/`Field` the rule is applied to. If the rule is applied to `ObjectType` or `InterfaceType` then `fieldArgs` is an empty object.
 
-If no other data is needed to perform authorization (e.g. actual data from the database or actual response to the request) then Pre execution rule should be used.
+If no other data is needed to perform authorization (e.g. actual data from the database or actual response to the request) then the Pre execution rule should be used.
 
 To create simple Pre execution rule `preExecRule` function should be used
 ```ts
@@ -519,7 +517,7 @@ class IsAuthenticated extends PreExecutionRule {
 }
 ```
 
-**Post execution rules** are executed ***after*** all of resolvers logic is executed and result response is ready. Because of that fact, Post execution rules have access to the actual result of query execution. This can resolve authorization cases when the decision depends on attributes of the requested entity, for example, if only the author of the post can see the post if it is in draft status.
+**Post execution rules** are executed ***after*** all resolvers logic is executed and the result response is ready. Because of that fact, Post execution rules have access to the actual result of query execution. This can resolve authorization cases when the decision depends on attributes of the requested entity, for example, if only the author of the post can see the post if it is in draft status.
 
 In order to create Post execution rule `postExecRule` function should be used
 ```ts
@@ -536,7 +534,7 @@ const CanReadPost = postExecRule({
 );
 ```
 
-Alternatively new class extended from `PostExecutionRule` could be created
+Alternatively a new class extended from `PostExecutionRule` could be created
 
 ```ts
 class CanReadPost extends PostExecutionRule {
@@ -555,13 +553,13 @@ class CanReadPost extends PostExecutionRule {
 }
 ```
 
-By adding `selectionSet` we ensure that even if the client originally didn't request fields that are needed to perform authorization these fields are present in the result value that comes to rule as an argument.
+By adding `selectionSet` we ensure that even if the client originally didn't request fields that are needed to perform authorization these fields are present in the result value that comes to a rule as an argument.
 
-**Please note** that with Post execution rules resolvers are executed even if the rule throws an Unauthorized error, so such rules are not suitable for Mutations or Queries that update some counters (count of views for example)
+**Please note** that with post execution rules resolvers are executed even if the rule throws an unauthorized error, so such rules are not suitable for Mutations or Queries that update some counters (count of views for example)
 
 ### Alternative by querying DB inside rules
 
-All rules can be async so for cases where authorization depends on real data and should be performed strictly before resolvers execution (for Mutation or Queries that update some counters) you can query DB right inside Pre execution rule
+All rules can be async so for cases where authorization depends on real data and should be performed strictly before resolvers execution (for Mutation or Queries that update some counters) you can query DB right inside pre execution rule
 
 ```ts
 const CanPublishPost = preExecRule()(

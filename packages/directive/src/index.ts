@@ -21,7 +21,7 @@ export function authZGraphQLDirective(
     name: 'AuthZRules',
     values: Object.keys(rules).reduce<GraphQLEnumValueConfigMap>(
       (result, key) => {
-        result[key] = { value: rules[key].name };
+        result[key] = { value: key };
         return result;
       },
       {}

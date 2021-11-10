@@ -1,0 +1,31 @@
+{
+  "name": "@graphql-authz-examples/apollo-federation",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Examples for GraphQL authorization layer",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
+  "scripts": {
+    "build": "tsc --build .",
+    "start": "node dist/index.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "restricted"
+  },
+  "dependencies": {
+    "@apollo/federation": "0.33.6",
+    "@apollo/gateway": "0.43.1",
+    "apollo-server": "2.25.2",
+    "apollo-server-core": "2.25.2",
+    "apollo-server-errors": "2.4.2",
+    "apollo-server-plugin-base": "0.13.0"
+  },
+  "devDependencies": {
+    "typescript": "4.4.4"
+  }
+}
