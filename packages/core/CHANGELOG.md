@@ -1,5 +1,11 @@
 # @graphql-authz/core
 
+## 1.2.0
+
+### Minor Changes
+
+- 71c7353: Add wildcards support
+
 ## 1.1.0
 
 ### Minor Changes

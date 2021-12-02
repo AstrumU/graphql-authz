@@ -1,6 +1,14 @@
 # @graphql-authz/directive
 
+## 1.1.1
+
+### Patch Changes
+
+- Updated dependencies [71c7353]
+  - @graphql-authz/core@1.2.0
+
 ## 1.1.0
+
 ### Minor Changes
 
 - 64cad9d: Compatibility with GraphQL v16 and Apollo Server v3
