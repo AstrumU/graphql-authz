@@ -24,9 +24,9 @@ To run examples which don't support GraphQL 16 right now please run
 
 After that you can run one of the following commands to start server configured with corresponding technologies:
 
-- `start:nestjs`
-- `start:type-graphql`
-- `start:apollo-federation`
+- `yarn start:nestjs`
+- `yarn start:type-graphql`
+- `yarn start:apollo-federation`
 
 
 To switch back to GraphQL 16 please discard all git changes and run `yarn clean` in both root of repository and examples folder and then `yarn && yarn build` in both.
