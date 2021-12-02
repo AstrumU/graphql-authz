@@ -16,6 +16,7 @@ import { getArgumentValues } from 'graphql/execution/values';
 import {
   getDeepType,
   getNodeAliasOrName,
+  isLeafTypeDeep,
   shouldIncludeNode
 } from './graphql-utils';
 import {
@@ -65,6 +66,20 @@ interface ICompilerParams {
   authSchema?: AuthSchema;
 }
 
+function getFieldConfigByAuthSchemaItem(authSchemaKey: string) {
+  return function (authSchemaItem?: AuthSchema[string][string]) {
+    if (!authSchemaItem) {
+      return null;
+    }
+
+    const config = authSchemaItem[
+      authSchemaKey as keyof typeof authSchemaItem
+    ] as IAuthConfig | undefined;
+
+    return config;
+  };
+}
+
 function getConfigsByTypeAndAuthSchema(
   typeName: string,
   authSchema: AuthSchema,
@@ -74,18 +89,36 @@ function getConfigsByTypeAndAuthSchema(
   return config ? [config] : [];
 }
 
+function getWildcardTypeConfigs(authSchema: AuthSchema, authSchemaKey: string) {
+  const wildcardConfig = authSchema['*']?.[authSchemaKey];
+  return wildcardConfig ? [wildcardConfig] : [];
+}
+
 function getConfigsByFieldAndAuthSchema(
   parentTypeName: string,
   fieldName: string,
   authSchema: AuthSchema,
   authSchemaKey: string
 ): IAuthConfig[] {
-  const fieldSchema = authSchema[parentTypeName]?.[fieldName];
+  const getConfig = getFieldConfigByAuthSchemaItem(authSchemaKey);
+
+  const config = getConfig(authSchema[parentTypeName]?.[fieldName]);
+
+  return config ? [config] : [];
+}
+
+function getWildcardFieldConfigs(
+  parentTypeName: string,
+  fieldName: string,
+  authSchema: AuthSchema,
+  authSchemaKey: string
+): IAuthConfig[] {
+  const getConfig = getFieldConfigByAuthSchemaItem(authSchemaKey);
 
   const config =
-    fieldSchema &&
-    authSchemaKey in fieldSchema &&
-    (fieldSchema[authSchemaKey as keyof typeof fieldSchema] as IAuthConfig);
+    getConfig(authSchema[parentTypeName]?.['*']) ||
+    getConfig(authSchema['*']?.[fieldName]) ||
+    getConfig(authSchema['*']?.['*']);
 
   return config ? [config] : [];
 }
@@ -204,7 +237,7 @@ export function compileRules({
         return false;
       }
 
-      if (type) {
+      if (type && !isLeafTypeDeep(type)) {
         const deepType = getDeepType(type);
 
         if (isIntrospectionType(deepType)) {
@@ -223,6 +256,14 @@ export function compileRules({
           : [];
 
         const configs = [...extensionsConfigs, ...authSchemaConfigs];
+
+        if (configs.length === 0) {
+          const wildcardConfigs = authSchema
+            ? getWildcardTypeConfigs(authSchema, authSchemaKey)
+            : [];
+
+          configs.push(...wildcardConfigs);
+        }
 
         const executableRules = getExecutableRulesByConfigs(configs, rules, {});
 
@@ -260,6 +301,19 @@ export function compileRules({
           : [];
 
         const configs = [...extensionsConfigs, ...authSchemaConfigs];
+
+        if (configs.length === 0) {
+          const wildcardConfigs = authSchema
+            ? getWildcardFieldConfigs(
+                parentTypeName,
+                graphqlField.name,
+                authSchema,
+                authSchemaKey
+              )
+            : [];
+
+          configs.push(...wildcardConfigs);
+        }
 
         const executableRules = getExecutableRulesByConfigs(
           configs,

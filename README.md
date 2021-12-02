@@ -18,15 +18,15 @@ GraphQL authorization layer, flexible, (not only) directive-based, compatible wi
 ## Examples
 
 Check examples in `examples` folder:
-- [Apollo Server (schema-first, directives)](examples/packages/apollo-server-schema-first/src/index.ts)
-- [Apollo Server (code-first, extensions)](examples/packages/apollo-server-code-first/src/index.ts)
-- [express-graphql (schema-first, directives)](examples/packages/express-graphql/src/index.ts)
-- [GraphQL Helix (schema-first, authSchema)](examples/packages/graphql-helix/src/index.ts)
-- [Envelop (schema-first, directives)](examples/packages/envelop/src/index.ts)
-- [TypeGraphQL (code-first, extensions)](examples/packages/type-graphql/src/index.ts)
-- [NestJS (code-first, directives)](examples/packages/nestjs/src/index.ts)
-- [Schema Stitching (gateway, directives)](examples/packages/schema-stitching/src)
-- [Apollo Federation (gateway, authSchema)](examples/packages/apollo-federation/src)
+- [Apollo Server (schema-first, directives)](examples/packages/apollo-server-schema-first)
+- [Apollo Server (code-first, extensions)](examples/packages/apollo-server-code-first)
+- [express-graphql (schema-first, directives)](examples/packages/express-graphql)
+- [GraphQL Helix (schema-first, authSchema)](examples/packages/graphql-helix)
+- [Envelop (schema-first, directives)](examples/packages/envelop)
+- [TypeGraphQL (code-first, extensions)](examples/packages/type-graphql)
+- [NestJS (code-first, directives)](examples/packages/nestjs)
+- [Schema Stitching (gateway, directives)](examples/packages/schema-stitching)
+- [Apollo Federation (gateway, authSchema)](examples/packages/apollo-federation)
 
 ## Integration
 
@@ -51,6 +51,7 @@ To integrate graphql-authz into the project you can follow several steps dependi
 
 Read more
 - [Pre execution rules vs Post execution rules](#pre-execution-rules-vs-post-execution-rules)  
+- [Wildcard rules](#wildcard-rules)
 - [Composing rules](#composing-rules)
 - [Custom errors](#custom-errors)
 
@@ -102,9 +103,9 @@ Alternatively you can create a rule as a class
   See [Apollo Server plugin readme](packages/plugins/apollo-server/README.md)
   or check examples:
 
-  [Apollo Server (schema-first, directives)](examples/src/apollo-server-schema-first/index.ts)
+  [Apollo Server (schema-first, directives)](examples/packages/apollo-server-schema-first)
 
-  [Apollo Server (code-first, extensions)](examples/src/apollo-server-code-first/index.ts)
+  [Apollo Server (code-first, extensions)](examples/packages/apollo-server-code-first)
 
 </details>
 <br>
@@ -116,7 +117,7 @@ Alternatively you can create a rule as a class
 
   See [Envelop plugin readme](packages/plugins/envelop/README.md) or check examples:
   
-  [Envelop (schema-first, directives)](examples/packages/envelop/src/index.ts)
+  [Envelop (schema-first, directives)](examples/packages/envelop)
 </details>
 <br>
 
@@ -180,7 +181,7 @@ Alternatively you can create a rule as a class
   ```
   
   
-  Check an example: [express-graphql (schema-first, directives)](examples/packages/express-graphql/src/index.ts)
+  Check an example: [express-graphql (schema-first, directives)](examples/packages/express-graphql)
 
 </details>
 <br>
@@ -247,7 +248,7 @@ Alternatively you can create a rule as a class
   })
   ```
   
-  Check an example: [GraphQL Helix (schema-first, authSchema)](examples/packages/graphql-helix/src/index.ts)
+  Check an example: [GraphQL Helix (schema-first, authSchema)](examples/packages/graphql-helix)
 </details>
 <br>
 
@@ -597,6 +598,119 @@ const CanPublishPost = preExecRule()(
   }
 );
 ```
+
+## Wildcard rules
+
+Attaching rules using wildcards is supported by authSchema. Wildcard can be used as a name of Object and as a name of field in different combinations. Here are some examples:
+
+```ts
+  // Reject rule is attached to every Object
+  const authSchema = {
+    '*': { __authz: { rules: ['Reject'] } }
+  };
+```
+
+```ts
+  // Reject rule is attached to every Field of every Object
+  const authSchema = {
+    '*': {
+      '*': { __authz: { rules: ['Reject'] } }
+    }
+  };
+```
+
+```ts
+  // Reject rule is attached to every Object AND every Field of every Object
+  const authSchema = {
+    '*': {
+      { __authz: { rules: ['Reject'] } },
+      '*': { __authz: { rules: ['Reject'] } }
+    }
+  };
+```
+
+```ts
+  // Reject rule is attached to every Field of User Object
+  const authSchema = {
+    User: {
+      '*': { __authz: { rules: ['Reject'] } }
+    }
+  };
+```
+
+```ts
+  // Reject rule is attached to createdAt Field of every Object
+  const authSchema = {
+    '*': {
+      createdAt: { __authz: { rules: ['Reject'] } }
+    }
+  };
+```
+
+### Overwriting wildcard rules
+
+Wildcard rules are attached to Object/Field only if no other rules are attached to it so to overwrite wildcard rule it's only necessary to attach any other rule to the Object/Field. Wildcard rules can be overwritten by rules attached using directive or extensions as well.
+
+```ts
+  // Reject rule is attached to all fields of the User object except of the id field. IsAuthenticated rule is attached to the id field.
+  const authSchema = {
+    User: {
+      '*': { __authz: { rules: ['Reject'] } },
+      id: { __authz: { rules: ['IsAuthenticated'] } }
+    }
+  };
+```
+
+```ts
+  // Reject rule is attached to all Objects except of the User Object. IsAuthenticated rule is attached to the User Object.
+  const authSchema = {
+    '*': { __authz: { rules: ['Reject'] } },
+    User: { __authz: { rules: ['IsAuthenticated'] } }
+  };
+```
+
+### Wildcard rules priority
+
+Wildcard rules are not composing with each other. Only one wildcard rule is attached to the certain Object/Field. Wildcard rules are attached to a Field in following priority:
+1. Any Field in certain Object:
+```ts
+  const authSchema = {
+    User: {
+      '*': { __authz: { rules: ['Reject'] } }
+    }
+  };
+```
+2. Certain field in any object:
+```ts
+  const authSchema = {
+    '*': {
+      createdAt: { __authz: { rules: ['Reject'] } }
+    }
+  };
+```
+3. Any field in any object:
+```ts
+  const authSchema = {
+    '*': {
+      '*': { __authz: { rules: ['Reject'] } }
+    }
+  };
+```
+
+With following example:
+
+```ts
+  const authSchema = {
+    '*': {
+      '*': { __authz: { rules: ['Rule01'] } },
+      id: { __authz: { rules: ['Rule02'] } }
+    },
+    User: {
+      '*': { __authz: { rules: ['Rule03'] } }
+    }
+  };
+```
+only Rule03 is attached to the id field of the User object
 
 ## Composing rules
 
