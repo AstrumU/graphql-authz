@@ -1,5 +1,12 @@
 # @graphql-authz/apollo-server-plugin
 
+## 2.0.1
+
+### Patch Changes
+
+- Updated dependencies [71c7353]
+  - @graphql-authz/core@1.2.0
+
 ## 2.0.0
 
 ### Major Changes

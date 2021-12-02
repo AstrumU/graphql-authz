@@ -1,6 +1,6 @@
 {
   "name": "@graphql-authz/apollo-server-plugin",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Apollo Server plugin for graphql-authz",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -27,7 +27,7 @@
     "apollo"
   ],
   "dependencies": {
-    "@graphql-authz/core": "1.1.0"
+    "@graphql-authz/core": "1.2.0"
   },
   "devDependencies": {
     "apollo-server": "3.4.0",
