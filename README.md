@@ -1,4 +1,4 @@
-<p align="center"><img src="https://github.com/AstrumU/graphql-authz/blob/main/img/logo.png?raw=true" width="200" /></p>
+<p align="center"><img src="./img/graphql-authz-gh-cover.png" height="250px" /></p>
 
 # graphql-authz
 
