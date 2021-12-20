@@ -1,12 +1,23 @@
 <p align="center"><img src="./img/graphql-authz-gh-cover.png" height="250px" /></p>
 
-# graphql-authz
+# 
 
-[![codecov](https://codecov.io/gh/AstrumU/graphql-authz/branch/main/graph/badge.svg?token=5IMVNTLQGF)](https://codecov.io/gh/AstrumU/graphql-authz)
+<p align="center">GraphQL authorization layer, flexible, (not only) directive-based, compatible with all modern GraphQL architectures.</p>
+
+<p align="center">
+  <a href="https://codecov.io/gh/AstrumU/graphql-authz"><img src="https://codecov.io/gh/AstrumU/graphql-authz/branch/main/graph/badge.svg?token=5IMVNTLQGF" height="20"/></a>
+  <a href="."><img src="https://badgen.net/github/checks/AstrumU/graphql-authz/main" height="20"/></a>
+  <a href="http://www.typescriptlang.org/"><img src="https://img.shields.io/badge/%3C%2F%3E-TypeScript-%230074c1.svg" height="20"/></a>
+  <a href="https://www.npmjs.com/package/@graphql-authz/core"><img src="https://badgen.net/npm/v/@graphql-authz/core" height="20"/></a>
+  <a href="https://www.npmjs.com/package/@graphql-authz/core"><img src="https://badgen.net/npm/types/@graphql-authz/core" height="20"/></a>
+</p>
+
 
 ## Overview
 
-GraphQL authorization layer, flexible, (not only) directive-based, compatible with all modern GraphQL architectures.
+Flexible modern way of adding an authorization layer on top of your existing GraphQL microservices or monolith backend systems.
+
+Full overview can be found in this blog post: [https://the-guild.dev/blog/graphql-authz]()
 
 ## Features
 - Attaching rules to Query/Mutation/Object/Interface/Field
