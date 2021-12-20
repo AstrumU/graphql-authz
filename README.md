@@ -17,7 +17,7 @@
 
 Flexible modern way of adding an authorization layer on top of your existing GraphQL microservices or monolith backend systems.
 
-Full overview can be found in this blog post: [https://the-guild.dev/blog/graphql-authz]()
+Full overview can be found in this blog post: [https://the-guild.dev/blog/graphql-authz](https://the-guild.dev/blog/graphql-authz)
 
 ## Features
 - Attaching rules to Query/Mutation/Object/Interface/Field
