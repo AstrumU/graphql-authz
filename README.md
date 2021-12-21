@@ -57,7 +57,12 @@ To integrate graphql-authz into the project you can follow several steps dependi
   - [Code First](#code-first)
 - [Attaching rules](#attaching-rules)
   - [Using Directives](#using-directives)
+    - [Schema-First](#schema-first)
+    - [Code-First](#code-first)
   - [Using extensions (Code-First only)](#using-extensions-code-first-only)
+    - [Using TypeGraphQL or NestJS decorators](#using-typegraphql-or-nestjs-decorators)
+    - [Using GraphQL.js constructors](#using-graphqljs-constructors)
+    - [Using GiraphQL](#using-giraphql)
   - [Using AuthSchema](#using-authschema)
 
 Read more
@@ -65,9 +70,6 @@ Read more
 - [Wildcard rules](#wildcard-rules)
 - [Composing rules](#composing-rules)
 - [Custom errors](#custom-errors)
-
-
-
 
 
 ## Installation
@@ -332,7 +334,7 @@ Pass directive to schema options to generate rules and directive definition
 
 Add authz directive to Query/Mutation/Object/Interface/Field you need to perform authorization on
 
-**Schema-First**
+#### Schema-First
 
 ```ts
 interface TestInterface @authz(rules: [Rule01]) {
@@ -353,7 +355,9 @@ type Mutation {
 }
 ```
 
-**Code-First** using decorators
+#### Code-First
+
+Using [TypeGraphQL](https://typegraphql.com/) or [NestJS](https://nestjs.com/) decorators
 ```ts
 @InterfaceType()
 @Directive(`@authz(rules: [Rule01]`)
@@ -416,7 +420,9 @@ class TestInterface {
 
 ### Using extensions (Code-First only)
 
-Using decorators looks pretty similar to the directive usage with decorators
+#### Using [TypeGraphQL](https://typegraphql.com/) or [NestJS](https://nestjs.com/) decorators
+
+It looks pretty similar to the directive usage with decorators
 ```ts
 import { IAuthConfig } from "@graphql-authz/core";
 
@@ -441,7 +447,7 @@ class TestInterface {
   public testField1!: string;
 }
 ```
-using graphql.js constructors
+#### Using [GraphQL.js](https://graphql.org/graphql-js/) constructors
 ```ts
 import { IAuthConfig } from "@graphql-authz/core";
 
@@ -481,6 +487,43 @@ const Query = new GraphQLObjectType({
   }
 });
 ```
+
+#### Using [GiraphQL](https://giraphql.com/)
+```ts
+import SchemaBuilder from '@giraphql/core';
+import AuthzPlugin from '@giraphql/plugin-authz';
+
+const builder = new SchemaBuilder<{
+  AuthZRule: keyof typeof rules;
+}>({
+  plugins: [AuthzPlugin],
+});
+
+builder.queryType({
+  fields: (t) => ({
+    users: t.field({
+      type: [User],
+      authz: {
+        rules: ['IsAuthenticated'],
+      },
+      resolve: () => users,
+    }),
+  }),
+});
+
+const Post = builder.objectRef<IPost>('Post');
+
+Post.implement({
+  authz: {
+    rules: ['CanReadPost'],
+  },
+  fields: (t) => ({
+    id: t.exposeID('id'),
+  }),
+});
+```
+
+[GiraphQL](https://giraphql.com/) provides a native GraphQL Authz plugin [@giraphql/plugin-authz](https://giraphql.com/plugins/authz) that helps to attach auth rules to Queries/Mutations/Objects/Interfaces/Fields in a type-safe way
 
 ### Using AuthSchema
 
