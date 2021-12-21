@@ -1,5 +1,12 @@
 # @graphql-authz/envelop-plugin
 
+## 1.0.3
+
+### Patch Changes
+
+- Updated dependencies [deb82f5]
+  - @graphql-authz/core@1.2.1
+
 ## 1.0.2
 
 ### Patch Changes

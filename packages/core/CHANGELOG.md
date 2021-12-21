@@ -1,5 +1,11 @@
 # @graphql-authz/core
 
+## 1.2.1
+
+### Patch Changes
+
+- deb82f5: Correctly handle queries with \_\_typename
+
 ## 1.2.0
 
 ### Minor Changes
