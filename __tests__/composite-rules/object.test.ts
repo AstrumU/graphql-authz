@@ -429,6 +429,7 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                       result = await server.executeOperation({
                         query: `query Test {
                       ${ruleName}${ruleVariant}${resultVariant}Query {
+                        __typename
                         id
                       }
                     }`
@@ -460,6 +461,13 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                             : queryResult
                         ).id
                       ).toEqual('string');
+
+                      expect(
+                        (resultVariant === 'List'
+                          ? queryResult[0]
+                          : queryResult
+                        ).__typename
+                      ).toEqual(`${ruleName}${ruleVariant}Object`);
                     }
                   });
                 });
