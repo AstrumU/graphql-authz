@@ -226,7 +226,10 @@ export function compileRules({
   const typeInfo = new TypeInfo(schema);
   const typeInfoVisitor = visitWithTypeInfo(typeInfo, {
     Field(node: FieldNode) {
-      if (!shouldIncludeNode({ variableValues: variables }, node)) {
+      if (
+        node.name.value === '__typename' ||
+        !shouldIncludeNode({ variableValues: variables }, node)
+      ) {
         return false;
       }
 
