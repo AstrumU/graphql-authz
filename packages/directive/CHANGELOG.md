@@ -1,5 +1,12 @@
 # @graphql-authz/directive
 
+## 1.1.2
+
+### Patch Changes
+
+- Updated dependencies [deb82f5]
+  - @graphql-authz/core@1.2.1
+
 ## 1.1.1
 
 ### Patch Changes
