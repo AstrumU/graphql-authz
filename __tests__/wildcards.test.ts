@@ -1,7 +1,6 @@
-import { preExecRule } from '@graphql-authz/core';
+import { preExecRule, completeConfig } from '@graphql-authz/core';
 
 import { mockServer } from './mock-server';
-import { completeConfig } from '../packages/core';
 
 const rawSchema = `
 type Post {
