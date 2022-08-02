@@ -22,8 +22,8 @@ export function completeConfig(
     ...config
   };
 
+  // Check if rules in authSchema actually exist in rules definition
   if (config.authSchema) {
-    // Check if rules in authSchema actually exist in rules definition
     const authSchemaRules = [] as (IAuthConfig<RulesObject> | string[] | undefined)[];
 
     // get all rules from authSchema into list
