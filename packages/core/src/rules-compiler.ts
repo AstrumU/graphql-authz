@@ -287,6 +287,11 @@ export function compileRules({
         const parentTypeName = parentType.name;
         const graphqlField = parentType.getFields()[node.name.value];
 
+        // this will occur if we are passed a field not in our schema
+        if (graphqlField === undefined){
+          return undefined
+        }
+
         const fieldArgs = getArgumentValues(graphqlField, node, variables);
 
         const extensionsConfigs = getConfigsByExtensions(
