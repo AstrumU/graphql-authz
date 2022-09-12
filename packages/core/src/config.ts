@@ -14,7 +14,6 @@ export interface IAuthZConfig {
 export function completeConfig(
   config: IAuthZConfig
 ): Omit<Required<IAuthZConfig>, 'authSchema'> & { authSchema?: AuthSchema } {
-
   const resultConfig = {
     directiveName: 'authz',
     authSchemaKey: '__authz',
@@ -24,20 +23,28 @@ export function completeConfig(
 
   // Check if rules in authSchema actually exist in rules definition
   if (config.authSchema) {
-    const authSchemaRules = [] as (IAuthConfig<RulesObject> | string[] | undefined)[];
+    const authSchemaRules: (IAuthConfig<RulesObject> | string[] | undefined)[] =
+      [];
 
     // get all rules from authSchema into list
     for (const typeName in config.authSchema) {
       const typeRuleDefinitions = config.authSchema[typeName];
       if (resultConfig.authSchemaKey in typeRuleDefinitions) {
         // type level rules
-        authSchemaRules.push(typeRuleDefinitions[resultConfig.authSchemaKey]?.rules);
+        authSchemaRules.push(
+          typeRuleDefinitions[resultConfig.authSchemaKey]?.rules
+        );
       } else {
         // field level rules
-        for (const fieldName in typeRuleDefinitions ) {
-          const fieldRuleDefinitions = typeRuleDefinitions[fieldName] as Record<string, IAuthConfig<RulesObject>>;
+        for (const fieldName in typeRuleDefinitions) {
+          const fieldRuleDefinitions = typeRuleDefinitions[fieldName] as Record<
+            string,
+            IAuthConfig<RulesObject>
+          >;
           if (resultConfig.authSchemaKey in fieldRuleDefinitions) {
-             authSchemaRules.push(fieldRuleDefinitions[resultConfig.authSchemaKey]?.rules);
+            authSchemaRules.push(
+              fieldRuleDefinitions[resultConfig.authSchemaKey]?.rules
+            );
           }
         }
       }
@@ -55,7 +62,6 @@ export function completeConfig(
         }
       }
     }
-
   }
 
   return resultConfig;

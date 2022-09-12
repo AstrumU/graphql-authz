@@ -89,55 +89,54 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
 
       it('should throw on unknown rule', async () => {
         let thewError: any | undefined;
-        try{
+        try {
           completeConfig({
             authSchema: {
               '*': { __authz: { rules: ['nonExistingRule'] } },
-              User: { __authz: { rules: ['PassingRule'] } },
+              User: { __authz: { rules: ['PassingRule'] } }
             },
             rules
-          })
-        } catch (e){
-          thewError = e
+          });
+        } catch (e) {
+          thewError = e;
         }
         expect(thewError).toBeDefined();
 
         thewError = undefined;
-        try{
+        try {
           completeConfig({
             authSchema: {
               '*': { __authz: { rules: ['FailingRule'] } },
               User: { __authz: { rules: ['PassingRule'] } },
               Looser: {
                 email: { __authz: { rules: ['TypoInRule'] } },
-                posts: { __authz: { rules: ['PassingRule'] } },
+                posts: { __authz: { rules: ['PassingRule'] } }
               }
             },
             rules
-          })
-        } catch (e){
-          thewError = e
+          });
+        } catch (e) {
+          thewError = e;
         }
         expect(thewError).toBeDefined();
 
         thewError = undefined;
-        try{
+        try {
           completeConfig({
             authSchema: {
               '*': { __authz: { rules: ['FailingRule'] } },
               User: { __authz: { rules: ['PassingRule'] } },
               Looser: {
                 email: { __authz: { rules: ['PassingRule'] } },
-                posts: { __authz: { rules: ['PassingRule'] } },
+                posts: { __authz: { rules: ['PassingRule'] } }
               }
             },
             rules
-          })
-        } catch (e){
-          thewError = e
+          });
+        } catch (e) {
+          thewError = e;
         }
         expect(thewError).toBeUndefined();
-
       });
       it('should handle wildcard object', async () => {
         const server = mockServer({
