@@ -775,6 +775,14 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@graphql-tools/merge@8.3.6":
+  version "8.3.6"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/merge/-/merge-8.3.6.tgz#97a936d4c8e8f935e58a514bb516c476437b5b2c"
+  integrity sha512-uUBokxXi89bj08P+iCvQk3Vew4vcfL5ZM6NTylWi8PIpoq4r5nJ625bRuN8h2uubEdRiH8ntN9M4xkd/j7AybQ==
+  dependencies:
+    "@graphql-tools/utils" "8.12.0"
+    tslib "^2.4.0"
+
 "@graphql-tools/merge@^8.0.2":
   version "8.0.3"
   resolved "https://registry.yarnpkg.com/@graphql-tools/merge/-/merge-8.0.3.tgz#56c844bc5d7d833456695c8e5eda4f1a0d5be873"
@@ -793,6 +801,26 @@
     fast-json-stable-stringify "^2.1.0"
     tslib "~2.3.0"
 
+"@graphql-tools/mock@^8.7.1":
+  version "8.7.6"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/mock/-/mock-8.7.6.tgz#701d898f7fe6c22e40d6d80e25874e464359ce11"
+  integrity sha512-cQGPyY6dF4x28552zjAg9En2WWVury62u1/xzipCNUSCdKRVOsAupTNBcAGdMjsKPLcGzzk1cPA8dP0DUfNqzg==
+  dependencies:
+    "@graphql-tools/schema" "9.0.4"
+    "@graphql-tools/utils" "8.12.0"
+    fast-json-stable-stringify "^2.1.0"
+    tslib "^2.4.0"
+
+"@graphql-tools/schema@9.0.4":
+  version "9.0.4"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/schema/-/schema-9.0.4.tgz#1a74608b57abf90fae6fd929d25e5482c57bc05d"
+  integrity sha512-B/b8ukjs18fq+/s7p97P8L1VMrwapYc3N2KvdG/uNThSazRRn8GsBK0Nr+FH+mVKiUfb4Dno79e3SumZVoHuOQ==
+  dependencies:
+    "@graphql-tools/merge" "8.3.6"
+    "@graphql-tools/utils" "8.12.0"
+    tslib "^2.4.0"
+    value-or-promise "1.0.11"
+
 "@graphql-tools/schema@^8.0.0", "@graphql-tools/schema@^8.1.2":
   version "8.1.2"
   resolved "https://registry.yarnpkg.com/@graphql-tools/schema/-/schema-8.1.2.tgz#913879da1a7889a9488e9b7dc189e7c83eff74be"
@@ -809,6 +837,13 @@
   integrity sha512-3G+NIBR5mHjPm78jAD0l07JRE0XH+lr9m7yL/wl69jAzK0Jr/H+/Ok4ljEolI70iglz+ZhIShVPAwyesF6rnFg==
   dependencies:
     tslib "~2.3.0"
+
+"@graphql-tools/utils@8.12.0":
+  version "8.12.0"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/utils/-/utils-8.12.0.tgz#243bc4f5fc2edbc9e8fd1038189e57d837cbe31f"
+  integrity sha512-TeO+MJWGXjUTS52qfK4R8HiPoF/R7X+qmgtOYd8DTH0l6b+5Y/tlg5aGeUJefqImRq7nvi93Ms40k/Uz4D5CWw==
+  dependencies:
+    tslib "^2.4.0"
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
@@ -5860,6 +5895,11 @@ tslib@^1.10.0, tslib@^1.8.1, tslib@^1.9.3:
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-1.14.1.tgz#cf2d38bdc34a134bcaf1091c41f6619e2f672d00"
   integrity sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==
 
+tslib@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.4.0.tgz#7cecaa7f073ce680a05847aa77be941098f36dc3"
+  integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
+
 tslib@~2.3.0:
   version "2.3.1"
   resolved "https://registry.yarnpkg.com/tslib/-/tslib-2.3.1.tgz#e8a335add5ceae51aa261d32a490158ef042ef01"
@@ -6027,6 +6067,11 @@ value-or-promise@1.0.10:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/value-or-promise/-/value-or-promise-1.0.10.tgz#5bf041f1e9a8e7043911875547636768a836e446"
   integrity sha512-1OwTzvcfXkAfabk60UVr5NdjtjJ0Fg0T5+B1bhxtrOEwSH2fe8y4DnLgoksfCyd8yZCOQQHB0qLMQnwgCjbXLQ==
+
+value-or-promise@1.0.11:
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/value-or-promise/-/value-or-promise-1.0.11.tgz#3e90299af31dd014fe843fe309cefa7c1d94b140"
+  integrity sha512-41BrgH+dIbCFXClcSapVs5M6GkENd3gQOJpEfPDNa71LsUGMXDL0jMWpI/Rh7WhX+Aalfz2TTS3Zt5pUsbnhLg==
 
 vary@^1, vary@~1.1.2:
   version "1.1.2"
