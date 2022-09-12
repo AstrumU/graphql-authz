@@ -58,6 +58,15 @@ const userQuery = `
   }
 `;
 
+const invalidQuery = `
+  query getUser {
+    user {
+      id
+      NOTINSCHEMA
+    }
+  }
+`;
+
 const authSchema = {
   Query: {
     post: { __authz: { rules: ['FailingPreExecRule'] } },
@@ -139,6 +148,18 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
 
                 expect(result.errors).toBeUndefined();
                 expect(result.data).toBeDefined();
+              });
+
+              it('should allow a validation error when given and invalid query', async () => {
+                const result = await server.executeOperation({
+                  query: invalidQuery
+                });
+
+                expect(result.errors).toHaveLength(1);
+                expect(result.errors?.[0].extensions?.code).toEqual(
+                  'GRAPHQL_VALIDATION_FAILED'
+                );
+                expect(result.data).toBeUndefined();
               });
             });
           });
