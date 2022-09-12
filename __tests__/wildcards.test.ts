@@ -87,7 +87,7 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
         jest.clearAllMocks();
       });
 
-      it('should throw on unknown rule', async () => {
+      it('should throw on unknown rule', () => {
         let thewError: any | undefined;
         try {
           completeConfig({
