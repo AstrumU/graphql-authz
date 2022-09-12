@@ -1,4 +1,4 @@
-import { preExecRule } from '@graphql-authz/core';
+import { preExecRule, completeConfig } from '@graphql-authz/core';
 
 import { mockServer } from './mock-server';
 
@@ -87,6 +87,57 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
         jest.clearAllMocks();
       });
 
+      it('should throw on unknown rule', () => {
+        let thewError: any | undefined;
+        try {
+          completeConfig({
+            authSchema: {
+              '*': { __authz: { rules: ['nonExistingRule'] } },
+              User: { __authz: { rules: ['PassingRule'] } }
+            },
+            rules
+          });
+        } catch (e) {
+          thewError = e;
+        }
+        expect(thewError).toBeDefined();
+
+        thewError = undefined;
+        try {
+          completeConfig({
+            authSchema: {
+              '*': { __authz: { rules: ['FailingRule'] } },
+              User: { __authz: { rules: ['PassingRule'] } },
+              Looser: {
+                email: { __authz: { rules: ['TypoInRule'] } },
+                posts: { __authz: { rules: ['PassingRule'] } }
+              }
+            },
+            rules
+          });
+        } catch (e) {
+          thewError = e;
+        }
+        expect(thewError).toBeDefined();
+
+        thewError = undefined;
+        try {
+          completeConfig({
+            authSchema: {
+              '*': { __authz: { rules: ['FailingRule'] } },
+              User: { __authz: { rules: ['PassingRule'] } },
+              Looser: {
+                email: { __authz: { rules: ['PassingRule'] } },
+                posts: { __authz: { rules: ['PassingRule'] } }
+              }
+            },
+            rules
+          });
+        } catch (e) {
+          thewError = e;
+        }
+        expect(thewError).toBeUndefined();
+      });
       it('should handle wildcard object', async () => {
         const server = mockServer({
           ...mockServerParams,
