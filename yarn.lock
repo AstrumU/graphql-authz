@@ -902,19 +902,19 @@
     tslib "~2.3.0"
     value-or-promise "1.0.10"
 
-"@graphql-tools/utils@8.1.2", "@graphql-tools/utils@^8.1.1", "@graphql-tools/utils@^8.1.2":
-  version "8.1.2"
-  resolved "https://registry.yarnpkg.com/@graphql-tools/utils/-/utils-8.1.2.tgz#a376259fafbca7532fda657e3abeec23b545e5d3"
-  integrity sha512-3G+NIBR5mHjPm78jAD0l07JRE0XH+lr9m7yL/wl69jAzK0Jr/H+/Ok4ljEolI70iglz+ZhIShVPAwyesF6rnFg==
-  dependencies:
-    tslib "~2.3.0"
-
 "@graphql-tools/utils@8.12.0":
   version "8.12.0"
   resolved "https://registry.yarnpkg.com/@graphql-tools/utils/-/utils-8.12.0.tgz#243bc4f5fc2edbc9e8fd1038189e57d837cbe31f"
   integrity sha512-TeO+MJWGXjUTS52qfK4R8HiPoF/R7X+qmgtOYd8DTH0l6b+5Y/tlg5aGeUJefqImRq7nvi93Ms40k/Uz4D5CWw==
   dependencies:
     tslib "^2.4.0"
+
+"@graphql-tools/utils@^8.1.1", "@graphql-tools/utils@^8.1.2":
+  version "8.1.2"
+  resolved "https://registry.yarnpkg.com/@graphql-tools/utils/-/utils-8.1.2.tgz#a376259fafbca7532fda657e3abeec23b545e5d3"
+  integrity sha512-3G+NIBR5mHjPm78jAD0l07JRE0XH+lr9m7yL/wl69jAzK0Jr/H+/Ok4ljEolI70iglz+ZhIShVPAwyesF6rnFg==
+  dependencies:
+    tslib "~2.3.0"
 
 "@humanwhocodes/config-array@^0.5.0":
   version "0.5.0"
