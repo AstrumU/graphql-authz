@@ -46,7 +46,7 @@ export function authZApolloPlugin(config: IAuthZConfig): ApolloServerPlugin {
           try {
             await Promise.all(
               compiledRules.preExecutionRules.map(rule =>
-                rule.execute(requestContext.context, rule.config.fieldArgs)
+                rule.execute(requestContext.context || requestContext.contextValue, rule.config.fieldArgs)
               )
             );
           } catch (error) {
