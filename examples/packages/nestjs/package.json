@@ -29,6 +29,6 @@
     "reflect-metadata": "0.1.13"
   },
   "devDependencies": {
-    "typescript": "4.4.4"
+    "typescript": "4.9.3"
   }
 }

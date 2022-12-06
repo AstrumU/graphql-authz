@@ -1,7 +1,11 @@
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import { addMocksToSchema } from '@graphql-tools/mock';
+import {
+  IExecutableSchemaDefinition,
+  makeExecutableSchema
+} from '@graphql-tools/schema';
+import { addMocksToSchema, IMocks } from '@graphql-tools/mock';
+import { wrapSchema } from '@graphql-tools/wrap';
 import { envelop, useSchema } from '@envelop/core';
-import { Config, ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
 import { GraphQLSchema } from 'graphql';
 
 import { authZEnvelopPlugin } from '@graphql-authz/envelop-plugin';
@@ -27,7 +31,8 @@ export interface IMockServerParams {
   declarationMode: 'directive' | 'authSchema';
   integrationMode: 'apollo-plugin' | 'envelop-plugin';
   authSchema: AuthSchema;
-  apolloServerConfig?: Config;
+  resolvers?: IExecutableSchemaDefinition<unknown>['resolvers'];
+  mocks?: IMocks;
 }
 
 function mockServerWithApolloPlugin(
@@ -36,37 +41,36 @@ function mockServerWithApolloPlugin(
     rules,
     authSchema,
     rawSchemaWithoutDirectives,
-    apolloServerConfig
+    resolvers,
+    mocks
   }: IMockServerParams,
   fullRawSchema: string
 ) {
   if (declarationMode === 'directive') {
     const plugin = authZApolloPlugin({ rules });
     const schema = makeExecutableSchema({
-      typeDefs: fullRawSchema
+      typeDefs: fullRawSchema,
+      resolvers
     });
 
     const transformedSchema = authZDirectiveTransformer(schema);
 
     return new ApolloServer({
-      schema: transformedSchema,
-      mocks: true,
-      mockEntireSchema: true,
-      plugins: [plugin],
-      ...apolloServerConfig
+      schema: addMocksToSchema({ schema: transformedSchema, mocks }),
+      includeStacktraceInErrorResponses: true,
+      plugins: [plugin]
     });
   } else {
     const plugin = authZApolloPlugin({ rules, authSchema });
     const schema = makeExecutableSchema({
-      typeDefs: rawSchemaWithoutDirectives
+      typeDefs: rawSchemaWithoutDirectives,
+      resolvers
     });
 
     return new ApolloServer({
-      schema,
-      mocks: true,
-      mockEntireSchema: true,
-      plugins: [plugin],
-      ...apolloServerConfig
+      schema: addMocksToSchema({ schema, mocks }),
+      includeStacktraceInErrorResponses: true,
+      plugins: [plugin]
     });
   }
 }
@@ -77,7 +81,8 @@ function mockServerWithEnvelopPlugin(
     rules,
     authSchema,
     rawSchemaWithoutDirectives,
-    apolloServerConfig
+    resolvers,
+    mocks
   }: IMockServerParams,
   fullRawSchema: string
 ) {
@@ -89,21 +94,18 @@ function mockServerWithEnvelopPlugin(
   if (declarationMode === 'directive') {
     schema = authZDirectiveTransformer(
       makeExecutableSchema({
-        typeDefs: fullRawSchema
+        typeDefs: fullRawSchema,
+        resolvers
       })
     );
     pluginConfig = { rules };
   } else {
     schema = makeExecutableSchema({
-      typeDefs: rawSchemaWithoutDirectives
+      typeDefs: rawSchemaWithoutDirectives,
+      resolvers
     });
     pluginConfig = { rules, authSchema };
   }
-
-  const mocks =
-    apolloServerConfig?.mocks && typeof apolloServerConfig.mocks !== 'boolean'
-      ? apolloServerConfig.mocks
-      : {};
 
   const schemaWithMocks = addMocksToSchema({
     schema,
@@ -114,24 +116,24 @@ function mockServerWithEnvelopPlugin(
     plugins: [useSchema(schemaWithMocks), authZEnvelopPlugin(pluginConfig)]
   });
 
-  const { schema: envelopedSchema } = getEnveloped();
+  const { schema: envelopedSchema, execute, contextFactory } = getEnveloped();
 
-  return new ApolloServer({
+  const wrappedSchema = wrapSchema({
     schema: envelopedSchema,
-    mocks: true,
-    mockEntireSchema: true,
-    executor: async requestContext => {
-      const { schema, execute, contextFactory } = getEnveloped();
-
-      return execute({
-        schema: schema,
+    // @ts-expect-error
+    executor: async requestContext =>
+      execute({
+        schema: envelopedSchema,
         document: requestContext.document,
         contextValue: await contextFactory(),
-        variableValues: requestContext.request.variables,
+        variableValues: requestContext.variables,
         operationName: requestContext.operationName
-      });
-    },
-    ...apolloServerConfig
+      })
+  });
+
+  return new ApolloServer({
+    schema: wrappedSchema,
+    includeStacktraceInErrorResponses: true
   });
 }
 

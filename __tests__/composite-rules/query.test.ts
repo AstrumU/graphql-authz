@@ -1,8 +1,8 @@
-import { ApolloServer } from 'apollo-server';
-import { GraphQLResponse } from 'apollo-server-plugin-base';
-import { GraphQLError } from 'graphql';
+import { ApolloServer } from '@apollo/server';
+import { FormattedExecutionResult, GraphQLError } from 'graphql';
 
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 import {
   rules,
   inlineRules,
@@ -309,14 +309,17 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               describe.each(['', 'Inline'])('%s', ruleVariant => {
                 describe.each(['', 'List'])('%s', resultVariant => {
                   it('should fail on failing rules and not fail on passing rules', async () => {
-                    let result: GraphQLResponse | undefined = undefined;
+                    let result: FormattedExecutionResult | undefined =
+                      undefined;
                     let error: GraphQLError | undefined = undefined;
                     try {
-                      result = await server.executeOperation({
-                        query: `query Test {
-                      ${ruleName}${ruleVariant}${resultVariant}Query
-                    }`
-                      });
+                      result = formatResponse(
+                        await server.executeOperation({
+                          query: `query Test {
+                          ${ruleName}${ruleVariant}${resultVariant}Query
+                        }`
+                        })
+                      );
                     } catch (e) {
                       error = e as GraphQLError;
                     }
@@ -329,7 +332,7 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                       );
                     } else {
                       expect(result).toBeDefined();
-                      const queryResult =
+                      const queryResult: any =
                         result?.data?.[
                           `${ruleName}${ruleVariant}${resultVariant}Query`
                         ];

@@ -1,10 +1,11 @@
-import { ApolloServer } from 'apollo-server';
-import { GraphQLResponse } from 'apollo-server-plugin-base';
-import { GraphQLError } from 'graphql';
+import { ApolloServer } from '@apollo/server';
+
+import { FormattedExecutionResult, GraphQLError } from 'graphql';
 
 import { syncRules, syncFunctionalRules } from './rules-sync';
 import { asyncRules, asyncFunctionalRules } from './rules-async';
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 
 const rawSchema = `
 type Post {
@@ -209,11 +210,13 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 expect(failingRuleArgs[3]).toHaveProperty('title');
                 expect(failingRuleArgs[3].title).toEqual(failingRuleArgs[2]);
 
-                const result = await server
-                  .executeOperation({
-                    query: userQuery
-                  })
-                  .catch(e => e);
+                const result = formatResponse(
+                  await server
+                    .executeOperation({
+                      query: userQuery
+                    })
+                    .catch(e => e)
+                );
 
                 const passingRuleArgs =
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute
@@ -256,17 +259,23 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('failing rule should fail query', async () => {
-                let result: GraphQLResponse | undefined = undefined;
+                let result: FormattedExecutionResult | undefined = undefined;
                 let error: GraphQLError | undefined = undefined;
                 try {
-                  result = await server.executeOperation({
-                    query: postWithTitleQuery
-                  });
+                  result = formatResponse(
+                    await server.executeOperation({
+                      query: postWithTitleQuery
+                    })
+                  );
                 } catch (e) {
                   error = e as GraphQLError;
                 }
 
-                expect(result && result?.data).toBeUndefined();
+                try {
+                  expect(result && result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.post).toBeNull();
+                }
                 expect(error || result?.errors?.[0]).toBeDefined();
                 expect(
                   (error || result?.errors?.[0])?.extensions?.code
@@ -277,9 +286,11 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 let result;
                 let error;
                 try {
-                  result = await server.executeOperation({
-                    query: userQuery
-                  });
+                  result = formatResponse(
+                    await server.executeOperation({
+                      query: userQuery
+                    })
+                  );
                 } catch (e) {
                   error = e;
                 }
@@ -290,17 +301,23 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('rule should be executed for nested entity', async () => {
-                let result: GraphQLResponse | undefined = undefined;
+                let result: FormattedExecutionResult | undefined = undefined;
                 let error: GraphQLError | undefined = undefined;
                 try {
-                  result = await server.executeOperation({
-                    query: userWithPostTitleQuery
-                  });
+                  result = formatResponse(
+                    await server.executeOperation({
+                      query: userWithPostTitleQuery
+                    })
+                  );
                 } catch (e) {
                   error = e as GraphQLError;
                 }
 
-                expect(result && result?.data).toBeUndefined();
+                try {
+                  expect(result && result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.user).toBeNull();
+                }
                 expect(error || result?.errors?.[0]).toBeDefined();
                 expect(
                   (error || result?.errors?.[0])?.extensions?.code
@@ -332,17 +349,19 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should skip fields with @skip(if: true) directive', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser($shouldSkip: Boolean!) {
-            user {
-              id
-              email @skip(if: $shouldSkip)
-            }
-          }`,
-                  variables: {
-                    shouldSkip: true
-                  }
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser($shouldSkip: Boolean!) {
+                      user {
+                        id
+                        email @skip(if: $shouldSkip)
+                      }
+                    }`,
+                    variables: {
+                      shouldSkip: true
+                    }
+                  })
+                );
 
                 expect(
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute
@@ -353,17 +372,19 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should not skip fields with @skip(if: false) directive', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser($shouldSkip: Boolean!) {
-            user {
-              id
-              email @skip(if: $shouldSkip)
-            }
-          }`,
-                  variables: {
-                    shouldSkip: false
-                  }
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser($shouldSkip: Boolean!) {
+                      user {
+                        id
+                        email @skip(if: $shouldSkip)
+                      }
+                    }`,
+                    variables: {
+                      shouldSkip: false
+                    }
+                  })
+                );
 
                 expect(
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute
@@ -381,17 +402,19 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should skip fields with @include(if: false) directive', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser($shouldInclude: Boolean!) {
-            user {
-              id
-              email @include(if: $shouldInclude)
-            }
-          }`,
-                  variables: {
-                    shouldInclude: false
-                  }
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser($shouldInclude: Boolean!) {
+                      user {
+                        id
+                        email @include(if: $shouldInclude)
+                      }
+                    }`,
+                    variables: {
+                      shouldInclude: false
+                    }
+                  })
+                );
 
                 expect(
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute
@@ -402,17 +425,19 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should not skip fields with @include(if: true) directive', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser($shouldInclude: Boolean!) {
-            user {
-              id
-              email @include(if: $shouldInclude)
-            }
-          }`,
-                  variables: {
-                    shouldInclude: true
-                  }
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser($shouldInclude: Boolean!) {
+                      user {
+                        id
+                        email @include(if: $shouldInclude)
+                      }
+                    }`,
+                    variables: {
+                      shouldInclude: true
+                    }
+                  })
+                );
 
                 expect(
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute
@@ -430,21 +455,23 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should handle fragments', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser {
-            user {
-              id
-              ...Fragment1
-            }
-          }
-          fragment Fragment1 on User {
-            ...Fragment2
-          }
-          fragment Fragment2 on User {
-            email
-          }
-          `
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser {
+                      user {
+                        id
+                        ...Fragment1
+                      }
+                    }
+                    fragment Fragment1 on User {
+                      ...Fragment2
+                    }
+                    fragment Fragment2 on User {
+                      email
+                    }
+                    `
+                  })
+                );
 
                 expect(
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute
@@ -460,15 +487,17 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should handle aliases', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser {
-            user {
-              id
-              emailAlias: email
-            }
-          }
-          `
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser {
+                      user {
+                        id
+                        emailAlias: email
+                      }
+                    }
+                    `
+                  })
+                );
 
                 expect(
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute
@@ -484,21 +513,23 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should handle aliases in fragments', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser {
-            user {
-              id
-              ...Fragment1
-            }
-          }
-          fragment Fragment1 on User {
-            ...Fragment2
-          }
-          fragment Fragment2 on User {
-            emailAlias: email
-          }
-          `
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser {
+                      user {
+                        id
+                        ...Fragment1
+                      }
+                    }
+                    fragment Fragment1 on User {
+                      ...Fragment2
+                    }
+                    fragment Fragment2 on User {
+                      emailAlias: email
+                    }
+                    `
+                  })
+                );
 
                 expect(
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute

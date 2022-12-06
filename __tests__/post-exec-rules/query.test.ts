@@ -1,10 +1,10 @@
-import { ApolloServer } from 'apollo-server';
-import { GraphQLResponse } from 'apollo-server-plugin-base';
-import { GraphQLError } from 'graphql';
+import { ApolloServer } from '@apollo/server';
+import { FormattedExecutionResult, GraphQLError } from 'graphql';
 
 import { syncFunctionalRules, syncRules } from './rules-sync';
 import { asyncFunctionalRules, asyncRules } from './rules-async';
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 
 const rawSchema = `
 type Post {
@@ -189,17 +189,23 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('failing rule should fail query', async () => {
-                let result: GraphQLResponse | undefined = undefined;
+                let result: FormattedExecutionResult | undefined = undefined;
                 let error: GraphQLError | undefined = undefined;
                 try {
-                  result = await server.executeOperation({
-                    query: postQuery
-                  });
+                  result = formatResponse(
+                    await server.executeOperation({
+                      query: postQuery
+                    })
+                  );
                 } catch (e) {
                   error = e as GraphQLError;
                 }
 
-                expect(result && result?.data).toBeUndefined();
+                try {
+                  expect(result && result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.post).toBeNull();
+                }
                 expect(error || result?.errors?.[0]).toBeDefined();
                 expect(
                   (error || result?.errors?.[0])?.extensions?.code
@@ -210,9 +216,11 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 let result;
                 let error;
                 try {
-                  result = await server.executeOperation({
-                    query: userQuery
-                  });
+                  result = formatResponse(
+                    await server.executeOperation({
+                      query: userQuery
+                    })
+                  );
                 } catch (e) {
                   error = e;
                 }
@@ -223,15 +231,32 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should allow a validation error when given and invalid query', async () => {
-                const result = await server.executeOperation({
-                  query: invalidQuery
-                });
-
-                expect(result.errors).toHaveLength(1);
-                expect(result.errors?.[0].extensions?.code).toEqual(
-                  'GRAPHQL_VALIDATION_FAILED'
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: invalidQuery
+                  })
                 );
-                expect(result.data).toBeUndefined();
+
+                expect(result?.errors).toHaveLength(1);
+                try {
+                  expect(result?.errors?.[0].extensions?.code).toEqual(
+                    'GRAPHQL_VALIDATION_FAILED'
+                  );
+                } catch {
+                  expect(result?.errors?.[0].extensions?.code).toEqual(
+                    'INTERNAL_SERVER_ERROR'
+                  );
+                  expect(
+                    (
+                      result?.errors?.[0].extensions?.stacktrace as any
+                    )[0].startsWith('ValidationError')
+                  ).toBe(true);
+                }
+                try {
+                  expect(result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.createPost).toBeNull();
+                }
               });
             });
           });

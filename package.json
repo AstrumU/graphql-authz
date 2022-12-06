@@ -27,16 +27,15 @@
     "url": "https://github.com/AstrumU/graphql-authz.git"
   },
   "devDependencies": {
+    "@apollo/server": "4.2.2",
     "@changesets/cli": "^2.16.0",
     "@envelop/types": "^1.4.0",
     "@graphql-tools/mock": "^8.7.1",
     "@graphql-tools/schema": "^8.1.2",
+    "@graphql-tools/wrap": "^8.1.2",
     "@types/jest": "^26.0.24",
     "@typescript-eslint/eslint-plugin": "^4.28.2",
     "@typescript-eslint/parser": "^4.28.2",
-    "apollo-server": "^3.4.0",
-    "apollo-server-core": "^3.10.1",
-    "apollo-server-plugin-base": "^3.3.0",
     "eslint": "^7.30.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-config-prettier": "^8.3.0",
@@ -49,7 +48,7 @@
     "prettier": "^2.3.2",
     "rimraf": "^3.0.2",
     "ts-jest": "^27.0.7",
-    "typescript": "4.4.4"
+    "typescript": "4.9.3"
   },
   "workspaces": [
     "./packages/*",

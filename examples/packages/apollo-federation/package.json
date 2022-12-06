@@ -26,6 +26,6 @@
     "apollo-server-plugin-base": "0.13.0"
   },
   "devDependencies": {
-    "typescript": "4.4.4"
+    "typescript": "4.9.3"
   }
 }

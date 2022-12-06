@@ -1,4 +1,4 @@
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
 import { PreExecutionRule } from '@graphql-authz/core';
 
 import { mockServer } from '../mock-server';
@@ -145,14 +145,12 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               rawSchemaWithoutDirectives,
               declarationMode,
               authSchema,
-              apolloServerConfig: {
-                resolvers: {
-                  TestUnion: {
-                    __resolveType
-                  },
-                  TestInterface: {
-                    __resolveType
-                  }
+              resolvers: {
+                TestUnion: {
+                  __resolveType
+                },
+                TestInterface: {
+                  __resolveType
                 }
               }
             });

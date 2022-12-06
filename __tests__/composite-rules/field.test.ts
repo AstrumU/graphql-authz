@@ -1,8 +1,8 @@
-import { ApolloServer } from 'apollo-server';
-import { GraphQLResponse } from 'apollo-server-plugin-base';
-import { GraphQLError } from 'graphql';
+import { ApolloServer } from '@apollo/server';
+import { FormattedExecutionResult, GraphQLError } from 'graphql';
 
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 import {
   inlineRules,
   rules,
@@ -319,16 +319,19 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               describe.each(['', 'Inline'])('%s', ruleVariant => {
                 describe.each(['', 'List'])('%s', resultVariant => {
                   it('should fail on failing rules and not fail on passing rules', async () => {
-                    let result: GraphQLResponse | undefined = undefined;
+                    let result: FormattedExecutionResult | undefined =
+                      undefined;
                     let error: GraphQLError | undefined = undefined;
                     try {
-                      result = await server.executeOperation({
-                        query: `query Test {
-                      testQuery {
-                        ${ruleName}${ruleVariant}${resultVariant}Field
-                      }
-                    }`
-                      });
+                      result = formatResponse(
+                        await server.executeOperation({
+                          query: `query Test {
+                            testQuery {
+                              ${ruleName}${ruleVariant}${resultVariant}Field
+                            }
+                          }`
+                        })
+                      );
                     } catch (e) {
                       error = e as GraphQLError;
                     }
@@ -344,10 +347,9 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                       expect(result?.data?.testQuery).toHaveProperty(
                         `${ruleName}${ruleVariant}${resultVariant}Field`
                       );
-                      const fieldData =
-                        result?.data?.testQuery[
-                          `${ruleName}${ruleVariant}${resultVariant}Field`
-                        ];
+                      const fieldData = (
+                        result?.data?.testQuery as Record<string, any>
+                      )[`${ruleName}${ruleVariant}${resultVariant}Field`];
                       expect(
                         typeof (resultVariant === 'List'
                           ? fieldData[0]

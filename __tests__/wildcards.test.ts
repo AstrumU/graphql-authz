@@ -1,6 +1,7 @@
 import { preExecRule, completeConfig } from '@graphql-authz/core';
 
 import { mockServer } from './mock-server';
+import { formatResponse } from './utils';
 
 const rawSchema = `
 type Post {
@@ -147,30 +148,44 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           }
         });
 
-        const postResult = await server.executeOperation({
-          query: postQuery
-        });
+        const postResult = formatResponse(
+          await server.executeOperation({
+            query: postQuery
+          })
+        );
 
-        expect(postResult.errors).toHaveLength(1);
-        expect(postResult.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
-        expect(postResult.data).toBeUndefined();
+        expect(postResult?.errors).toHaveLength(1);
+        expect(postResult?.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
+        try {
+          expect(postResult?.data).toBeUndefined();
+        } catch {
+          expect(postResult?.data?.post).toBeNull();
+        }
 
-        const userResult = await server.executeOperation({
-          query: userQuery
-        });
+        const userResult = formatResponse(
+          await server.executeOperation({
+            query: userQuery
+          })
+        );
 
-        expect(userResult.errors).toBeUndefined();
-        expect(userResult.data).toBeDefined();
+        expect(userResult?.errors).toBeUndefined();
+        expect(userResult?.data).toBeDefined();
 
-        const userWithPostsResult = await server.executeOperation({
-          query: userWithPostsQuery
-        });
+        const userWithPostsResult = formatResponse(
+          await server.executeOperation({
+            query: userWithPostsQuery
+          })
+        );
 
-        expect(userWithPostsResult.errors).toHaveLength(1);
-        expect(userWithPostsResult.errors?.[0].extensions?.code).toEqual(
+        expect(userWithPostsResult?.errors).toHaveLength(1);
+        expect(userWithPostsResult?.errors?.[0].extensions?.code).toEqual(
           'FORBIDDEN'
         );
-        expect(userWithPostsResult.data).toBeUndefined();
+        try {
+          expect(userWithPostsResult?.data).toBeUndefined();
+        } catch {
+          expect(userWithPostsResult?.data?.user).toBeNull();
+        }
       });
 
       it('should handle wildcard object wildcard field', async () => {
@@ -187,40 +202,60 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           }
         });
 
-        const postResult = await server.executeOperation({
-          query: postQuery
-        });
+        const postResult = formatResponse(
+          await server.executeOperation({
+            query: postQuery
+          })
+        );
 
-        expect(postResult.errors).toHaveLength(1);
-        expect(postResult.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
-        expect(postResult.data).toBeUndefined();
+        expect(postResult?.errors).toHaveLength(1);
+        expect(postResult?.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
+        try {
+          expect(postResult?.data).toBeUndefined();
+        } catch {
+          expect(postResult?.data?.post).toBeNull();
+        }
 
-        const userResult = await server.executeOperation({
-          query: userQuery
-        });
+        const userResult = formatResponse(
+          await server.executeOperation({
+            query: userQuery
+          })
+        );
 
-        expect(userResult.errors).toBeUndefined();
-        expect(userResult.data).toBeDefined();
+        expect(userResult?.errors).toBeUndefined();
+        expect(userResult?.data).toBeDefined();
 
-        const userWithEmailResult = await server.executeOperation({
-          query: userWithEmailQuery
-        });
+        const userWithEmailResult = formatResponse(
+          await server.executeOperation({
+            query: userWithEmailQuery
+          })
+        );
 
-        expect(userWithEmailResult.errors).toHaveLength(1);
-        expect(userWithEmailResult.errors?.[0].extensions?.code).toEqual(
+        expect(userWithEmailResult?.errors).toHaveLength(1);
+        expect(userWithEmailResult?.errors?.[0].extensions?.code).toEqual(
           'FORBIDDEN'
         );
-        expect(userWithEmailResult.data).toBeUndefined();
+        try {
+          expect(userWithEmailResult?.data).toBeUndefined();
+        } catch {
+          expect(userWithEmailResult?.data?.user).toBeNull();
+        }
 
-        const userWithPostsResult = await server.executeOperation({
-          query: userWithPostsQuery
-        });
+        const userWithPostsResult = formatResponse(
+          await server.executeOperation({
+            query: userWithPostsQuery
+          })
+        );
 
-        expect(userWithPostsResult.errors).toHaveLength(1);
-        expect(userWithPostsResult.errors?.[0].extensions?.code).toEqual(
+        expect(userWithPostsResult?.errors).toHaveLength(1);
+        expect(userWithPostsResult?.errors?.[0].extensions?.code).toEqual(
           'FORBIDDEN'
         );
-        expect(userWithPostsResult.data).toBeUndefined();
+        try {
+          expect(userWithPostsResult?.data).toBeUndefined();
+        } catch {
+          expect(userWithPostsResult?.data?.user).toBeNull();
+        }
       });
 
       it('should handle wildcard object field', async () => {
@@ -234,27 +269,37 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           }
         });
 
-        const postResult = await server.executeOperation({
-          query: postQuery
-        });
+        const postResult = formatResponse(
+          await server.executeOperation({
+            query: postQuery
+          })
+        );
 
-        expect(postResult.errors).toHaveLength(1);
-        expect(postResult.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
-        expect(postResult.data).toBeUndefined();
+        expect(postResult?.errors).toHaveLength(1);
+        expect(postResult?.errors?.[0].extensions?.code).toEqual('FORBIDDEN');
+        try {
+          expect(postResult?.data).toBeUndefined();
+        } catch {
+          expect(postResult?.data?.post).toBeNull();
+        }
 
-        const postTitleResult = await server.executeOperation({
-          query: postTitleQuery
-        });
+        const postTitleResult = formatResponse(
+          await server.executeOperation({
+            query: postTitleQuery
+          })
+        );
 
-        expect(postTitleResult.errors).toBeUndefined();
-        expect(postTitleResult.data).toBeDefined();
+        expect(postTitleResult?.errors).toBeUndefined();
+        expect(postTitleResult?.data).toBeDefined();
 
-        const userResult = await server.executeOperation({
-          query: userQuery
-        });
+        const userResult = formatResponse(
+          await server.executeOperation({
+            query: userQuery
+          })
+        );
 
-        expect(userResult.errors).toBeUndefined();
-        expect(userResult.data).toBeDefined();
+        expect(userResult?.errors).toBeUndefined();
+        expect(userResult?.data).toBeDefined();
       });
 
       it('should handle object wildcard field', async () => {
@@ -268,22 +313,30 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           }
         });
 
-        const userWithEmailResult = await server.executeOperation({
-          query: userWithEmailQuery
-        });
+        const userWithEmailResult = formatResponse(
+          await server.executeOperation({
+            query: userWithEmailQuery
+          })
+        );
 
-        expect(userWithEmailResult.errors).toHaveLength(1);
-        expect(userWithEmailResult.errors?.[0].extensions?.code).toEqual(
+        expect(userWithEmailResult?.errors).toHaveLength(1);
+        expect(userWithEmailResult?.errors?.[0].extensions?.code).toEqual(
           'FORBIDDEN'
         );
-        expect(userWithEmailResult.data).toBeUndefined();
+        try {
+          expect(userWithEmailResult?.data).toBeUndefined();
+        } catch {
+          expect(userWithEmailResult?.data?.user).toBeNull();
+        }
 
-        const userResult = await server.executeOperation({
-          query: userQuery
-        });
+        const userResult = formatResponse(
+          await server.executeOperation({
+            query: userQuery
+          })
+        );
 
-        expect(userResult.errors).toBeUndefined();
-        expect(userResult.data).toBeDefined();
+        expect(userResult?.errors).toBeUndefined();
+        expect(userResult?.data).toBeDefined();
       });
     });
   }

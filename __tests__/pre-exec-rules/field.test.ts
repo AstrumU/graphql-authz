@@ -1,8 +1,9 @@
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
 
 import { syncRules, syncFunctionalRules } from './rules-sync';
 import { asyncRules, asyncFunctionalRules } from './rules-async';
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 
 const rawSchema = `
 type Post {
@@ -167,55 +168,71 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('failing rule should fail query', async () => {
-                const result = await server.executeOperation({
-                  query: postWithTitleQuery
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: postWithTitleQuery
+                  })
+                );
 
-                expect(result.errors).toHaveLength(1);
-                expect(result.errors?.[0].extensions?.code).toEqual(
+                expect(result?.errors).toHaveLength(1);
+                expect(result?.errors?.[0].extensions?.code).toEqual(
                   'FORBIDDEN'
                 );
-                expect(result.data).toBeUndefined();
+                try {
+                  expect(result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.post).toBeNull();
+                }
               });
 
               it('passing rule should not fail query', async () => {
-                const result = await server.executeOperation({
-                  query: userQuery
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: userQuery
+                  })
+                );
 
-                expect(result.errors).toBeUndefined();
-                expect(result.data).toBeDefined();
+                expect(result?.errors).toBeUndefined();
+                expect(result?.data).toBeDefined();
               });
 
               it('rule should be executed for nested entity', async () => {
-                const result = await server.executeOperation({
-                  query: userWithPostTitleQuery
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: userWithPostTitleQuery
+                  })
+                );
 
                 expect(rules.FailingPreExecRule.prototype.execute).toBeCalled();
                 expect(
                   rules.FailingPreExecRule.prototype.execute
                 ).toBeCalledTimes(1);
 
-                expect(result.errors).toHaveLength(1);
-                expect(result.errors?.[0].extensions?.code).toEqual(
+                expect(result?.errors).toHaveLength(1);
+                expect(result?.errors?.[0].extensions?.code).toEqual(
                   'FORBIDDEN'
                 );
-                expect(result.data).toBeUndefined();
+                try {
+                  expect(result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.user).toBeNull();
+                }
               });
 
               it('should skip fields with @skip(if: true) directive', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser($shouldSkip: Boolean!) {
-                user {
-                  id
-                  email @skip(if: $shouldSkip)
-                }
-              }`,
-                  variables: {
-                    shouldSkip: true
-                  }
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser($shouldSkip: Boolean!) {
+                      user {
+                        id
+                        email @skip(if: $shouldSkip)
+                      }
+                    }`,
+                    variables: {
+                      shouldSkip: true
+                    }
+                  })
+                );
 
                 expect(
                   rules.PassingPreExecRule.prototype.execute
@@ -225,17 +242,19 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should not skip fields with @skip(if: false) directive', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser($shouldSkip: Boolean!) {
-                user {
-                  id
-                  email @skip(if: $shouldSkip)
-                }
-              }`,
-                  variables: {
-                    shouldSkip: false
-                  }
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser($shouldSkip: Boolean!) {
+                      user {
+                        id
+                        email @skip(if: $shouldSkip)
+                      }
+                    }`,
+                    variables: {
+                      shouldSkip: false
+                    }
+                  })
+                );
 
                 expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
                 expect(result?.data?.user).toBeDefined();
@@ -243,17 +262,19 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should skip fields with @include(if: false) directive', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser($shouldInclude: Boolean!) {
-                user {
-                  id
-                  email @include(if: $shouldInclude)
-                }
-              }`,
-                  variables: {
-                    shouldInclude: false
-                  }
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser($shouldInclude: Boolean!) {
+                      user {
+                        id
+                        email @include(if: $shouldInclude)
+                      }
+                    }`,
+                    variables: {
+                      shouldInclude: false
+                    }
+                  })
+                );
 
                 expect(
                   rules.PassingPreExecRule.prototype.execute
@@ -263,17 +284,19 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('should not skip fields with @include(if: true) directive', async () => {
-                const result = await server.executeOperation({
-                  query: `query getUser($shouldInclude: Boolean!) {
-                user {
-                  id
-                  email @include(if: $shouldInclude)
-                }
-              }`,
-                  variables: {
-                    shouldInclude: true
-                  }
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `query getUser($shouldInclude: Boolean!) {
+                      user {
+                        id
+                        email @include(if: $shouldInclude)
+                      }
+                    }`,
+                    variables: {
+                      shouldInclude: true
+                    }
+                  })
+                );
 
                 expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
                 expect(result?.data?.user).toBeDefined();
