@@ -38,13 +38,13 @@ export class UnauthorizedError extends Error {
 }
 
 export abstract class Rule {
-  abstract type: RuleType;
+  public abstract type: RuleType;
 
   public abstract readonly config: IRuleConfig;
 }
 
 export abstract class ExecutableRule extends Rule {
-  abstract execute(
+  public abstract execute(
     context: unknown,
     fieldArgs: Record<string, unknown>,
     ...args: unknown[]
@@ -82,11 +82,11 @@ export abstract class ExecutableRule extends Rule {
 }
 
 export abstract class CompositeRule extends Rule {
-  abstract operator: CompositionOperator;
+  public abstract operator: CompositionOperator;
 
-  abstract getRules(): Array<InstantiableRule>;
+  public abstract getRules(): Array<InstantiableRule>;
 
-  abstract wrapRules(ruleInstances: Rule[]): void;
+  public abstract wrapRules(ruleInstances: Rule[]): void;
 
   protected errors: Array<{
     error: UnauthorizedError;
@@ -112,7 +112,7 @@ export abstract class CompositeRule extends Rule {
 }
 
 export abstract class PreExecutionRule extends ExecutableRule {
-  abstract execute(
+  public abstract execute(
     context: unknown,
     fieldArgs: Record<string, unknown>
   ): void | Promise<void> | boolean | Promise<boolean>;
@@ -121,7 +121,7 @@ export abstract class PreExecutionRule extends ExecutableRule {
 }
 
 export abstract class PostExecutionRule extends ExecutableRule {
-  abstract execute(
+  public abstract execute(
     context: unknown,
     fieldArgs: Record<string, unknown>,
     value: unknown,
