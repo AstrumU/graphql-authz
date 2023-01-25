@@ -21,7 +21,7 @@
     "@apollo/federation": "0.33.6",
     "@apollo/gateway": "0.43.1",
     "apollo-server": "2.25.3",
-    "apollo-server-core": "2.25.2",
+    "apollo-server-core": "3.11.1",
     "apollo-server-errors": "2.4.2",
     "apollo-server-plugin-base": "0.13.0"
   },
