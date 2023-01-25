@@ -1,5 +1,11 @@
 # @graphql-authz/apollo-server-plugin
 
+## 3.0.0
+
+### Major Changes
+
+- 30ec511: Apollo Server v4 support
+
 ## 2.0.3
 
 ### Patch Changes
