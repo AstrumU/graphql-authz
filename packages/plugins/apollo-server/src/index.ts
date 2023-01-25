@@ -1,5 +1,5 @@
-import { ApolloServerPlugin } from 'apollo-server-plugin-base';
-import { parse, print } from 'graphql';
+import { ApolloServerPlugin } from '@apollo/server';
+import { GraphQLError, parse, print } from 'graphql';
 import {
   executePostExecRules,
   compileRules,
@@ -46,7 +46,7 @@ export function authZApolloPlugin(config: IAuthZConfig): ApolloServerPlugin {
           try {
             await Promise.all(
               compiledRules.preExecutionRules.map(rule =>
-                rule.execute(requestContext.context, rule.config.fieldArgs)
+                rule.execute(requestContext.contextValue, rule.config.fieldArgs)
               )
             );
           } catch (error) {
@@ -55,17 +55,19 @@ export function authZApolloPlugin(config: IAuthZConfig): ApolloServerPlugin {
         },
         async willSendResponse(requestContext) {
           try {
+            const { body: responseBody } = requestContext.response;
             if (
-              requestContext.response.data &&
+              'singleResult' in responseBody &&
+              responseBody.singleResult.data &&
               hasPostExecutionRules(compiledRules)
             ) {
               const fragmentDefinitions =
                 getFragmentDefinitions(filteredDocument);
 
               const executionPromises = executePostExecRules({
-                context: requestContext.context,
+                context: requestContext.contextValue,
                 schema: requestContext.schema,
-                resultData: requestContext.response?.data,
+                resultData: responseBody.singleResult.data,
                 document: filteredDocument,
                 rules: compiledRules,
                 fragmentDefinitions,
@@ -77,19 +79,26 @@ export function authZApolloPlugin(config: IAuthZConfig): ApolloServerPlugin {
                 requestContext.schema,
                 fragmentDefinitions,
                 variables,
-                requestContext.response.data
+                responseBody.singleResult.data
               );
-              requestContext.response.data = cleanResult;
+              responseBody.singleResult.data = cleanResult;
 
               await Promise.all(executionPromises);
             }
           } catch (error) {
-            // TODO: unify errors thrown from different hooks
-            // in apollo-server-core errors thrown form `didResolveOperation` are caught and processed
-            // https://github.com/apollographql/apollo-server/blob/019e975e669aa42f28727bf2da99d048cd727c0a/packages/apollo-server-core/src/requestPipeline.ts#L370
-            // but errors thrown from `willSendResponse` hook aren't caught and processed
-            // https://github.com/apollographql/apollo-server/blob/019e975e669aa42f28727bf2da99d048cd727c0a/packages/apollo-server-core/src/requestPipeline.ts#L570
-            processError(error);
+            try {
+              processError(error);
+            } catch (e) {
+              const formattedError =
+                e instanceof GraphQLError ? e : new GraphQLError(String(e));
+
+              requestContext.response.body = {
+                kind: 'single',
+                singleResult: {
+                  errors: [formattedError]
+                }
+              };
+            }
           }
         }
       });

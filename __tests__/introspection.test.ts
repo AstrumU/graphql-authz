@@ -1,4 +1,4 @@
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
 import { getIntrospectionQuery } from 'graphql';
 import { postExecRule } from '@graphql-authz/core';
 

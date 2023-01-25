@@ -1,8 +1,9 @@
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
 
 import { syncFunctionalRules, syncRules } from './rules-sync';
 import { asyncFunctionalRules, asyncRules } from './rules-async';
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 
 const rawSchema = `
 type Post {
@@ -130,24 +131,32 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('failing rule should fail query', async () => {
-                const result = await server.executeOperation({
-                  query: createPostMutation
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: createPostMutation
+                  })
+                );
 
-                expect(result.errors).toHaveLength(1);
-                expect(result.errors?.[0].extensions?.code).toEqual(
+                expect(result?.errors).toHaveLength(1);
+                expect(result?.errors?.[0].extensions?.code).toEqual(
                   'FORBIDDEN'
                 );
-                expect(result.data).toBeUndefined();
+                try {
+                  expect(result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.createPost).toBeNull();
+                }
               });
 
               it('passing rule should not fail query', async () => {
-                const result = await server.executeOperation({
-                  query: createUserMutation
-                });
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: createUserMutation
+                  })
+                );
 
-                expect(result.errors).toBeUndefined();
-                expect(result.data).toBeDefined();
+                expect(result?.errors).toBeUndefined();
+                expect(result?.data).toBeDefined();
               });
             });
           });

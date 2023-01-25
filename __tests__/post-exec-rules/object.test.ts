@@ -1,10 +1,10 @@
-import { ApolloServer } from 'apollo-server';
-import { GraphQLResponse } from 'apollo-server-plugin-base';
-import { GraphQLError } from 'graphql';
+import { ApolloServer } from '@apollo/server';
+import { FormattedExecutionResult, GraphQLError } from 'graphql';
 
 import { syncFunctionalRules, syncRules } from './rules-sync';
 import { asyncFunctionalRules, asyncRules } from './rules-async';
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 
 const rawSchema = `
 type Post @authz(rules: [FailingPostExecRule]) {
@@ -180,11 +180,13 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                   post: failingRuleArgs[2]
                 });
 
-                const result = await server
-                  .executeOperation({
-                    query: userQuery
-                  })
-                  .catch(e => e);
+                const result = formatResponse(
+                  await server
+                    .executeOperation({
+                      query: userQuery
+                    })
+                    .catch(e => e)
+                );
 
                 const passingRuleArgs =
                   rules.PassingPostExecRuleWithSelectionSet.prototype.execute
@@ -220,17 +222,24 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('failing rule should fail query', async () => {
-                let result: GraphQLResponse | undefined = undefined;
+                let result: FormattedExecutionResult | undefined = undefined;
                 let error: GraphQLError | undefined = undefined;
                 try {
-                  result = await server.executeOperation({
-                    query: postQuery
-                  });
+                  result = formatResponse(
+                    await server.executeOperation({
+                      query: postQuery
+                    })
+                  );
                 } catch (e) {
                   error = e as GraphQLError;
                 }
 
-                expect(result && result?.data).toBeUndefined();
+                try {
+                  expect(result && result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.post).toBeNull();
+                }
+
                 expect(error || result?.errors?.[0]).toBeDefined();
                 expect(
                   (error || result?.errors?.[0])?.extensions?.code
@@ -241,9 +250,11 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 let result;
                 let error;
                 try {
-                  result = await server.executeOperation({
-                    query: userQuery
-                  });
+                  result = formatResponse(
+                    await server.executeOperation({
+                      query: userQuery
+                    })
+                  );
                 } catch (e) {
                   error = e;
                 }
@@ -254,17 +265,23 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               });
 
               it('rule should be executed for nested entity', async () => {
-                let result: GraphQLResponse | undefined = undefined;
+                let result: FormattedExecutionResult | undefined = undefined;
                 let error: GraphQLError | undefined = undefined;
                 try {
-                  result = await server.executeOperation({
-                    query: userWithPostsQuery
-                  });
+                  result = formatResponse(
+                    await server.executeOperation({
+                      query: userWithPostsQuery
+                    })
+                  );
                 } catch (e) {
                   error = e as GraphQLError;
                 }
 
-                expect(result && result?.data).toBeUndefined();
+                try {
+                  expect(result && result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.user).toBeNull();
+                }
                 expect(error || result?.errors?.[0]).toBeDefined();
                 expect(
                   (error || result?.errors?.[0])?.extensions?.code

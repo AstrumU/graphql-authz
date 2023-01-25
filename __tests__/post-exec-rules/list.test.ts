@@ -1,6 +1,7 @@
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
 
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 import { asyncRules } from './rules-async';
 
 const rawSchema = `
@@ -186,48 +187,46 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               rawSchemaWithoutDirectives,
               declarationMode,
               authSchema,
-              apolloServerConfig: {
-                mocks: {
-                  Query: () => ({
-                    user: () => ({
-                      posts: [],
-                      comments: [{ id: 'comment_id' }]
-                    }),
-                    userWithNullPosts: () => ({
-                      posts: null,
-                      comments: [{ id: 'comment_id' }]
-                    }),
-                    userWithLikes: () => ({
-                      likes: []
-                    }),
-                    userWithCommentsAndLikesListOfLists: () => ({
-                      likesListOfLists: [
-                        [[{ id: 'like_id01' }, { id: 'like_id02' }]],
-                        [[{ id: 'like_id03' }, { id: 'like_id04' }]]
+              mocks: {
+                Query: () => ({
+                  user: () => ({
+                    posts: [],
+                    comments: [{ id: 'comment_id' }]
+                  }),
+                  userWithNullPosts: () => ({
+                    posts: null,
+                    comments: [{ id: 'comment_id' }]
+                  }),
+                  userWithLikes: () => ({
+                    likes: []
+                  }),
+                  userWithCommentsAndLikesListOfLists: () => ({
+                    likesListOfLists: [
+                      [[{ id: 'like_id01' }, { id: 'like_id02' }]],
+                      [[{ id: 'like_id03' }, { id: 'like_id04' }]]
+                    ],
+                    comments: [{ id: 'comment_id' }]
+                  }),
+                  userWithPostsAndLikesListOfLists: () => ({
+                    likesListOfLists: [
+                      [
+                        [{ id: 'like_id01' }, { id: 'like_id02' }],
+                        [{ id: 'like_id03' }, { id: 'like_id04' }]
+                      ]
+                    ],
+                    posts: [{ id: 'post_id' }]
+                  }),
+                  userWithPostsAndStringsListOfLists: () => ({
+                    stringsListOfLists: [
+                      [
+                        ['test01', 'test02'],
+                        ['test03', 'test04']
                       ],
-                      comments: [{ id: 'comment_id' }]
-                    }),
-                    userWithPostsAndLikesListOfLists: () => ({
-                      likesListOfLists: [
-                        [
-                          [{ id: 'like_id01' }, { id: 'like_id02' }],
-                          [{ id: 'like_id03' }, { id: 'like_id04' }]
-                        ]
-                      ],
-                      posts: [{ id: 'post_id' }]
-                    }),
-                    userWithPostsAndStringsListOfLists: () => ({
-                      stringsListOfLists: [
-                        [
-                          ['test01', 'test02'],
-                          ['test03', 'test04']
-                        ],
-                        [['test05']]
-                      ],
-                      posts: [{ id: 'post_id' }]
-                    })
+                      [['test05']]
+                    ],
+                    posts: [{ id: 'post_id' }]
                   })
-                }
+                })
               }
             });
           });
@@ -243,9 +242,18 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               })
               .catch(e => e);
 
-            expect(
-              result instanceof Error || result.errors[0] instanceof Error
-            ).toBeTruthy();
+            const error = formatResponse(result)?.errors?.[0];
+
+            try {
+              expect(
+                result instanceof Error || error instanceof Error
+              ).toBeTruthy();
+            } catch {
+              expect(error).toMatchObject({
+                message: 'Unauthorized!',
+                extensions: { code: 'FORBIDDEN' }
+              });
+            }
             expect(
               asyncRules.FailingPostExecRule.prototype.execute
             ).toBeCalledTimes(1);
@@ -258,9 +266,18 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               })
               .catch(e => e);
 
-            expect(
-              result instanceof Error || result.errors[0] instanceof Error
-            ).toBeTruthy();
+            const error = formatResponse(result)?.errors?.[0];
+
+            try {
+              expect(
+                result instanceof Error || error instanceof Error
+              ).toBeTruthy();
+            } catch {
+              expect(error).toMatchObject({
+                message: 'Unauthorized!',
+                extensions: { code: 'FORBIDDEN' }
+              });
+            }
             expect(
               asyncRules.FailingPostExecRule.prototype.execute
             ).toBeCalledTimes(1);
@@ -274,7 +291,9 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
             expect(
               asyncRules.FailingPostExecRule.prototype.execute
             ).not.toBeCalled();
-            expect(result.data).toEqual({
+            expect(
+              'singleResult' in result.body && result.body.singleResult.data
+            ).toEqual({
               userWithLikes: { likes: [] }
             });
           });
@@ -286,9 +305,18 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               })
               .catch(e => e);
 
-            expect(
-              result instanceof Error || result.errors[0] instanceof Error
-            ).toBeTruthy();
+            const error = formatResponse(result)?.errors?.[0];
+
+            try {
+              expect(
+                result instanceof Error || error instanceof Error
+              ).toBeTruthy();
+            } catch {
+              expect(error).toMatchObject({
+                message: 'Unauthorized!',
+                extensions: { code: 'FORBIDDEN' }
+              });
+            }
             expect(
               asyncRules.FailingPostExecRule.prototype.execute
             ).toBeCalled();
@@ -298,14 +326,16 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           });
 
           it('should handle passing list of lists', async () => {
-            const result = await server.executeOperation({
-              query: userPostsAndLikesListOfListsQuery
-            });
+            const result = formatResponse(
+              await server.executeOperation({
+                query: userPostsAndLikesListOfListsQuery
+              })
+            );
 
             expect(
               asyncRules.PassingPostExecRule.prototype.execute
             ).toBeCalledTimes(4);
-            expect(result.data).toEqual({
+            expect(result?.data).toEqual({
               userWithPostsAndLikesListOfLists: {
                 likesListOfLists: [
                   [
@@ -319,11 +349,13 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           });
 
           it('should handle passing list of lists of strings', async () => {
-            const result = await server.executeOperation({
-              query: userPostsAndStringsListOfListsQuery
-            });
+            const result = formatResponse(
+              await server.executeOperation({
+                query: userPostsAndStringsListOfListsQuery
+              })
+            );
 
-            expect(result.data).toEqual({
+            expect(result?.data).toEqual({
               userWithPostsAndStringsListOfLists: {
                 stringsListOfLists: [
                   [

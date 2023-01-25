@@ -1,7 +1,8 @@
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
 import { PostExecutionRule } from '@graphql-authz/core';
 
 import { mockServer } from '../mock-server';
+import { formatResponse } from '../utils';
 
 class Rule1 extends PostExecutionRule {
   public execute() {
@@ -171,47 +172,45 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               rawSchemaWithoutDirectives,
               declarationMode,
               authSchema,
-              apolloServerConfig: {
-                mocks: {
-                  Query: () => ({
-                    testUnionQuery: () => [
-                      {
-                        testField1: 'testField1Value',
-                        testField2: 'testField2Value',
-                        __typename: 'SubType1'
-                      },
-                      {
-                        testField1: 'testField1Value',
-                        testField3: 'testField3Value',
-                        __typename: 'SubType2'
-                      }
-                    ],
-                    testInterfaceQuery: () => [
-                      {
-                        testField1: 'testField1Value',
-                        testField2: 'testField2Value',
-                        __typename: 'SubType1'
-                      },
-                      {
-                        testField1: 'testField1Value',
-                        testField3: 'testField3Value',
-                        __typename: 'SubType2'
-                      }
-                    ],
-                    testUnionWithSelectionSetQuery: () => ({
+              mocks: {
+                Query: () => ({
+                  testUnionQuery: () => [
+                    {
                       testField1: 'testField1Value',
                       testField2: 'testField2Value',
                       __typename: 'SubType1'
-                    })
+                    },
+                    {
+                      testField1: 'testField1Value',
+                      testField3: 'testField3Value',
+                      __typename: 'SubType2'
+                    }
+                  ],
+                  testInterfaceQuery: () => [
+                    {
+                      testField1: 'testField1Value',
+                      testField2: 'testField2Value',
+                      __typename: 'SubType1'
+                    },
+                    {
+                      testField1: 'testField1Value',
+                      testField3: 'testField3Value',
+                      __typename: 'SubType2'
+                    }
+                  ],
+                  testUnionWithSelectionSetQuery: () => ({
+                    testField1: 'testField1Value',
+                    testField2: 'testField2Value',
+                    __typename: 'SubType1'
                   })
+                })
+              },
+              resolvers: {
+                TestUnion: {
+                  __resolveType
                 },
-                resolvers: {
-                  TestUnion: {
-                    __resolveType
-                  },
-                  TestInterface: {
-                    __resolveType
-                  }
+                TestInterface: {
+                  __resolveType
                 }
               }
             });
@@ -241,14 +240,16 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
           });
 
           it('should clean result', async () => {
-            const result = await server.executeOperation({
-              query: testUnionWithSelectionSetQuery
-            });
+            const result = formatResponse(
+              await server.executeOperation({
+                query: testUnionWithSelectionSetQuery
+              })
+            );
 
-            expect(result.data?.testUnionWithSelectionSetQuery).toBeDefined();
+            expect(result?.data?.testUnionWithSelectionSetQuery).toBeDefined();
 
             expect(
-              result.data?.testUnionWithSelectionSetQuery?.testField1
+              (result?.data?.testUnionWithSelectionSetQuery as any)?.testField1
             ).toBeUndefined();
           });
         });
