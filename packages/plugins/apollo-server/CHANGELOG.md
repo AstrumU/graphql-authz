@@ -1,5 +1,11 @@
 # @graphql-authz/apollo-server-plugin
 
+## 3.1.0
+
+### Minor Changes
+
+- b692ed2: Upgrade @apollo/server and replace deprecated apollo-server packages in `examples`
+
 ## 3.0.0
 
 ### Major Changes
