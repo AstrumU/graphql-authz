@@ -52,7 +52,6 @@ async function bootstrap() {
     listen: { port: 4000 },
     context: async ({ req }) => {
       const userId = req.headers['x-user-id'];
-      console.log('userId ==========>', userId);
       return {
         user: userId ? { id: req.headers['x-user-id'] } : null
         
