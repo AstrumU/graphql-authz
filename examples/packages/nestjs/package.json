@@ -18,14 +18,12 @@
     "access": "restricted"
   },
   "dependencies": {
-    "apollo-server-errors": "3.3.0",
-    "apollo-server-plugin-base": "3.3.0",
-    "apollo-server": "2.25.3",
-    "apollo-server-core": "3.4.0",
-    "@nestjs/common": "8.1.2",
-    "@nestjs/core": "8.1.2",
-    "@nestjs/graphql": "9.1.1",
-    "@nestjs/platform-express": "8.1.2",
+    "@apollo/server": "4.7.5",
+    "@nestjs/apollo": "12.0.4",
+    "@nestjs/common": "10.0.3",
+    "@nestjs/core": "10.0.3",
+    "@nestjs/graphql": "12.0.4",
+    "@nestjs/platform-express": "10.0.3",
     "reflect-metadata": "0.1.13"
   },
   "devDependencies": {

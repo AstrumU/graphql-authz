@@ -1,5 +1,6 @@
 import 'reflect-metadata';
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 import {
   ObjectType,
   Field,
@@ -202,13 +203,14 @@ async function bootstrap() {
   const server = new ApolloServer({
     schema,
     // authz apollo plugin
-    plugins: [authZApolloPlugin({ rules: authZRules })],
-    context: ({ req }) => ({
-      user: users.find(({ id }) => id === req.get('x-user-id')) || null
-    })
+    plugins: [authZApolloPlugin({ rules: authZRules })]
   });
 
-  return server.listen().then(({ url }) => {
+  return startStandaloneServer(server, {
+    context: async ({ req }) => ({
+      user: users.find(({ id }) => id === req.headers['x-user-id']) || null
+    })
+  }).then(({ url }) => {
     console.log(`🚀  Server ready at ${url}`);
   });
 }

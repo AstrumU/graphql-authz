@@ -1,4 +1,6 @@
-import { ApolloServer, gql } from 'apollo-server';
+import { gql } from 'graphql-tag';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 import { preExecRule, postExecRule } from '@graphql-authz/core';
 import { authZApolloPlugin } from '@graphql-authz/apollo-server-plugin';
 import { authZDirective } from '@graphql-authz/directive';
@@ -183,12 +185,13 @@ const transformedSchema = authZDirectiveTransformer(schema);
 const server = new ApolloServer({
   schema: transformedSchema,
   // authz apollo plugin
-  plugins: [authZApolloPlugin({ rules: authZRules })],
-  context: ({ req }) => ({
-    user: users.find(({ id }) => id === req.get('x-user-id')) || null
-  })
+  plugins: [authZApolloPlugin({ rules: authZRules })]
 });
 
-server.listen().then(({ url }) => {
+startStandaloneServer(server, {
+  context: async ({ req }) => ({
+    user: users.find(({ id }) => id === req.headers['x-user-id']) || null
+  })
+}).then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });

@@ -18,12 +18,10 @@
     "access": "restricted"
   },
   "dependencies": {
-    "@apollo/federation": "0.33.6",
-    "@apollo/gateway": "0.43.1",
-    "apollo-server": "2.25.3",
-    "apollo-server-core": "2.25.2",
-    "apollo-server-errors": "2.4.2",
-    "apollo-server-plugin-base": "0.13.0"
+    "@apollo/server": "4.7.5",
+    "@apollo/subgraph": "2.4.8",
+    "@apollo/gateway": "2.4.8",
+    "graphql-tag": "2.12.6"
   },
   "devDependencies": {
     "typescript": "4.9.3"

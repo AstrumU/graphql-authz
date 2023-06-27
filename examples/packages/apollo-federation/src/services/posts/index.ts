@@ -1,5 +1,7 @@
-import { ApolloServer, gql } from 'apollo-server';
-import { buildFederatedSchema } from '@apollo/federation';
+import { gql } from 'graphql-tag';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { buildSubgraphSchema } from '@apollo/subgraph';
 
 import { posts } from '../../db';
 
@@ -65,7 +67,7 @@ const resolvers = {
 };
 
 const server = new ApolloServer({
-  schema: buildFederatedSchema([
+  schema: buildSubgraphSchema([
     {
       typeDefs,
       resolvers
@@ -73,6 +75,6 @@ const server = new ApolloServer({
   ])
 });
 
-server.listen({ port: 4002 }).then(({ url }) => {
+startStandaloneServer(server, { listen: { port: 4002 } }).then(({ url }) => {
   console.log(`🚀 Server ready at ${url}`);
 });

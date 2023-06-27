@@ -18,10 +18,7 @@
     "access": "restricted"
   },
   "dependencies": {
-    "apollo-server-errors": "3.3.0",
-    "apollo-server-plugin-base": "3.3.0",
-    "apollo-server": "2.25.3",
-    "apollo-server-core": "3.4.0"
+    "@apollo/server": "4.7.5"
   },
   "devDependencies": {
     "typescript": "4.9.3"

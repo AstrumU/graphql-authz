@@ -10,10 +10,12 @@ import {
   GraphQLModule,
   registerEnumType,
   Directive,
-  Mutation
+  Mutation,
+  GqlModuleOptions
 } from '@nestjs/graphql';
 import { Module } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 
 import { preExecRule, postExecRule, IAuthConfig } from '@graphql-authz/core';
 import { authZApolloPlugin } from '@graphql-authz/apollo-server-plugin';
@@ -201,11 +203,12 @@ class PostResolver {
 // nestjs module
 @Module({
   imports: [
-    GraphQLModule.forRoot({
+    GraphQLModule.forRoot<ApolloDriverConfig>({
       path: '/',
+      driver: ApolloDriver,
       transformSchema: schema => authZDirectiveTransformer(schema),
       autoSchemaFile: true,
-      context: ({ req }) => ({
+      context: ({ req }: GqlModuleOptions['context']) => ({
         user: users.find(({ id }) => id === req.get('x-user-id')) || null
       }),
       // authz apollo plugin

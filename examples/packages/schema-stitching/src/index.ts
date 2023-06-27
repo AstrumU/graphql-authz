@@ -1,4 +1,5 @@
-import { ApolloServer } from 'apollo-server';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 import { buildSchema } from 'graphql';
 import waitOn from 'wait-on';
 import { stitchSchemas } from '@graphql-tools/stitch';
@@ -44,19 +45,20 @@ async function bootstrap() {
   const server = new ApolloServer({
     schema,
     // authz apollo plugin
-    plugins: [authZApolloPlugin({ rules: authZRules })],
-    context: ({ req }) => {
-      const userId = req.get('x-user-id');
-      return {
-        schema,
-        user: userId ? { id: req.get('x-user-id') } : null
-      };
-    }
+    plugins: [authZApolloPlugin({ rules: authZRules })]
   });
 
-  server.listen(4000).then(({ url }) => {
-    console.log(`🚀  Server ready at ${url}`);
-  });
+  return startStandaloneServer(server, {
+    listen: { port: 4000 },
+    context: async ({ req }) => {
+      const userId = req.headers['x-user-id'];
+      console.log('userId ==========>', userId);
+      return {
+        user: userId ? { id: req.headers['x-user-id'] } : null
+        
+      };
+    }
+  }).then(({ url }) => console.log(`🚀 Server ready at ${url}`));
 }
 
 waitOn({ resources: [4001, 4002].map(p => `tcp:${p}`) }, () => bootstrap());

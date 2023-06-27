@@ -13,6 +13,7 @@
     "clean:packages": "rimraf packages/*/{dist,node_modules,tsconfig.tsbuildinfo}",
     "clean:root": "rimraf {node_modules,coverage,tsconfig.tsbuildinfo}",
     "build": "tsc --build .",
+    "watch": "yarn build -w --preserveWatchOutput",
     "postinstall": "rimraf node_modules/graphql",
     "start:apollo-server-schema-first": "node packages/apollo-server-schema-first/dist/index.js",
     "start:apollo-server-code-first": "node packages/apollo-server-code-first/dist/index.js",
