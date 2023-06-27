@@ -12,6 +12,7 @@
     "clean:packages": "rimraf packages/{,plugins}/*/{dist,node_modules,tsconfig.tsbuildinfo}",
     "clean:root": "rimraf {node_modules,coverage,tsconfig.tsbuildinfo}",
     "build": "tsc --build tsconfig.json",
+    "watch": "yarn build -w --preserveWatchOutput",
     "test": "yarn jest --coverage",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -27,7 +28,7 @@
     "url": "https://github.com/AstrumU/graphql-authz.git"
   },
   "devDependencies": {
-    "@apollo/server": "4.2.2",
+    "@apollo/server": "4.7.5",
     "@changesets/cli": "^2.16.0",
     "@envelop/types": "^1.4.0",
     "@graphql-tools/mock": "^8.7.1",

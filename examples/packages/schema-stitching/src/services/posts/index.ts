@@ -1,4 +1,6 @@
-import { ApolloServer, gql } from 'apollo-server';
+import { gql } from 'graphql-tag';
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
 import { stitchingDirectives } from '@graphql-tools/stitching-directives';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { directiveTypeDefs } from '@graphql-authz/core';
@@ -104,6 +106,6 @@ const server = new ApolloServer({
   schema
 });
 
-server.listen(4002).then(({ url }) => {
+startStandaloneServer(server, { listen: { port: 4002 } }).then(({ url }) => {
   console.log(`🚀  Server ready at ${url}`);
 });
