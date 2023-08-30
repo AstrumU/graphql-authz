@@ -28,7 +28,7 @@
     "url": "https://github.com/AstrumU/graphql-authz.git"
   },
   "devDependencies": {
-    "@apollo/server": "4.7.5",
+    "@apollo/server": "4.9.3",
     "@changesets/cli": "^2.16.0",
     "@envelop/types": "^1.4.0",
     "@graphql-tools/mock": "^8.7.1",
