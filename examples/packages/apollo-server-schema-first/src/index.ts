@@ -1,4 +1,4 @@
-import { gql } from 'graphql-tag';
+import gql from 'graphql-tag';
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { preExecRule, postExecRule } from '@graphql-authz/core';
