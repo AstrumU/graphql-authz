@@ -1,5 +1,13 @@
 # @graphql-authz/directive
 
+## 1.1.4
+
+### Patch Changes
+
+- 9e18f19: Upgrade graphql to v16.8.1 and @graphql-tools to v9._._/v10._._
+- Updated dependencies [9e18f19]
+  - @graphql-authz/core@1.3.1
+
 ## 1.1.3
 
 ### Patch Changes
