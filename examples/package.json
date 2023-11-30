@@ -31,7 +31,7 @@
     "access": "restricted"
   },
   "resolutions": {
-    "graphql": "16.0.1"
+    "graphql": "16.8.1"
   },
   "dependencies": {},
   "devDependencies": {
