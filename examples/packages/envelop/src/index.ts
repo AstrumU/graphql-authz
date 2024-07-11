@@ -1,6 +1,9 @@
 import { createServer } from 'http';
-import { envelop, useExtendContext, useSchema, useTiming } from '@envelop/core';
+import * as GraphQLJS from 'graphql'
+import { GraphQLError } from 'graphql'
+import { envelop, useExtendContext, useSchema, useEngine } from '@envelop/core';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+
 import {
   preExecRule,
   postExecRule,
@@ -165,11 +168,11 @@ const schema = authZDirectiveTransformer(
 
 const getEnveloped = envelop({
   plugins: [
+    useEngine(GraphQLJS),
     useSchema(schema),
-    useTiming(),
     // authenticator
-    useExtendContext(req => ({
-      user: users.find(({ id }) => id === req.headers['x-user-id']) || null
+    useExtendContext(context => ({
+      user: users.find(({ id }) => id === context.req.headers['x-user-id']) || null
     })),
     // graphql-authz plugin
     authZEnvelopPlugin({ rules: authZRules })
@@ -216,11 +219,14 @@ const server = createServer((req, res) => {
 
         res.end(JSON.stringify(result));
       } catch (error) {
-        res.end(
-          JSON.stringify({
-            errors: [error]
-          })
-        );
+        if (error instanceof GraphQLError) {
+          res.end(JSON.stringify({ error }));
+          return;
+        }
+
+        const errorMessage = error instanceof Error ? error.message : "Unknown unexpected error!"
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: errorMessage }));
       }
     })();
   });

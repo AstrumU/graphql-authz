@@ -18,7 +18,7 @@
     "access": "restricted"
   },
   "dependencies": {
-    "@envelop/core": "1.5.0"
+    "@envelop/core": "5.0.1"
   },
   "devDependencies": {
     "typescript": "4.9.3"

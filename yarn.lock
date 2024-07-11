@@ -907,17 +907,20 @@
     human-id "^1.0.2"
     prettier "^1.19.1"
 
-"@envelop/core@1.5.0":
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/@envelop/core/-/core-1.5.0.tgz#047392e24ec3ce2a009e62ad86ee7e8e6c8238e9"
-  integrity sha512-hAQj40tfuVD4nOPpKFjWvdzf28CyJlzY26Z/whXGVgrjD6LK9foh/rQzIALg8cSae4xDCT34j1c11E5Mhw6VHw==
+"@envelop/core@5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@envelop/core/-/core-5.0.1.tgz#7993c5d577b1de01645539cbbe3eab26f213a35a"
+  integrity sha512-wxA8EyE1fPnlbP0nC/SFI7uU8wSNf4YjxZhAPu0P63QbgIvqHtHsH4L3/u+rsTruzhk3OvNRgQyLsMfaR9uzAQ==
   dependencies:
-    "@envelop/types" "1.4.0"
+    "@envelop/types" "5.0.0"
+    tslib "^2.5.0"
 
-"@envelop/types@1.4.0", "@envelop/types@^1.4.0":
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/@envelop/types/-/types-1.4.0.tgz#35327e9d23968434dd0a049ec464f1645729f886"
-  integrity sha512-ScEvh7ORsUfiML18rQflN/gI17v0f0QbgpSa3F51T6Ix0QB/TpFC+s/uq+JNbeFH0c2j7vSCc70IFxEOv8M3SQ==
+"@envelop/types@5.0.0", "@envelop/types@^5.0.0":
+  version "5.0.0"
+  resolved "https://registry.yarnpkg.com/@envelop/types/-/types-5.0.0.tgz#3ae59b50ec31d4bdcc7bd0b47e9c8cf2ac44b0ff"
+  integrity sha512-IPjmgSc4KpQRlO4qbEDnBEixvtb06WDmjKfi/7fkZaryh5HuOmTtixe1EupQI5XfXO8joc3d27uUZ0QdC++euA==
+  dependencies:
+    tslib "^2.5.0"
 
 "@eslint/eslintrc@^0.4.3":
   version "0.4.3"
