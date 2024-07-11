@@ -1,10 +1,11 @@
+import * as GraphQLJS from 'graphql';
 import {
   IExecutableSchemaDefinition,
   makeExecutableSchema
 } from '@graphql-tools/schema';
 import { addMocksToSchema, IMocks } from '@graphql-tools/mock';
 import { wrapSchema } from '@graphql-tools/wrap';
-import { envelop, useSchema } from '@envelop/core';
+import { envelop, useSchema, useEngine } from '@envelop/core';
 import { ApolloServer } from '@apollo/server';
 import { GraphQLSchema } from 'graphql';
 
@@ -113,14 +114,17 @@ function mockServerWithEnvelopPlugin(
   });
 
   const getEnveloped = envelop({
-    plugins: [useSchema(schemaWithMocks), authZEnvelopPlugin(pluginConfig)]
+    plugins: [
+      useEngine(GraphQLJS),
+      useSchema(schemaWithMocks),
+      authZEnvelopPlugin(pluginConfig)
+    ]
   });
 
   const { schema: envelopedSchema, execute, contextFactory } = getEnveloped();
 
   const wrappedSchema = wrapSchema({
     schema: envelopedSchema,
-    // @ts-expect-error
     executor: async requestContext =>
       execute({
         schema: envelopedSchema,

@@ -1,7 +1,9 @@
 import { createServer } from 'http';
+import * as GraphQLJS from 'graphql'
 import { GraphQLError } from 'graphql'
-import { envelop, useExtendContext, useSchema, useTiming } from '@envelop/core';
+import { envelop, useExtendContext, useSchema, useEngine } from '@envelop/core';
 import { makeExecutableSchema } from '@graphql-tools/schema';
+
 import {
   preExecRule,
   postExecRule,
@@ -166,8 +168,8 @@ const schema = authZDirectiveTransformer(
 
 const getEnveloped = envelop({
   plugins: [
+    useEngine(GraphQLJS),
     useSchema(schema),
-    useTiming(),
     // authenticator
     useExtendContext(context => ({
       user: users.find(({ id }) => id === context.req.headers['x-user-id']) || null

@@ -30,7 +30,7 @@
   "devDependencies": {
     "@apollo/server": "4.7.5",
     "@changesets/cli": "^2.16.0",
-    "@envelop/types": "^1.4.0",
+    "@envelop/types": "^5.0.0",
     "@graphql-tools/mock": "^9.0.0",
     "@graphql-tools/schema": "^10.0.2",
     "@graphql-tools/wrap": "^10.0.1",
