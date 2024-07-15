@@ -1,8 +1,9 @@
 {
-  "extends": "../../tsconfig.json",
   "compilerOptions": {
     "incremental": true,
     "composite": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "target": "es2018",
     "moduleResolution": "node",
     "module": "commonjs",

@@ -5,34 +5,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: 'yarn'
-      - run: yarn install
-      - run: yarn build
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm build
 
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: 'yarn'
-      - run: yarn install
-      - run: yarn lint
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm lint
 
   prettier:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: 'yarn'
-      - run: yarn install
-      - run: yarn prettier
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm prettier
 
   test:
     name: Test on GraphQL ${{matrix.graphql_version}}
@@ -43,13 +52,16 @@ jobs:
           - 16
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version-file: ".nvmrc"
-          cache: 'yarn'
+          cache: 'pnpm'
       - name: Downgrade GraphQL v${{matrix.graphql_version}}
         if: ${{matrix.graphql_version != 16}}
         run: node ./scripts/downgrade-graphql-version.js ${{matrix.graphql_version}}
-      - run: yarn install
-      - run: yarn build
-      - run: yarn test
+      - run: pnpm install
+      - run: pnpm build
+      - run: pnpm test

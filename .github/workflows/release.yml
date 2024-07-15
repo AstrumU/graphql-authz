@@ -22,14 +22,17 @@ jobs:
           node-version-file: ".nvmrc"
 
       - name: Install Dependencies
-        run: yarn
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+        run: pnpm install
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@v1
         with:
           # This expects you to have a script called release which does a build for your packages and calls changeset publish
-          publish: yarn release
+          publish: pnpm release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

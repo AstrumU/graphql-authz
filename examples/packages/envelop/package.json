@@ -18,9 +18,17 @@
     "access": "restricted"
   },
   "dependencies": {
-    "@envelop/core": "5.0.1"
+    "@envelop/core": "5.0.1",
+    "@envelop/types": "5.0.0",
+    "@graphql-authz/core": "1.3.1",
+    "@graphql-authz/directive": "1.1.4",
+    "@graphql-authz/envelop-plugin": "1.0.5",
+    "@graphql-tools/schema": "10.0.4",
+    "graphql": "^16.8.1"
   },
   "devDependencies": {
-    "typescript": "4.9.3"
+    "typescript": "4.9.3",
+    "@types/jest": "26.0.24",
+    "@types/node": "20.14.10"
   }
 }

@@ -2,92 +2,37 @@ const fs = require('fs');
 
 const version = process.argv[2];
 
-const packageJsonList = [
+const packagesToDowngrade = [
   {
     name: 'root',
     path: './package.json'
   },
-  {
-    name: 'core',
-    path: './packages/core/package.json'
-  },
-  {
-    name: 'directive',
-    path: './packages/directive/package.json'
-  }
 ];
 
-const commonDeps = {
-  '15': {
-    graphql: '^15'
+const resolutionConfig = {
+  'resolutions': {
+    graphql: `^${version}`
   }
 };
 
-const rootDeps = {
-  '15': {
-    ...commonDeps['15'],
-    'apollo-server': '^2',
-    'apollo-server-plugin-base': '^0.13',
-    'apollo-server-core': '^2'
-  }
-};
+async function overridePackageJsonConfig(filePath, newContent) {
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  const currentContent = await fs.promises.readFile(filePath, 'utf-8').then(JSON.parse);
+  const mergedContent = JSON.stringify({ ...currentContent, ...newContent }, null, 2)
+  // eslint-disable-next-line security/detect-non-literal-fs-filename
+  await fs.promises.writeFile(filePath, mergedContent)
+}
 
 async function run() {
-  const packageJsonContentList = await Promise.all(
-    packageJsonList.map(async item => ({
-      ...item,
-      // eslint-disable-next-line security/detect-non-literal-fs-filename
-      content: await fs.promises.readFile(item.path, 'utf-8').then(JSON.parse)
-    }))
-  );
-
-  switch (version) {
-    case '15': {
-      async function renamePluginInTests() {
-        await fs.promises.rename(
-          './__tests__/apollo-server-plugin.ts',
-          './__tests__/apollo-server-v3-plugin.ts'
-        );
-
-        await fs.promises.rename(
-          './__tests__/apollo-server-v2-plugin.ts',
-          './__tests__/apollo-server-plugin.ts'
-        );
-      }
-
-      function updatePackageJson() {
-        return Promise.all(
-          packageJsonContentList.map(item =>
-            // eslint-disable-next-line security/detect-non-literal-fs-filename
-            fs.promises.writeFile(
-              item.path,
-              JSON.stringify(
-                {
-                  ...item.content,
-                  devDependencies: {
-                    ...item.content.devDependencies,
-                    ...(item.name === 'root'
-                      ? rootDeps[version]
-                      : commonDeps[version])
-                  }
-                },
-                null,
-                2
-              )
-            )
-          )
-        );
-      }
-
-      await Promise.all([renamePluginInTests(), updatePackageJson()]);
-
-      break;
-    }
-    default:
-      throw new Error(
-        `downgrade-graphql-version script supports only version 15. Got ${version}`
-      );
+  if (version !== '15') {
+    throw new Error(
+      `downgrade-graphql-version script supports only version 15. Got ${version}`
+    );
   }
+
+  return Promise.all(
+    packagesToDowngrade.map(package => overridePackageJsonConfig(package.path, resolutionConfig))
+  )
 }
 
 run()
