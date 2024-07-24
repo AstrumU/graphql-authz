@@ -99,23 +99,7 @@ importers:
         specifier: 4.9.3
         version: 4.9.3
 
-  examples:
-    devDependencies:
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      npm-run-all:
-        specifier: 4.1.5
-        version: 4.1.5
-      rimraf:
-        specifier: 3.0.2
-        version: 3.0.2
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
+  examples: {}
 
   examples/packages/apollo-federation:
     dependencies:
@@ -140,16 +124,6 @@ importers:
       graphql-tag:
         specifier: 2.12.6
         version: 2.12.6(graphql@16.9.0)
-    devDependencies:
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   examples/packages/apollo-server-code-first:
     dependencies:
@@ -165,16 +139,6 @@ importers:
       graphql:
         specifier: ^16.8.1
         version: 16.9.0
-    devDependencies:
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   examples/packages/apollo-server-schema-first:
     dependencies:
@@ -199,16 +163,6 @@ importers:
       graphql-tag:
         specifier: 2.12.6
         version: 2.12.6(graphql@16.9.0)
-    devDependencies:
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   examples/packages/envelop:
     dependencies:
@@ -233,16 +187,6 @@ importers:
       graphql:
         specifier: ^16.8.1
         version: 16.9.0
-    devDependencies:
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   examples/packages/express-graphql:
     dependencies:
@@ -268,15 +212,6 @@ importers:
       '@types/express':
         specifier: 4.17.21
         version: 4.17.21
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   examples/packages/graphql-helix:
     dependencies:
@@ -299,15 +234,6 @@ importers:
       '@types/express':
         specifier: 4.17.21
         version: 4.17.21
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   examples/packages/nestjs:
     dependencies:
@@ -344,16 +270,6 @@ importers:
       reflect-metadata:
         specifier: 0.1.13
         version: 0.1.13
-    devDependencies:
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   examples/packages/schema-stitching:
     dependencies:
@@ -391,18 +307,9 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
     devDependencies:
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
       '@types/wait-on':
         specifier: 5.3.1
         version: 5.3.1
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   examples/packages/type-graphql:
     dependencies:
@@ -424,16 +331,6 @@ importers:
       type-graphql:
         specifier: 1.1.1
         version: 1.1.1(class-validator@0.14.1)(graphql@15.3.0)
-    devDependencies:
-      '@types/jest':
-        specifier: 26.0.24
-        version: 26.0.24
-      '@types/node':
-        specifier: 20.14.10
-        version: 20.14.10
-      typescript:
-        specifier: 4.9.3
-        version: 4.9.3
 
   packages/core:
     devDependencies:

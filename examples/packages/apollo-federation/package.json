@@ -26,9 +26,5 @@
     "graphql": "^16.8.1",
     "graphql-tag": "2.12.6"
   },
-  "devDependencies": {
-    "typescript": "4.9.3",
-    "@types/jest": "26.0.24",
-    "@types/node": "20.14.10"
-  }
+  "devDependencies": {}
 }

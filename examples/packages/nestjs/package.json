@@ -30,9 +30,5 @@
     "graphql": "^16.8.1",
     "reflect-metadata": "0.1.13"
   },
-  "devDependencies": {
-    "typescript": "4.9.3",
-    "@types/jest": "26.0.24",
-    "@types/node": "20.14.10"
-  }
+  "devDependencies": {}
 }
