@@ -4,6 +4,7 @@ import {
   makeExecutableSchema
 } from '@graphql-tools/schema';
 import { addMocksToSchema, IMocks } from '@graphql-tools/mock';
+import { ExecutionRequest } from '@graphql-tools/utils';
 import { wrapSchema } from '@graphql-tools/wrap';
 import { envelop, useSchema, useEngine } from '@envelop/core';
 import { ApolloServer } from '@apollo/server';
@@ -125,7 +126,7 @@ function mockServerWithEnvelopPlugin(
 
   const wrappedSchema = wrapSchema({
     schema: envelopedSchema,
-    executor: async requestContext =>
+    executor: async (requestContext: ExecutionRequest) =>
       execute({
         schema: envelopedSchema,
         document: requestContext.document,

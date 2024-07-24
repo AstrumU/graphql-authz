@@ -3,33 +3,33 @@
 To run examples you can follow several steps:
 
 - see GraphQL 15 section to run NestJS, TypeGraphQL or Apollo Federation examples
-- `yarn && yarn build` from the root of repository
+- `pnpm i && pnpm build` from the root of repository
 - `cd examples`
-- `yarn && yarn build` from the examples folder
+- `pnpm i && pnpm build` from the examples folder
 
 After that you can run one of the following commands to start server configured with corresponding technologies:
 
-- `yarn start:apollo-server-schema-first`
-- `yarn start:apollo-server-code-first`
-- `yarn start:envelop`
-- `yarn start:express-graphql`
-- `yarn start:graphql-helix`
-- `yarn start:schema-stitching`
+- `pnpm start:apollo-server-schema-first`
+- `pnpm start:apollo-server-code-first`
+- `pnpm start:envelop`
+- `pnpm start:express-graphql`
+- `pnpm start:graphql-helix`
+- `pnpm start:schema-stitching`
+- `pnpm start:apollo-federation`
 
 ## GraphQL 15
 
 To run examples which don't support GraphQL 16 right now please run
 
-`node ./scripts/downgrade-graphql-version.js 15` as a first step before `yarn && yarn build` from the root of repository.
+`node ./scripts/downgrade-graphql-version.js 15` as a first step before `pnpm i && pnpm build` from the root of repository.
 
 After that you can run one of the following commands to start server configured with corresponding technologies:
 
-- `yarn start:nestjs`
-- `yarn start:type-graphql`
-- `yarn start:apollo-federation`
+- `pnpm start:nestjs`
+- `pnpm start:type-graphql`
 
 
-To switch back to GraphQL 16 please discard all git changes and run `yarn clean` in both root of repository and examples folder and then `yarn && yarn build` in both.
+To switch back to GraphQL 16 please discard all git changes and run `pnpm clean` in both root of repository and examples folder and then `pnpm i && pnpm build` in both.
 
 ## Testing
 
