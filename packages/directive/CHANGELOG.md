@@ -1,5 +1,20 @@
 # @graphql-authz/directive
 
+## 1.1.6
+
+### Patch Changes
+
+- 06ffc4b: Migrate from yarn to pnpm.
+- 6be6e7d: Bump Typescript
+- Updated dependencies [6be6e7d]
+  - @graphql-authz/core@1.3.2
+
+## 1.1.5
+
+### Patch Changes
+
+- 67f7b74: Move @graphql-authz/core to peerDependencies.
+
 ## 1.1.4
 
 ### Patch Changes
