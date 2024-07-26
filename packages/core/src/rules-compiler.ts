@@ -31,7 +31,7 @@ import {
   composeSimpleRule,
   composeWithAndIfNeeded
 } from './rules-composer';
-import { AuthSchema } from './auth-schema';
+import { AuthSchema, InternalAuthSchema } from './auth-schema';
 import { IAuthConfig } from './auth-config';
 
 export interface IExtensionsDirective<
@@ -66,60 +66,38 @@ interface ICompilerParams {
   authSchema?: AuthSchema;
 }
 
-function getFieldConfigByAuthSchemaItem(authSchemaKey: string) {
-  return function (authSchemaItem?: AuthSchema[string][string]) {
-    if (!authSchemaItem) {
-      return null;
-    }
-
-    const config = authSchemaItem[
-      authSchemaKey as keyof typeof authSchemaItem
-    ] as IAuthConfig | undefined;
-
-    return config;
-  };
-}
-
 function getConfigsByTypeAndAuthSchema(
   typeName: string,
-  authSchema: AuthSchema,
-  authSchemaKey: string
+  authSchema: InternalAuthSchema,
 ) {
-  const config = authSchema[typeName]?.[authSchemaKey];
+  const config = authSchema.getTypeRuleConfig(typeName);
   return config ? [config] : [];
 }
 
-function getWildcardTypeConfigs(authSchema: AuthSchema, authSchemaKey: string) {
-  const wildcardConfig = authSchema['*']?.[authSchemaKey];
+function getWildcardTypeConfigs(authSchema: InternalAuthSchema) {
+  const wildcardConfig = authSchema.getTypeRuleConfig("*");
   return wildcardConfig ? [wildcardConfig] : [];
 }
 
 function getConfigsByFieldAndAuthSchema(
   parentTypeName: string,
   fieldName: string,
-  authSchema: AuthSchema,
-  authSchemaKey: string
+  authSchema: InternalAuthSchema,
 ): IAuthConfig[] {
-  const getConfig = getFieldConfigByAuthSchemaItem(authSchemaKey);
-
-  const config = getConfig(authSchema[parentTypeName]?.[fieldName]);
-
+  const config = authSchema.getFieldRuleConfig(parentTypeName, fieldName);
   return config ? [config] : [];
 }
 
 function getWildcardFieldConfigs(
   parentTypeName: string,
   fieldName: string,
-  authSchema: AuthSchema,
-  authSchemaKey: string
+  authSchema: InternalAuthSchema,
 ): IAuthConfig[] {
-  const getConfig = getFieldConfigByAuthSchemaItem(authSchemaKey);
+  const allFieldsRuleConfigOfType = authSchema.getFieldRuleConfig(parentTypeName, "*");
+  const globalFieldRuleConfig = authSchema.getFieldRuleConfig("*", fieldName);
+  const globalAllFieldsRuleConfig = authSchema.getFieldRuleConfig("*", "*");
 
-  const config =
-    getConfig(authSchema[parentTypeName]?.['*']) ||
-    getConfig(authSchema['*']?.[fieldName]) ||
-    getConfig(authSchema['*']?.['*']);
-
+  const config = allFieldsRuleConfigOfType ?? globalFieldRuleConfig ?? globalAllFieldsRuleConfig
   return config ? [config] : [];
 }
 
@@ -205,15 +183,9 @@ export function hasPostExecutionRules({
   }).length;
 }
 
-export function compileRules({
-  document,
-  schema,
-  rules,
-  variables,
-  directiveName,
-  authSchemaKey,
-  authSchema
-}: ICompilerParams): ICompiledRules {
+export function compileRules(compileParams: ICompilerParams): ICompiledRules {
+  const { document, schema, rules, variables, directiveName } = compileParams;
+  const authSchema = InternalAuthSchema.createIfCan(compileParams.authSchemaKey, compileParams.authSchema)
   const compiledRules: ICompiledRules = {
     preExecutionRules: [],
     postExecutionRules: {
@@ -253,8 +225,7 @@ export function compileRules({
         const authSchemaConfigs = authSchema
           ? getConfigsByTypeAndAuthSchema(
               deepType.name,
-              authSchema,
-              authSchemaKey
+              authSchema
             )
           : [];
 
@@ -262,7 +233,7 @@ export function compileRules({
 
         if (configs.length === 0) {
           const wildcardConfigs = authSchema
-            ? getWildcardTypeConfigs(authSchema, authSchemaKey)
+            ? getWildcardTypeConfigs(authSchema)
             : [];
 
           configs.push(...wildcardConfigs);
@@ -304,7 +275,6 @@ export function compileRules({
               parentTypeName,
               graphqlField.name,
               authSchema,
-              authSchemaKey
             )
           : [];
 
@@ -316,7 +286,6 @@ export function compileRules({
                 parentTypeName,
                 graphqlField.name,
                 authSchema,
-                authSchemaKey
               )
             : [];
 

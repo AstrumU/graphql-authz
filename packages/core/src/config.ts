@@ -1,68 +1,57 @@
-import { AuthSchema } from './auth-schema';
+import {
+  AuthSchema,
+  InternalAuthSchema,
+} from './auth-schema';
 import { RulesObject } from './rules';
 import { processError as defaultProcessError } from './process-error';
-import { IAuthConfig } from './auth-config';
+import { isDefined, RequireAllExcept } from './helpers';
 
 export interface IAuthZConfig {
   rules: RulesObject;
   directiveName?: string;
+  /** Default: `__authz`. Always should matches with a rules key wrapper in `authSchema`. @see `__authz` param in {@link AuthSchema}.  */
   authSchemaKey?: string;
+  /** @see {@link AuthSchema} */
   authSchema?: AuthSchema;
   processError?: (error: unknown) => never;
 }
 
-export function completeConfig(
-  config: IAuthZConfig
-): Omit<Required<IAuthZConfig>, 'authSchema'> & { authSchema?: AuthSchema } {
-  const resultConfig = {
-    directiveName: 'authz',
-    authSchemaKey: '__authz',
-    processError: defaultProcessError,
-    ...config
-  };
+type CompleteIAuthzConfig = RequireAllExcept<IAuthZConfig, 'authSchema'>;
+function fillConfigWithDefaultValues({
+  rules,
+  authSchema,
+  directiveName = 'authz',
+  authSchemaKey = '__authz',
+  processError = defaultProcessError,
+}: IAuthZConfig): CompleteIAuthzConfig {
+  return { rules, authSchema, authSchemaKey, processError, directiveName };
+}
 
-  // Check if rules in authSchema actually exist in rules definition
-  if (config.authSchema) {
-    const authSchemaRules: (IAuthConfig<RulesObject> | string[] | undefined)[] =
-      [];
-
-    // get all rules from authSchema into list
-    for (const typeName in config.authSchema) {
-      const typeRuleDefinitions = config.authSchema[typeName];
-      if (resultConfig.authSchemaKey in typeRuleDefinitions) {
-        // type level rules
-        authSchemaRules.push(
-          typeRuleDefinitions[resultConfig.authSchemaKey]?.rules
+function verifyThatAllAuthSchemaRulesAreRegistered(
+  rules: RulesObject,
+  authSchema: InternalAuthSchema,
+): void {
+  authSchema.getAllRuleConfigs()
+    .flatMap(ruleConfig => ruleConfig.rules ?? [])
+    .forEach((ruleName: string) => {
+      if (!(ruleName in rules)) {
+        const availableRules = Object.keys(rules).join(', ');
+        throw new Error(
+          `Rule ${ruleName} is not found! Your registered rules are: ${availableRules}`
         );
-      } else {
-        // field level rules
-        for (const fieldName in typeRuleDefinitions) {
-          const fieldRuleDefinitions = typeRuleDefinitions[fieldName] as Record<
-            string,
-            IAuthConfig<RulesObject>
-          >;
-          if (resultConfig.authSchemaKey in fieldRuleDefinitions) {
-            authSchemaRules.push(
-              fieldRuleDefinitions[resultConfig.authSchemaKey]?.rules
-            );
-          }
-        }
       }
-    }
+    });
+}
 
-    // check if all rules in authSchema actually exist in config.rules definition
-    for (const authSchemaRule of authSchemaRules) {
-      if (!authSchemaRule || !Array.isArray(authSchemaRule)) {
-        continue;
-      }
-      let ruleName: string;
-      for (ruleName of authSchemaRule) {
-        if (!(ruleName in config.rules)) {
-          throw new Error(`Rule ${ruleName} not found in rules`);
-        }
-      }
-    }
+/**
+ * Fills out all missed configuration properties with a default values and perform a validation of `authSchema`.
+ */
+export function completeConfig(config: IAuthZConfig): CompleteIAuthzConfig {
+  const completedConfig = fillConfigWithDefaultValues(config);
+  const authSchema = InternalAuthSchema.createIfCan(completedConfig.authSchemaKey, completedConfig.authSchema);
+  if (isDefined(authSchema)) {
+    verifyThatAllAuthSchemaRulesAreRegistered(completedConfig.rules, authSchema);
   }
 
-  return resultConfig;
+  return completedConfig;
 }
