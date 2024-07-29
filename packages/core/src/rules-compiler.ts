@@ -9,9 +9,9 @@ import {
   GraphQLObjectType,
   GraphQLInterfaceType,
   GraphQLField,
-  isIntrospectionType
+  isIntrospectionType,
+  getArgumentValues
 } from 'graphql';
-import { getArgumentValues } from 'graphql/execution/values';
 
 import {
   getDeepType,
