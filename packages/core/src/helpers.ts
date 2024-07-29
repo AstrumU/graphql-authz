@@ -1,8 +1,4 @@
-export function isNil<V>(
-  value: V | null | undefined
-): value is null | undefined {
-  return value === null || value === undefined;
-}
+import isNil from "lodash.isnil";
 
 export function isDefined<V>(value: V | null | undefined): value is V {
   return !isNil(value);

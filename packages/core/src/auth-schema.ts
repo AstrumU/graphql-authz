@@ -1,5 +1,6 @@
+import isNil from 'lodash.isnil';
 import { IAuthConfig } from './auth-config';
-import { isDefined, isNil, ToDeepDictionary } from './helpers';
+import { isDefined, ToDeepDictionary } from './helpers';
 
 /**
  * GraphQL-style definition of your validation rules applied to

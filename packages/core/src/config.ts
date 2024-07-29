@@ -5,6 +5,7 @@ import {
 import { RulesObject } from './rules';
 import { processError as defaultProcessError } from './process-error';
 import { isDefined, RequireAllExcept } from './helpers';
+import isEmpty from 'lodash.isempty';
 
 export interface IAuthZConfig {
   rules: RulesObject;
@@ -31,16 +32,12 @@ function verifyThatAllAuthSchemaRulesAreRegistered(
   rules: RulesObject,
   authSchema: InternalAuthSchema,
 ): void {
-  authSchema.getAllRuleConfigs()
-    .flatMap(ruleConfig => ruleConfig.rules ?? [])
-    .forEach((ruleName: string) => {
-      if (!(ruleName in rules)) {
-        const availableRules = Object.keys(rules).join(', ');
-        throw new Error(
-          `Rule ${ruleName} is not found! Your registered rules are: ${availableRules}`
-        );
-      }
-    });
+  const allUsedRules = authSchema.getAllRuleConfigs().flatMap(ruleConfig => ruleConfig.rules ?? [])
+  const notRegisteredRules = allUsedRules.filter((ruleName: string) => !(ruleName in rules));
+  if (!isEmpty(notRegisteredRules)) {
+    const registeredRules = Object.keys(rules);
+    throw new Error(`Rules ${String(notRegisteredRules)} are not found! Registered rules are: ${String(registeredRules)}`);
+  }
 }
 
 /**

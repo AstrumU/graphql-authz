@@ -17,6 +17,7 @@ import {
   GraphQLDirective,
   printSchema
 } from 'graphql';
+import isNil from 'lodash.isnil'
 
 type WrappedType = GraphQLList<any> | GraphQLNonNull<any>; // eslint-disable-line
 type DeepType = Exclude<GraphQLType, WrappedType>;
@@ -65,22 +66,22 @@ export function getFilteredDocument(
   document: DocumentNode,
   operationName?: string | null
 ): DocumentNode {
+  if (isNil(operationName)) {
+    return document;
+  }
+
   // by default, definitions contains all queries, mutations, fragments of the document
   // TODO: throw Error if there are no definitions matched with operationName?
   // there can be anonymous definitions without name
   // introspection query from graphql-codegen has no operationName at all
-  const filteredDefinitions = operationName
-    ? document.definitions.filter(
-        definition =>
-          definition.kind !== 'OperationDefinition' ||
-          ('name' in definition && definition.name?.value === operationName)
-      )
-    : document.definitions;
-  const filteredDocument = {
+  const filteredDefinitions = document.definitions.filter(definition => (
+    (definition.kind !== 'OperationDefinition') ||
+    (definition.name?.value === operationName)
+  ))
+  return {
     ...document,
     definitions: filteredDefinitions
   };
-  return filteredDocument;
 }
 
 export function getFragmentDefinitions(
