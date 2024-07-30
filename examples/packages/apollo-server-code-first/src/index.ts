@@ -7,7 +7,8 @@ import {
   GraphQLNonNull,
   GraphQLObjectType,
   GraphQLSchema,
-  GraphQLString
+  GraphQLString,
+  GraphQLUnionType
 } from 'graphql';
 import { preExecRule, postExecRule, IAuthConfig } from '@graphql-authz/core';
 import { authZApolloPlugin } from '@graphql-authz/apollo-server-plugin';
@@ -69,7 +70,9 @@ const CanReadPost = postExecRule({
     context: IContext,
     fieldArgs: unknown,
     post: { status: string; author: { id: string } }
-  ) => post.status === 'public' || context.user?.id === post.author.id
+  ) => {
+    return post.status === 'public' || context.user?.id === post.author.id
+  }
 );
 
 const CanPublishPost = preExecRule()(
@@ -146,7 +149,25 @@ const User = new GraphQLObjectType({
       resolve: (parent: { id: string }) =>
         posts.filter(({ authorId }) => authorId === parent.id)
     }
+  }),
+  extensions: createAuthZExtensions({
+    rules: ['IsAdmin']
   })
+});
+
+// Adding a union type
+const SearchResult = new GraphQLUnionType({
+  name: 'SearchResult',
+  types: [Post, User],
+  resolveType: (value) => {
+    if (value.title) {
+      return 'Post'
+    } else if (value.username) {
+      return 'User'
+    } else {
+      return undefined
+    }
+  }
 });
 
 const Query = new GraphQLObjectType({
@@ -172,6 +193,24 @@ const Query = new GraphQLObjectType({
       },
       resolve: (parent: unknown, args: { [argName: string]: any }) =>
         posts.find(({ id }) => id === args.id)
+    },
+    search: {
+      type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(SearchResult))),
+      args: {
+        term: { type: GraphQLString }
+      },
+      resolve: (parent: unknown, args: { [argName: string]: any }) => {
+        // Simple search logic
+        const postsResult = posts.filter(post =>
+          post.title.includes(args.term) || post.body.includes(args.term)
+        );
+        if (postsResult.length > 0) {
+          return postsResult
+        }
+
+        const usersResult = users.filter(user => user.username.includes(args.term));
+        return usersResult;
+      },
     }
   }
 });
@@ -203,7 +242,8 @@ const Mutation = new GraphQLObjectType({
 
 const schema = new GraphQLSchema({
   query: Query,
-  mutation: Mutation
+  mutation: Mutation,
+  types: [Post, User, SearchResult]
 });
 
 const server = new ApolloServer({
@@ -215,5 +255,5 @@ const server = new ApolloServer({
 startStandaloneServer(server, {
   context: async ({ req }) => ({
     user: users.find(({ id }) => id === req.headers['x-user-id']) || null
-  })
+  }),
 }).then(({ url }) => console.log(`🚀 Server ready at ${url}`));
