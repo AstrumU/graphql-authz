@@ -9,7 +9,8 @@ import {
   GraphQLObjectType,
   GraphQLInterfaceType,
   GraphQLField,
-  isIntrospectionType
+  isIntrospectionType,
+  InlineFragmentNode
 } from 'graphql';
 import { getArgumentValues } from 'graphql/execution/values';
 
@@ -205,6 +206,77 @@ export function hasPostExecutionRules({
   }).length;
 }
 
+function processTypesOfNode(
+  node: FieldNode | InlineFragmentNode,
+  variables: Record<string, unknown>,
+  typeInfo: TypeInfo,
+  directiveName: string,
+  authSchemaKey: string,
+  rules: RulesObject,
+  compiledRules: ICompiledRules,
+  authSchema?: AuthSchema
+): boolean {
+  const name = 'name' in node ? node.name.value : node.typeCondition?.name.value
+  if (
+    name === '__typename' ||
+    !shouldIncludeNode({ variableValues: variables }, node)
+  ) {
+    return true;
+  }
+
+  const type = typeInfo.getType();
+  const parentType = typeInfo.getParentType();
+
+  if (parentType && isIntrospectionType(parentType)) {
+    return true;
+  }
+
+  if (type && !isLeafTypeDeep(type)) {
+    const deepType = getDeepType(type);
+
+    if (isIntrospectionType(deepType)) {
+      return true;
+    }
+    const extensionsConfigs = getConfigsByExtensions(
+      deepType.extensions,
+      directiveName
+    );
+    const authSchemaConfigs = authSchema
+      ? getConfigsByTypeAndAuthSchema(
+          deepType.name,
+          authSchema,
+          authSchemaKey
+        )
+      : [];
+
+    const configs = [...extensionsConfigs, ...authSchemaConfigs];
+
+    if (configs.length === 0) {
+      const wildcardConfigs = authSchema
+        ? getWildcardTypeConfigs(authSchema, authSchemaKey)
+        : [];
+
+      configs.push(...wildcardConfigs);
+    }
+
+    const executableRules = getExecutableRulesByConfigs(configs, rules, {});
+
+    const rulesByType = compiledRules.postExecutionRules.byType;
+    const typeName = deepType.name;
+
+    executableRules.forEach(rule => {
+      if (rule instanceof PreExecutionRule) {
+        compiledRules.preExecutionRules.push(rule);
+      } else if (rule instanceof PostExecutionRule) {
+        rulesByType[typeName] = rulesByType[typeName] || [];
+        rulesByType[typeName].push(rule);
+      }
+    });
+  }
+
+  return false;
+}
+
 export function compileRules({
   document,
   schema,
@@ -225,64 +297,39 @@ export function compileRules({
 
   const typeInfo = new TypeInfo(schema);
   const typeInfoVisitor = visitWithTypeInfo(typeInfo, {
+    InlineFragment(node: InlineFragmentNode) {
+      const shouldSkipNode = processTypesOfNode(
+        node,
+        variables,
+        typeInfo,
+        directiveName,
+        authSchemaKey,
+        rules,
+        compiledRules,
+        authSchema,
+      )
+      if (shouldSkipNode) {
+        return false;
+      }
+
+      return undefined;
+    },
     Field(node: FieldNode) {
-      if (
-        node.name.value === '__typename' ||
-        !shouldIncludeNode({ variableValues: variables }, node)
-      ) {
+      const shouldSkipNode = processTypesOfNode(
+        node,
+        variables,
+        typeInfo,
+        directiveName,
+        authSchemaKey,
+        rules,
+        compiledRules,
+        authSchema,
+      )
+      if (shouldSkipNode) {
         return false;
       }
 
-      const type = typeInfo.getType();
       const parentType = typeInfo.getParentType();
-
-      if (parentType && isIntrospectionType(parentType)) {
-        return false;
-      }
-
-      if (type && !isLeafTypeDeep(type)) {
-        const deepType = getDeepType(type);
-
-        if (isIntrospectionType(deepType)) {
-          return false;
-        }
-        const extensionsConfigs = getConfigsByExtensions(
-          deepType.extensions,
-          directiveName
-        );
-        const authSchemaConfigs = authSchema
-          ? getConfigsByTypeAndAuthSchema(
-              deepType.name,
-              authSchema,
-              authSchemaKey
-            )
-          : [];
-
-        const configs = [...extensionsConfigs, ...authSchemaConfigs];
-
-        if (configs.length === 0) {
-          const wildcardConfigs = authSchema
-            ? getWildcardTypeConfigs(authSchema, authSchemaKey)
-            : [];
-
-          configs.push(...wildcardConfigs);
-        }
-
-        const executableRules = getExecutableRulesByConfigs(configs, rules, {});
-
-        const rulesByType = compiledRules.postExecutionRules.byType;
-        const typeName = deepType.name;
-
-        executableRules.forEach(rule => {
-          if (rule instanceof PreExecutionRule) {
-            compiledRules.preExecutionRules.push(rule);
-          } else if (rule instanceof PostExecutionRule) {
-            rulesByType[typeName] = rulesByType[typeName] || [];
-            rulesByType[typeName].push(rule);
-          }
-        });
-      }
-
       if (parentType && !isUnionType(parentType)) {
         const parentTypeName = parentType.name;
         const graphqlField = parentType.getFields()[node.name.value];
