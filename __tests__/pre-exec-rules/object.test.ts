@@ -185,6 +185,64 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                   expect(result?.data?.user).toBeNull();
                 }
               });
+
+              it('rule should be executed for fragment', async () => {
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `
+                      query getPost {
+                        post {
+                          id
+                          ...Fragment1
+                        }
+                      }
+                      fragment Fragment1 on Post {
+                        ...Fragment2
+                      }
+                      fragment Fragment2 on Post {
+                        title
+                      }
+                    `
+                  })
+                );
+
+                expect(result?.errors).toHaveLength(1);
+                expect(result?.errors?.[0].extensions?.code).toEqual(
+                  'FORBIDDEN'
+                );
+                try {
+                  expect(result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.post).toBeNull();
+                }
+              });
+
+              it('rule should be executed for inline fragment', async () => {
+                const result = formatResponse(
+                  await server.executeOperation({
+                    query: `
+                      query getPost {
+                        post {
+                          id
+                          ... on Post {
+                            title
+                          }
+                        }
+                      }
+                    `
+                  })
+                );
+
+                expect(result?.errors).toHaveLength(1);
+                expect(result?.errors?.[0].extensions?.code).toEqual(
+                  'FORBIDDEN'
+                );
+                try {
+                  expect(result?.data).toBeUndefined();
+                } catch {
+                  expect(result?.data?.post).toBeNull();
+                }
+              })
             });
           });
         });

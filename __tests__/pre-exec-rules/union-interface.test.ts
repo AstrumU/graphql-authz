@@ -3,28 +3,49 @@ import { PreExecutionRule } from '@graphql-authz/core';
 
 import { mockServer } from '../mock-server';
 
-class Rule1 extends PreExecutionRule {
+class FieldRule0 extends PreExecutionRule {
   public execute() {
     return;
   }
 }
 
-class Rule2 extends PreExecutionRule {
+class FieldRule1 extends PreExecutionRule {
   public execute() {
     return;
   }
 }
 
-class Rule3 extends PreExecutionRule {
+class FieldRule2 extends PreExecutionRule {
+  public execute() {
+    return;
+  }
+}
+
+class TypeRule3 extends PreExecutionRule {
+  public execute() {
+    return;
+  }
+}
+
+class TypeRule4 extends PreExecutionRule {
+  public execute() {
+    return;
+  }
+}
+
+class TypeRule5 extends PreExecutionRule {
   public execute() {
     return;
   }
 }
 
 const rules = {
-  Rule1,
-  Rule2,
-  Rule3
+  FieldRule0,
+  FieldRule1,
+  FieldRule2,
+  TypeRule3,
+  TypeRule4,
+  TypeRule5,
 } as const;
 
 (Object.keys(rules) as Array<keyof typeof rules>).forEach(key => {
@@ -33,74 +54,130 @@ const rules = {
 
 const rawSchema = `
 interface TestInterface {
-  testField1: String! @authz(rules: [Rule1])
+  testField0: String! @authz(rules: [FieldRule0])
 }
 
-union TestUnion = SubType1 | SubType2
+union TestFieldUnion = SubType1 | SubType2
 
 type SubType1 implements TestInterface {
-  testField1: String!
-  testField2: String! @authz(rules: [Rule2])
+  testField0: String!
+  testField1: String! @authz(rules: [FieldRule1])
 }
 
 type SubType2 implements TestInterface {
-  testField1: String!
-  testField3: String! @authz(rules: [Rule3])
+  testField0: String!
+  testField2: String! @authz(rules: [FieldRule2])
+}
+
+type SubType3 implements TestInterface @authz(rules: [TypeRule3]) {
+  testField0: String!
+  testField3: String!
+}
+
+union TestTypeUnion = SubType4 | SubType5
+
+type SubType4 @authz(rules: [TypeRule4]) {
+  testField4: String!
+}
+
+type SubType5 @authz(rules: [TypeRule5]) {
+  testField5: String!
 }
 
 type Query {
   testInterfaceQuery: TestInterface
-  testUnionQuery: TestUnion
+  testFieldUnionQuery: TestFieldUnion
+  testTypeUnionQuery: TestTypeUnion
 }
 `;
 
 const rawSchemaWithoutDirectives = `
 interface TestInterface {
-  testField1: String!
+  testField0: String!
 }
 
-union TestUnion = SubType1 | SubType2
+union TestFieldUnion = SubType1 | SubType2
 
 type SubType1 implements TestInterface {
+  testField0: String!
   testField1: String!
-  testField2: String!
 }
 
 type SubType2 implements TestInterface {
-  testField1: String!
+  testField0: String!
+  testField2: String!
+}
+
+type SubType3 implements TestInterface {
+  testField0: String!
   testField3: String!
+}
+
+union TestTypeUnion = SubType4 | SubType5
+
+type SubType4 {
+  testField4: String!
+}
+
+type SubType5 {
+  testField5: String!
 }
 
 type Query {
   testInterfaceQuery: TestInterface
-  testUnionQuery: TestUnion
+  testFieldUnionQuery: TestFieldUnion
+  testTypeUnionQuery: TestTypeUnion
 }
 `;
 
-const testInterfaceQuery = `
+const testFieldInterfaceQuery = `
   query test {
     testInterfaceQuery {
-      testField1
+      testField0
       ... on SubType1 {
-        testField2
+        testField1
       }
       ... on SubType2 {
+        testField2
+      }
+    }
+  }
+`;
+
+const testTypeInterfaceQuery = `
+  query test {
+    testInterfaceQuery {
+      testField0
+      ... on SubType3 {
         testField3
       }
     }
   }
 `;
 
-const testUnionQuery = `
+const testFieldUnionQuery = `
   query test {
-    testUnionQuery {
+    testFieldUnionQuery {
       ... on SubType1 {
+        testField0
         testField1
-        testField2
       }
       ... on SubType2 {
-        testField1
-        testField3
+        testField0
+        testField2
+      }
+    }
+  }
+`;
+
+const testTypeUnionQuery = `
+  query test {
+    testTypeUnionQuery {
+      ... on SubType4 {
+        testField4
+      }
+      ... on SubType5 {
+        testField5
       }
     }
   }
@@ -108,22 +185,34 @@ const testUnionQuery = `
 
 const authSchema = {
   TestInterface: {
-    testField1: { __authz: { rules: ['Rule1'] } }
+    testField0: { __authz: { rules: ['FieldRule0'] } }
   },
   SubType1: {
-    testField2: { __authz: { rules: ['Rule2'] } }
+    testField1: { __authz: { rules: ['FieldRule1'] } }
   },
   SubType2: {
-    testField3: { __authz: { rules: ['Rule3'] } }
-  }
+    testField2: { __authz: { rules: ['FieldRule2'] } }
+  },
+  SubType3: { __authz: { rules: ['TypeRule3'] } },
+  SubType4: { __authz: { rules: ['TypeRule4'] } },
+  SubType5: { __authz: { rules: ['TypeRule5'] } }
 };
 
 function __resolveType(obj: Record<string, unknown>) {
-  if ('testField2' in obj) {
+  if ('testField1' in obj) {
     return 'SubType1';
   }
-  if ('testField3' in obj) {
+  if ('testField2' in obj) {
     return 'SubType2';
+  }
+  if ('testField3' in obj) {
+    return 'SubType3';
+  }
+  if ('testField4' in obj) {
+    return 'SubType4';
+  }
+  if ('testField5' in obj) {
+    return 'SubType5';
   }
   return null;
 }
@@ -146,7 +235,10 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               declarationMode,
               authSchema,
               resolvers: {
-                TestUnion: {
+                TestFieldUnion: {
+                  __resolveType
+                },
+                TestTypeUnion: {
                   __resolveType
                 },
                 TestInterface: {
@@ -160,23 +252,40 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
             jest.clearAllMocks();
           });
 
-          it('should handle interfaces', async () => {
+          it('should handle interfaces with fields rules', async () => {
             await server.executeOperation({
-              query: testInterfaceQuery
+              query: testFieldInterfaceQuery
             });
 
-            expect(Rule1.prototype.execute).toBeCalledTimes(1);
-            expect(Rule2.prototype.execute).toBeCalledTimes(1);
-            expect(Rule3.prototype.execute).toBeCalledTimes(1);
+            expect(FieldRule0.prototype.execute).toBeCalledTimes(1);
+            expect(FieldRule1.prototype.execute).toBeCalledTimes(1);
+            expect(FieldRule2.prototype.execute).toBeCalledTimes(1);
           });
 
-          it('should handle unions', async () => {
+          it('should handle interfaces with types rules', async () => {
             await server.executeOperation({
-              query: testUnionQuery
+              query: testTypeInterfaceQuery
             });
 
-            expect(Rule2.prototype.execute).toBeCalledTimes(1);
-            expect(Rule3.prototype.execute).toBeCalledTimes(1);
+            expect(TypeRule3.prototype.execute).toBeCalledTimes(1);
+          });
+
+          it('should handle unions with fields rules', async () => {
+            await server.executeOperation({
+              query: testFieldUnionQuery
+            });
+
+            expect(FieldRule1.prototype.execute).toBeCalledTimes(1);
+            expect(FieldRule2.prototype.execute).toBeCalledTimes(1);
+          });
+
+          it('should handle unions with type rules', async () => {
+            const result = await server.executeOperation({
+              query: testTypeUnionQuery
+            });
+
+            expect(TypeRule4.prototype.execute).toBeCalledTimes(1);
+            expect(TypeRule5.prototype.execute).toBeCalledTimes(1);
           });
         });
       }
