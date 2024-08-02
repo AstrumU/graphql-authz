@@ -486,35 +486,6 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 expect(passingRuleArgs[3]).toHaveProperty('email');
               });
 
-              it('should handle inline fragments', async () => {
-                const result = formatResponse(
-                  await server.executeOperation({
-                    query: `
-                      query getUser {
-                        user {
-                          id
-                          ... on User {
-                            email
-                          }
-                        }
-                      }
-                    `
-                  })
-                )
-
-                expect(
-                  rules.PassingPostExecRuleWithSelectionSet.prototype.execute
-                ).toBeCalled();
-                expect(result?.data?.user).not.toHaveProperty('comments');
-
-                const passingRuleArgs =
-                  rules.PassingPostExecRuleWithSelectionSet.prototype.execute
-                    .mock.calls[0];
-
-                expect(passingRuleArgs[2]).toBeDefined();
-                expect(passingRuleArgs[3]).toHaveProperty('email');
-              });
-
               it('should handle aliases', async () => {
                 const result = formatResponse(
                   await server.executeOperation({

@@ -5,9 +5,7 @@ import {
   TypeInfo,
   visitWithTypeInfo,
   visit,
-  GraphQLSchema,
-  GraphQLType,
-  isUnionType,
+  GraphQLSchema
 } from 'graphql';
 
 import { getDeepType } from './graphql-utils';
@@ -40,20 +38,6 @@ function executePostExecRule(
   }
 }
 
-function resolveUnionTypeAndGetItsName(
-  type: GraphQLType | null | undefined,
-  resultInfo: ResultInfo,
-  context: unknown,
-): string {
-  if (type && isUnionType(type) && type.resolveType) {
-    const value = resultInfo.getValue();
-    // const resolverInfo: GraphQLResolveInfo = TODO
-    // const typeName = type.resolveType(value, context, ,type);
-  }
-
-  return ''
-}
-
 function executePostExecRulesForType(
   resultInfo: ResultInfo,
   typeInfo: TypeInfo,
@@ -70,17 +54,10 @@ function executePostExecRulesForType(
   const typeName =
     unwrappedType && 'name' in unwrappedType && unwrappedType.name;
   const parentTypeName = parentType && parentType.name;
-  const unionResolvedTypeName = resolveUnionTypeAndGetItsName(unwrappedType, resultInfo, context);
 
   const {
     postExecutionRules: { byType: rulesByType, byField: rulesByField }
   } = rules;
-
-  if (unionResolvedTypeName in rulesByType) {
-    rulesByType[unionResolvedTypeName].forEach(rule =>
-      executePostExecRule(rule, rules, context, resultInfo)
-    );
-  }
 
   if (typeName && typeName in rulesByType) {
     rulesByType[typeName].forEach(rule =>

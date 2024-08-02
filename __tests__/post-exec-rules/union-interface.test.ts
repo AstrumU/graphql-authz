@@ -22,12 +22,6 @@ class Rule3 extends PostExecutionRule {
   }
 }
 
-class Rule4 extends PostExecutionRule {
-  public execute() {
-    return;
-  }
-}
-
 class RuleWithSelectionSet extends PostExecutionRule {
   public execute() {
     return;
@@ -40,7 +34,6 @@ const rules = {
   Rule1,
   Rule2,
   Rule3,
-  Rule4,
   RuleWithSelectionSet
 } as const;
 
@@ -53,7 +46,7 @@ interface TestInterface {
   testField1: String! @authz(rules: [Rule1])
 }
 
-union TestFieldUnion = SubType1 | SubType2
+union TestUnion = SubType1 | SubType2
 
 type SubType1 implements TestInterface {
   testField1: String!
@@ -65,21 +58,10 @@ type SubType2 implements TestInterface {
   testField3: String! @authz(rules: [Rule3])
 }
 
-union TestTypeUnion = SubType3 | SubType4
-
-type SubType3 @authz(rules: [Rule3]) {
-  testFieldType3: String!
-}
-
-type SubType4 @authz(rules: [Rule4]) {
-  testFieldType4: String!
-}
-
 type Query {
   testInterfaceQuery: [TestInterface!]!
-  testFieldUnionQuery: [TestFieldUnion!]!
-  testTypeUnionQuery: [TestTypeUnion!]!
-  testUnionWithSelectionSetQuery: TestFieldUnion! @authz(rules: [RuleWithSelectionSet])
+  testUnionQuery: [TestUnion!]!
+  testUnionWithSelectionSetQuery: TestUnion! @authz(rules: [RuleWithSelectionSet])
 }
 `;
 
@@ -88,7 +70,7 @@ interface TestInterface {
   testField1: String!
 }
 
-union TestFieldUnion = SubType1 | SubType2
+union TestUnion = SubType1 | SubType2
 
 type SubType1 implements TestInterface {
   testField1: String!
@@ -100,21 +82,10 @@ type SubType2 implements TestInterface {
   testField3: String!
 }
 
-union TestTypeUnion = SubType3 | SubType4
-
-type SubType3 {
-  testFieldType3: String!
-}
-
-type SubType4 {
-  testFieldType4: String!
-}
-
 type Query {
   testInterfaceQuery: [TestInterface!]!
-  testFieldUnionQuery: [TestFieldUnion!]!
-  testTypeUnionQuery: [TestTypeUnion!]!
-  testUnionWithSelectionSetQuery: TestFieldUnion!
+  testUnionQuery: [TestUnion!]!
+  testUnionWithSelectionSetQuery: TestUnion!
 }
 `;
 
@@ -132,9 +103,9 @@ const testInterfaceQuery = `
   }
 `;
 
-const testFieldUnionQuery = `
+const testUnionQuery = `
   query test {
-    testFieldUnionQuery {
+    testUnionQuery {
       ... on SubType1 {
         testField1
         testField2
@@ -142,19 +113,6 @@ const testFieldUnionQuery = `
       ... on SubType2 {
         testField1
         testField3
-      }
-    }
-  }
-`;
-
-const testTypeUnionQuery = `
-  query test {
-    testTypeUnionQuery {
-      ... on SubType3 {
-        testFieldType3
-      }
-      ... on SubType4 {
-        testFieldType4
       }
     }
   }
@@ -184,9 +142,7 @@ const authSchema = {
   },
   SubType2: {
     testField3: { __authz: { rules: ['Rule3'] } }
-  },
-  SubType3: { __authz: { rules: ['Rule3'] } },
-  SubType4: { __authz: { rules: ['Rule4'] } }
+  }
 };
 
 function __resolveType(obj: Record<string, unknown>) {
@@ -195,12 +151,6 @@ function __resolveType(obj: Record<string, unknown>) {
   }
   if ('testField3' in obj) {
     return 'SubType2';
-  }
-  if ('testFieldType3' in obj) {
-    return 'SubType3';
-  }
-  if ('testFieldType3' in obj) {
-    return 'SubType4';
   }
   return null;
 }
@@ -224,7 +174,7 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
               authSchema,
               mocks: {
                 Query: () => ({
-                  testFieldUnionQuery: () => [
+                  testUnionQuery: () => [
                     {
                       testField1: 'testField1Value',
                       testField2: 'testField2Value',
@@ -234,16 +184,6 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                       testField1: 'testField1Value',
                       testField3: 'testField3Value',
                       __typename: 'SubType2'
-                    }
-                  ],
-                  testTypeUnionQuery: () => [
-                    {
-                      testFieldType3: 'testFieldType3Value1',
-                      __typename: 'SubType3'
-                    },
-                    {
-                      testFieldType3: 'testFieldType3Value2',
-                      __typename: 'SubType3'
                     }
                   ],
                   testInterfaceQuery: () => [
@@ -266,13 +206,10 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 })
               },
               resolvers: {
-                TestFieldUnion: {
+                TestUnion: {
                   __resolveType
                 },
                 TestInterface: {
-                  __resolveType
-                },
-                TestTypeUnion: {
                   __resolveType
                 }
               }
@@ -293,22 +230,13 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
             expect(Rule3.prototype.execute).toBeCalledTimes(1);
           });
 
-          it('should handle unions with fields rules', async () => {
+          it('should handle unions', async () => {
             await server.executeOperation({
-              query: testFieldUnionQuery
+              query: testUnionQuery
             });
 
             expect(Rule2.prototype.execute).toBeCalledTimes(1);
             expect(Rule3.prototype.execute).toBeCalledTimes(1);
-          });
-
-          it('should handle unions with type rules processing only queried type rules', async () => {
-            await server.executeOperation({
-              query: testTypeUnionQuery
-            });
-
-            expect(Rule3.prototype.execute).toBeCalledTimes(1);
-            expect(Rule4.prototype.execute).toBeCalledTimes(0);
           });
 
           it('should clean result', async () => {
