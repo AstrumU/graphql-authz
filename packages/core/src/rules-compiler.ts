@@ -216,7 +216,8 @@ function processTypesOfNode(
   compiledRules: ICompiledRules,
   authSchema?: AuthSchema
 ): boolean {
-  const name = 'name' in node ? node.name.value : node.typeCondition?.name.value
+  const name =
+    'name' in node ? node.name.value : node.typeCondition?.name.value;
   if (
     name === '__typename' ||
     !shouldIncludeNode({ variableValues: variables }, node)
@@ -242,11 +243,7 @@ function processTypesOfNode(
       directiveName
     );
     const authSchemaConfigs = authSchema
-      ? getConfigsByTypeAndAuthSchema(
-          deepType.name,
-          authSchema,
-          authSchemaKey
-        )
+      ? getConfigsByTypeAndAuthSchema(deepType.name, authSchema, authSchemaKey)
       : [];
 
     const configs = [...extensionsConfigs, ...authSchemaConfigs];
@@ -306,8 +303,8 @@ export function compileRules({
         authSchemaKey,
         rules,
         compiledRules,
-        authSchema,
-      )
+        authSchema
+      );
       if (shouldSkipNode) {
         return false;
       }
@@ -323,8 +320,8 @@ export function compileRules({
         authSchemaKey,
         rules,
         compiledRules,
-        authSchema,
-      )
+        authSchema
+      );
       if (shouldSkipNode) {
         return false;
       }

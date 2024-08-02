@@ -45,7 +45,7 @@ const rules = {
   FieldRule2,
   TypeRule3,
   TypeRule4,
-  TypeRule5,
+  TypeRule5
 } as const;
 
 (Object.keys(rules) as Array<keyof typeof rules>).forEach(key => {

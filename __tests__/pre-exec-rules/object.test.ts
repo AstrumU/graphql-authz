@@ -242,7 +242,7 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 } catch {
                   expect(result?.data?.post).toBeNull();
                 }
-              })
+              });
             });
           });
         });
