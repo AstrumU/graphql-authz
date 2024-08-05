@@ -323,6 +323,23 @@ describe.each(['apollo-plugin', 'envelop-plugin'] as const)(
                 expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
               });
 
+              it('should handle inline fragments', async () => {
+                await server.executeOperation({
+                  query: `
+                    query getUser {
+                      user {
+                        id
+                        ... on User {
+                          email
+                        }
+                      }
+                    }
+                  `
+                });
+
+                expect(rules.PassingPreExecRule.prototype.execute).toBeCalled();
+              });
+
               it('should handle aliases', async () => {
                 await server.executeOperation({
                   query: `query getUser {
