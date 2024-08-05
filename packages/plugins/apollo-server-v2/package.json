@@ -1,6 +1,6 @@
 {
   "name": "@graphql-authz/apollo-server-v2-plugin",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Apollo Server v2 plugin for graphql-authz",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",

@@ -1,5 +1,11 @@
 # @graphql-authz/apollo-server-v2-plugin
 
+## 1.0.6
+
+### Patch Changes
+
+- 67f7b74: Move @graphql-authz/core to peerDependencies.
+
 ## 1.0.5
 
 ### Patch Changes

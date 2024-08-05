@@ -1,5 +1,11 @@
 # @graphql-authz/directive
 
+## 1.1.5
+
+### Patch Changes
+
+- 67f7b74: Move @graphql-authz/core to peerDependencies.
+
 ## 1.1.4
 
 ### Patch Changes
