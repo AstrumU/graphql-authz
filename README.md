@@ -488,10 +488,10 @@ const Query = new GraphQLObjectType({
 });
 ```
 
-#### Using [GiraphQL](https://giraphql.com/)
+#### Using [Pothos](https://pothos-graphql.dev)
 ```ts
-import SchemaBuilder from '@giraphql/core';
-import AuthzPlugin from '@giraphql/plugin-authz';
+import SchemaBuilder from '@pothos/core';
+import AuthzPlugin from '@pothos/plugin-authz';
 
 const builder = new SchemaBuilder<{
   AuthZRule: keyof typeof rules;
@@ -523,7 +523,7 @@ Post.implement({
 });
 ```
 
-[GiraphQL](https://giraphql.com/) provides a native GraphQL Authz plugin [@giraphql/plugin-authz](https://giraphql.com/plugins/authz) that helps to attach auth rules to Queries/Mutations/Objects/Interfaces/Fields in a type-safe way
+[Pothos](https://pothos-graphql.dev) provides a native GraphQL Authz plugin [@pothos/plugin-authz](https://pothos-graphql.dev/docs/plugins/authz) that helps to attach auth rules to Queries/Mutations/Objects/Interfaces/Fields in a type-safe way
 
 ### Using AuthSchema
 
