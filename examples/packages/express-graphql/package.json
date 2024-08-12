@@ -1,7 +1,7 @@
 {
   "name": "@graphql-authz-examples/express-graphql",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Examples for GraphQL authorization layer",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
@@ -18,8 +18,8 @@
     "access": "restricted"
   },
   "dependencies": {
-    "@graphql-authz/core": "1.3.1",
-    "@graphql-authz/directive": "1.1.4",
+    "@graphql-authz/core": "1.3.2",
+    "@graphql-authz/directive": "1.1.6",
     "@graphql-tools/schema": "10.0.4",
     "express": "4.19.2",
     "express-graphql": "0.12.0",

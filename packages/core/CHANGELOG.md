@@ -1,5 +1,13 @@
 # @graphql-authz/core
 
+## 1.3.2
+
+### Patch Changes
+
+- adf7272: Fix not applied type-specific pre-exec rules when union or interface is used.
+- 06ffc4b: Migrate from yarn to pnpm.
+- 6be6e7d: Bump Typescript
+
 ## 1.3.1
 
 ### Patch Changes
