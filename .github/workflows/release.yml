@@ -21,10 +21,11 @@ jobs:
         with:
           node-version-file: ".nvmrc"
 
-      - name: Install Dependencies
       - uses: pnpm/action-setup@v4
         with:
           version: 9
+
+      - name: Install Dependencies
         run: pnpm install
 
       - name: Create Release Pull Request or Publish to npm
